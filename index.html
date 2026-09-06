@@ -467,7 +467,7 @@
   // gviz/CSV ได้เลย (เป็นข้อจำกัดของ Google เอง) จึงต้องใช้ Google Apps Script
   // เป็นตัวกลางอ่านรูปแล้วส่งกลับมาเป็น JSON แทน — ดูวิธีติดตั้งท้ายไฟล์นี้
   // (ค้นหาคำว่า "APPS SCRIPT SETUP") แล้วนำ Web app URL มาใส่ตรงนี้
-  const APPS_SCRIPT_URL = ""; // เช่น "https://script.google.com/macros/s/XXXXXXXX/exec"
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsMMgAFFoUv-HGWIowfm-nQTHJeO0k55W9lA5mA5y4GC8HMcnZhT7WGxBHCiHRJX0/exec";
 
   const elChatScroll = document.getElementById('chatScroll');
   const elChatInput = document.getElementById('chatInput');
@@ -1100,7 +1100,7 @@
       syncFromSheet();
       return;
     }
-    setSyncState('loading', 'กำลังซิงก์ข้อมูลพร้อมรูปภาพ… (อาจใช้เวลาสักครู่)');
+    setSyncState('loading', 'กำลังซิงก์ข้อมูลพร้อมรูปภาพ… (ครั้งแรกอาจใช้เวลาถึง 30-50 วินาที)');
     syncBtn.disabled = true;
     syncNote.textContent = "";
 
@@ -1141,7 +1141,7 @@
     script.onerror = function(){ fail('โหลดสคริปต์ไม่สำเร็จ (ตรวจสอบว่า Deploy เป็น "Anyone" แล้ว)'); };
     document.body.appendChild(script);
     // ให้เวลานานกว่าปกติ เพราะต้องดึงรูปภาพหลายสิบ-หลายร้อยรูปในการเรียกครั้งเดียว
-    gasTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับ (ข้อมูลรูปภาพเยอะอาจใช้เวลานาน)'); }, 30000);
+    gasTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับ (ข้อมูลรูปภาพเยอะอาจใช้เวลานานถึง 1 นาทีในการซิงก์ครั้งแรก)'); }, 55000);
   }
 
   syncBtn.addEventListener('click', syncFromAppsScript);
