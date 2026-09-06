@@ -4,52 +4,52 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ผู้ช่วยค้นหาบุคลากร | คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</title>
-<meta name="description" content="ระบบผู้ช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม ค้นหาด้วยเสียงหรือพิมพ์ก็ได้">
+<meta name="description" content="ระบบผู้ช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* ---- โทนสีหลัก: ขาว-เหลือง-เทา ไล่โทนอ่อน สไตล์ ERP มืออาชีพ ---- */
+    /* ---- โทนสีหลัก: ขาว-เขียว ไดนามิก สดใส เป็นธรรมชาติ ---- */
     --bg:#FFFFFF;
-    --bg-gradient: linear-gradient(160deg, #FFFCF2 0%, #FBF7EA 22%, #F4F2EA 55%, #EFEFEC 100%);
+    --bg-gradient: linear-gradient(160deg, #F2FBF3 0%, #E9F8EC 22%, #E3F6E9 55%, #F5FDF6 100%);
     --surface:#FFFFFF;
-    --surface-alt:#FFFCF3;
-    --border:#EDE7D6;
-    --border-strong:#DED2A9;
-    --text:#2B2A25;
-    --text-soft:#6E6A5C;
-    --text-faint:#A79F89;
+    --surface-alt:#F0FAF2;
+    --border:#DCF0DF;
+    --border-strong:#B7E4C0;
+    --text:#1E2B21;
+    --text-soft:#57705C;
+    --text-faint:#93AC98;
 
-    --gold-50:#FFFBEF;
-    --gold-100:#FBF1D2;
-    --gold-300:#EAD07C;
-    --gold-500:#C99A2E;
-    --gold-600:#AD8021;
-    --gold-700:#8C6519;
+    --gold-50:#EFFBF1;
+    --gold-100:#DDF5E1;
+    --gold-300:#8FDE9F;
+    --gold-500:#27AE60;
+    --gold-600:#1F9550;
+    --gold-700:#177A41;
 
-    --gray-100:#F2F1ED;
-    --gray-200:#E4E2DA;
-    --gray-400:#B9B5A6;
-    --gray-600:#7A7666;
-    --gray-800:#4A473C;
+    --gray-100:#EEF6EF;
+    --gray-200:#DCEBDD;
+    --gray-400:#A6C4AB;
+    --gray-600:#5D7962;
+    --gray-800:#33422F;
 
     --accent:var(--gold-600);
     --accent-soft:var(--gold-100);
     --accent-strong:var(--gold-700);
-    --accent-grad: linear-gradient(135deg, var(--gold-500), var(--gray-600));
+    --accent-grad: linear-gradient(135deg, var(--gold-500), var(--gold-700));
 
-    --success:#3F7D5C;
-    --success-soft:#E7F1EA;
+    --success:#1F9550;
+    --success-soft:#E4F6EA;
     --warn:#B4841F;
     --warn-soft:#FBF1DE;
-    --danger:#B5504A;
+    --danger:#C0453F;
     --danger-soft:#FBEAE8;
 
     --radius:14px;
     --radius-sm:9px;
-    --shadow:0 1px 2px rgba(43,42,37,0.05), 0 8px 24px rgba(43,42,37,0.06);
-    --shadow-sm:0 1px 2px rgba(43,42,37,0.06);
+    --shadow:0 1px 2px rgba(30,50,33,0.05), 0 8px 24px rgba(30,50,33,0.07);
+    --shadow-sm:0 1px 2px rgba(30,50,33,0.06);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -127,6 +127,12 @@
     margin:0;
   }
   .sync-box{ text-align:right; position:relative; z-index:1; }
+  .home-link{
+    display:inline-block; font-size:11.5px; font-weight:600; text-decoration:none;
+    color:var(--accent-strong); background:var(--accent-soft);
+    padding:5px 11px; border-radius:16px; margin-bottom:8px;
+  }
+  .home-link:hover{ background:var(--gold-300); color:#fff; }
   .sync-status-inline{
     font-size:11.5px;
     color:var(--text-soft);
@@ -398,10 +404,11 @@
       <div>
         <div class="brand-eyebrow">ENGINEERING · MSU DIRECTORY</div>
         <h1>ผู้ช่วยค้นหาข้อมูลบุคลากร</h1>
-        <p class="subtitle">คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม — ค้นหาด้วยเสียงหรือพิมพ์ก็ได้</p>
+        <p class="subtitle">คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</p>
       </div>
     </div>
     <div class="sync-box">
+      <a class="home-link" href="https://panya-jeerachat.github.io/dwms/">🏠 กลับหน้าหลัก</a>
       <span class="sync-status-inline"><span class="sync-dot" id="syncDot"></span><span id="syncText">กำลังเตรียมข้อมูล…</span></span>
       <div><button class="sync-btn" id="syncBtn">🔄 ซิงก์ข้อมูลล่าสุด</button></div>
       <div class="sync-note" id="syncNote"></div>
@@ -446,8 +453,9 @@
 
   <footer class="foot">
     ระบบนี้ค้นหาข้อมูลด้วยกฎที่กำหนดไว้ล่วงหน้าเท่านั้น <b>ไม่มีการใช้ปัญญาประดิษฐ์ (AI)</b> ในการประมวลผลคำตอบ<br>
-    ข้อมูลบุคลากรซิงก์แบบเรียลไทม์จาก Google Sheets ของคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม (รูปภาพซิงก์ผ่าน Google Apps Script — ดูวิธีตั้งค่าในไฟล์ Code.gs ที่แนบมา)<br>
-    หากพบข้อมูลผิดพลาด กรุณาแจ้งฝ่ายธุรการคณะ
+    ข้อมูลบุคลากรซิงก์แบบเรียลไทม์จาก Google Sheets ของคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม<br><br>
+    © 2569 คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม<br>
+    พัฒนาโดย นายปัญญา จีระฉัตร | นักวิชาการโสตทัศนศึกษา | <a href="mailto:panya.j@msu.ac.th">panya.j@msu.ac.th</a>
   </footer>
 
 </div>
@@ -491,8 +499,6 @@
 
   let records = JSON.parse(document.getElementById('recordData').textContent || "[]");
   let ttsEnabled = true;
-  let activeBuildingFilter = null;
-  let activeDeptFilter = null;
 
   /* ================= UTIL ================= */
   function escapeHtml(s){
@@ -503,7 +509,7 @@
   function norm(s){ return (s||"").toString().trim().toLowerCase(); }
   function fmtTime(d){ return d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}); }
 
-  const AVATAR_PALETTE = ["#C99A2E","#8C6519","#7A7666","#AD8021","#6E6A5C","#B9975A","#9C8752","#8A8168"];
+  const AVATAR_PALETTE = ["#27AE60","#1F9550","#5D7962","#2E9B5E","#3FAE72","#4C8C5A","#2F8558","#6BAE7C"];
   function hashStr(s){
     let h=0; s=s||"";
     for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; }
@@ -584,39 +590,47 @@
       '<div class="stat-tile"><div class="num">'+records.length+'</div><div class="lbl">บุคลากรทั้งหมด</div></div>' +
       '<div class="stat-tile"><div class="num">'+buildings.length+'</div><div class="lbl">อาคาร</div></div>' +
       '<div class="stat-tile"><div class="num">'+depts.length+'</div><div class="lbl">สาขา/หน่วยงาน</div></div>' +
-      '<div class="stat-tile"><div class="num">🎙️/⌨️</div><div class="lbl">ถามด้วยเสียงหรือพิมพ์</div></div>';
+      '<div class="stat-tile"><div class="num">🟢</div><div class="lbl">พร้อมให้บริการ</div></div>';
   }
 
   /* ================= FILTER CHIPS ================= */
   function renderChips(){
     const buildings = getBuildings();
-    elBuildingChips.innerHTML = '<button class="chip clear-chip" data-clear="building">✕ ล้างตัวกรองอาคาร</button>' +
+    elBuildingChips.innerHTML =
       buildings.map(b=>'<button class="chip" data-building="'+escapeHtml(b)+'">🏢 '+escapeHtml(b)+'</button>').join('');
 
     const depts = getDepts();
-    elDeptChipsRow.innerHTML = '<button class="chip clear-chip" data-clear="dept">✕ ล้างตัวกรองสาขา</button>' +
+    elDeptChipsRow.innerHTML =
       depts.map(d=>'<button class="chip" data-dept="'+escapeHtml(d)+'">🎓 '+escapeHtml(deptKeyword(d))+'</button>').join('');
 
     elBuildingChips.querySelectorAll('[data-building]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        const b = btn.getAttribute('data-building');
-        elChatInput.value = "มีใครอยู่อาคาร " + b + " บ้าง";
-        handleSend();
+        askBuildingList(btn.getAttribute('data-building'));
       });
-    });
-    elBuildingChips.querySelector('[data-clear="building"]').addEventListener('click', ()=>{
-      activeBuildingFilter = null; elBrowseSearch.value=""; renderDirectory();
     });
     elDeptChipsRow.querySelectorAll('[data-dept]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        const d = btn.getAttribute('data-dept');
-        elChatInput.value = "อาจารย์สาขา " + deptKeyword(d) + " มีใครบ้าง";
-        handleSend();
+        askDeptList(btn.getAttribute('data-dept'));
       });
     });
-    elDeptChipsRow.querySelector('[data-clear="dept"]').addEventListener('click', ()=>{
-      activeDeptFilter = null; elBrowseSearch.value=""; renderDirectory();
-    });
+  }
+
+  /* ---- คลิกชิป = กรองแบบตรงหมวดหมู่ 100% (ไม่ผ่านตัวเดาความหมายภาษาธรรมชาติ) ---- */
+  function askBuildingList(building){
+    const list = records.filter(r=>r.building===building)
+      .sort((a,b)=> (a.floor+a.room).localeCompare(b.floor+b.room,'th') || a.name.localeCompare(b.name,'th'));
+    addMessage('user', escapeHtml('บุคลากรทั้งหมดในอาคาร ' + building));
+    const html = '<div class="ans-title">พบบุคลากรในอาคาร '+escapeHtml(building)+' จำนวน '+list.length+' ท่าน</div>' + personGridHtml(list);
+    addMessage('assistant', html);
+    speak('พบบุคลากรในอาคาร ' + building + ' ทั้งหมด ' + list.length + ' ท่าน');
+  }
+  function askDeptList(dept){
+    const list = records.filter(r=>r.dept===dept)
+      .sort((a,b)=> a.name.localeCompare(b.name,'th'));
+    addMessage('user', escapeHtml('บุคลากรทั้งหมดในสาขา/หน่วยงาน ' + dept));
+    const html = '<div class="ans-title">พบบุคลากรในสาขา/หน่วยงาน '+escapeHtml(dept)+' จำนวน '+list.length+' ท่าน</div>' + personGridHtml(list);
+    addMessage('assistant', html);
+    speak('พบบุคลากรในสาขา ' + dept + ' ทั้งหมด ' + list.length + ' ท่าน');
   }
 
   /* ================= DIRECTORY GRID (browse mode) ================= */
@@ -639,18 +653,30 @@
     elDirToggleBtn.textContent = hidden ? 'ซ่อนทำเนียบ' : 'แสดงทำเนียบ';
   });
 
-  /* ================= SEARCH ENGINE (rule-based, no AI) ================= */
+  /* ================= SEARCH ENGINE (rule-based, no AI) =================
+     ออกแบบใหม่แบบ "จัดลำดับหมวดหมู่ก่อน แล้วค่อยกรองแบบเจาะจง" (cascade)
+     แทนการให้คะแนนสะสมแบบเดิม เพื่อไม่ให้ผลลัพธ์ที่ไม่เกี่ยวข้องหลุดปนเข้ามา
+     เช่น ถามหา "คณบดี" ต้องไม่ปนกับ "รองคณบดี/ผู้ช่วยคณบดี" และถามหาแผนก
+     ต้องไม่ปนกับตำแหน่งของอาจารย์แผนกอื่นที่บังเอิญมีคำซ้อนกัน */
+
   const ACAD_KEYWORDS = ["ศาสตราจารย์","รองศาสตราจารย์","ผู้ช่วยศาสตราจารย์","อาจารย์","ดร."];
-  const POSITION_KEYWORDS = [
-    "คณบดี","รองคณบดี","ผู้ช่วยคณบดี","หัวหน้าสำนักงาน","หัวหน้าสำนักวิชา","หัวหน้ากลุ่มงาน","หัวหน้างาน",
+
+  // คำที่บ่งบอก "ฝ่ายงาน/หน้าที่เฉพาะ" ภายในสำนักงาน ใช้จับคู่กับคอลัมน์ตำแหน่งตรงๆ
+  const FUNCTION_KEYWORDS = [
+    "หัวหน้าสำนักงาน","หัวหน้าสำนักวิชา","หัวหน้ากลุ่มงาน","หัวหน้างาน","ประธานหลักสูตร",
     "เลขานุการ","นักวิทยาศาสตร์","นักวิชาการศึกษา","นักวิเคราะห์","นักวิชาการเงิน","วิศวกรโยธา",
-    "ประธานหลักสูตร","ธุรการ","พัสดุ","การเงิน","บุคคล","กิจการนิสิต","โสตทัศนูปกรณ์","คอมพิวเตอร์",
-    "ยานยนต์","สวน","ห้องสมุด","วิจัย","วิเทศสัมพันธ์","ประกันคุณภาพ","บัณฑิตศึกษา","ปริญญาตรี","อาจารย์"
+    "ธุรการ","พัสดุ","การเงิน","งานบุคคล","กิจการนิสิต","โสตทัศนูปกรณ์","คอมพิวเตอร์",
+    "ยานยนต์","งานสวน","ห้องสมุด","วิจัย","วิเทศสัมพันธ์","ประกันคุณภาพ","บัณฑิตศึกษา","ปริญญาตรี"
+  ];
+
+  // คำใบ้ฝ่ายงานย่อย ใช้เจาะจงเพิ่มเติมภายในกลุ่ม "รองคณบดี" / "ผู้ช่วยคณบดี" ที่มีหลายคน
+  const PORTFOLIO_HINTS = [
+    "วิชาการและพัฒนานิสิต","วิชาการ","วิจัย นวัตกรรมและวิเทศสัมพันธ์","วิจัย","นวัตกรรม","วิเทศ",
+    "บริหารและวางแผน","บริหาร","แผน","อำนวยการ","สารสนเทศ","ปฏิบัติการวิศวกรรม","กิจการนิสิต","พัฒนานิสิต"
   ];
 
   function detectBuilding(qStripped){
     const buildings = getBuildings();
-    // ตรงตัวเช่น EN1, en-2
     const m = qStripped.match(/EN0*([0-9]+)/i);
     if(m){
       const code = "EN" + m[1];
@@ -688,91 +714,174 @@
     }
     return best ? best.dept : null;
   }
-  function detectPositionKeywords(q){
-    return POSITION_KEYWORDS.filter(k=> q.indexOf(norm(k)) !== -1);
+
+  // ตรวจตำแหน่งบริหารแบบมีลำดับชั้น (คณบดี > รองคณบดี > ผู้ช่วยคณบดี)
+  // เพื่อไม่ให้คำว่า "คณบดี" เพียงคำเดียวไปจับปนกับ "รองคณบดี"/"ผู้ช่วยคณบดี"
+  function findHierarchyTier(rawNorm){
+    if(rawNorm.indexOf('ผู้ช่วยคณบดี') !== -1) return 'ผู้ช่วยคณบดี';
+    if(rawNorm.indexOf('รองคณบดี') !== -1) return 'รองคณบดี';
+    if(rawNorm.indexOf('คณบดี') !== -1) return 'คณบดี';
+    return null;
   }
-  function detectAcadKeywords(q){
-    return ACAD_KEYWORDS.filter(k=> q.indexOf(norm(k)) !== -1);
+  function positionMatchesTier(position, tier){
+    if(!position) return false;
+    if(tier === 'คณบดี'){
+      // คณบดีตัวจริงเท่านั้น ไม่เอารองคณบดี/ผู้ช่วยคณบดี
+      return position.indexOf('คณบดี') !== -1 && position.indexOf('รอง') === -1 && position.indexOf('ผู้ช่วย') === -1;
+    }
+    return position.indexOf(tier) !== -1;
   }
 
-  function scoreRecord(r, ctx){
-    let score = 0;
-    const nameStripped = stripSpaces(r.name).toLowerCase();
-    const emailNorm = norm(r.email);
-
-    // รหัสประจำตัว (T001 / S036 ฯลฯ) ตรงตัว
-    if(ctx.rawStripped && r.id && ctx.rawStripped.toUpperCase() === r.id.toUpperCase()){
-      score += 100;
-    }
-    // อีเมล
-    if(ctx.raw.indexOf('@') !== -1 && emailNorm && norm(ctx.raw).indexOf(emailNorm) !== -1){
-      score += 60;
-    }
-    // ชื่อ-นามสกุล (ตัดช่องว่างเทียบกัน)
-    if(ctx.rawStripped.length >= 2 && nameStripped.indexOf(ctx.rawStripped.toLowerCase()) !== -1){
-      score += ctx.rawStripped.length >= 4 ? 65 : 40;
-    } else {
-      // เทียบทีละ token ที่ยาวพอ
-      for(const tok of ctx.tokensStripped){
-        if(tok.length >= 2 && nameStripped.indexOf(tok.toLowerCase()) !== -1){ score += 30; break; }
+  /* ---------- Fuzzy match (Levenshtein) รองรับเสียงพูดเพี้ยน/สะกดผิด ---------- */
+  function levenshtein(a, b){
+    a = a || ""; b = b || "";
+    const m = a.length, n = b.length;
+    if(m === 0) return n;
+    if(n === 0) return m;
+    let prev = new Array(n+1);
+    let curr = new Array(n+1);
+    for(let j=0;j<=n;j++) prev[j] = j;
+    for(let i=1;i<=m;i++){
+      curr[0] = i;
+      for(let j=1;j<=n;j++){
+        const cost = a[i-1] === b[j-1] ? 0 : 1;
+        curr[j] = Math.min(curr[j-1]+1, prev[j]+1, prev[j-1]+cost);
       }
+      const tmp = prev; prev = curr; curr = tmp;
     }
-    // ห้อง
-    if(r.room){
-      const roomNorm = stripSpaces(r.room).toUpperCase();
-      for(const t of ctx.roomTokens){
-        if(roomNorm.indexOf(t.toUpperCase()) !== -1){ score += 45; break; }
-      }
-    }
-    // อาคาร
-    if(ctx.building && r.building && r.building.toUpperCase() === ctx.building.toUpperCase()){
-      score += 25;
-    }
-    // ชั้น (ให้คะแนนก็ต่อเมื่อมีการระบุอาคารด้วย หรือระบุชั้นเดี่ยวๆ)
-    if(ctx.floor && r.floor && String(r.floor) === String(ctx.floor)){
-      score += ctx.building ? 15 : 8;
-    }
-    // สาขา/หน่วยงาน
-    if(ctx.dept && r.dept === ctx.dept){
-      score += 30;
-    }
-    // ตำแหน่งงาน (keyword)
-    for(const kw of ctx.positionKeywords){
-      if(r.position && r.position.indexOf(kw) !== -1){ score += 32; break; }
-    }
-    // ตำแหน่งทางวิชาการ
-    for(const kw of ctx.acadKeywords){
-      if(r.acadTitle && r.acadTitle.indexOf(kw) !== -1){ score += 18; break; }
-    }
-    // fallback: substring ทั่วไป
-    const combined = norm([r.name,r.position,r.dept,r.note].join(" "));
-    if(ctx.rawNorm.length >= 2 && combined.indexOf(ctx.rawNorm) !== -1){ score += 6; }
+    return prev[n];
+  }
+  function similarity(a, b){
+    if(!a || !b) return 0;
+    const dist = levenshtein(a, b);
+    const maxLen = Math.max(a.length, b.length) || 1;
+    return 1 - dist / maxLen;
+  }
+  const FUZZY_THRESHOLD = 0.72;
 
-    return score;
+  function findByNameExact(rawStripped){
+    const q = rawStripped.toLowerCase();
+    return records.filter(r => stripSpaces(r.name).toLowerCase().indexOf(q) !== -1);
+  }
+  function findByNameToken(tokensStripped){
+    return records.filter(r=>{
+      const nameTokens = r.name.trim().split(/\s+/).map(stripSpaces);
+      return tokensStripped.some(qt => qt.length>=2 && nameTokens.some(nt => nt.length>=2 && (nt.toLowerCase().indexOf(qt.toLowerCase())!==-1 || qt.toLowerCase().indexOf(nt.toLowerCase())!==-1)));
+    });
+  }
+  function findByNameFuzzy(tokensStripped){
+    const candidates = [];
+    records.forEach(r=>{
+      const nameTokens = [stripSpaces(r.name)].concat(r.name.trim().split(/\s+/).map(stripSpaces));
+      let best = 0;
+      tokensStripped.forEach(qt=>{
+        if(qt.length < 2) return;
+        nameTokens.forEach(nt=>{
+          if(nt.length < 2) return;
+          const sim = similarity(qt.toLowerCase(), nt.toLowerCase());
+          if(sim > best) best = sim;
+        });
+      });
+      if(best >= FUZZY_THRESHOLD) candidates.push({ r, sim: best });
+    });
+    candidates.sort((a,b)=> b.sim - a.sim);
+    return candidates.map(c=>c.r);
   }
 
-  function buildContext(raw){
+  /* ---------- ตัวจำแนกหมวดหมู่คำถาม (cascade) ---------- */
+  function classify(raw){
     const rawNorm = norm(raw);
     const rawStripped = stripSpaces(raw);
-    const tokens = raw.trim().split(/\s+/).filter(Boolean);
-    const tokensStripped = tokens.map(stripSpaces);
-    return {
-      raw, rawNorm, rawStripped, tokens, tokensStripped,
-      building: detectBuilding(rawStripped),
-      floor: detectFloor(raw),
-      roomTokens: detectRoomTokens(rawStripped),
-      dept: detectDept(rawNorm),
-      positionKeywords: detectPositionKeywords(rawNorm),
-      acadKeywords: detectAcadKeywords(rawNorm)
-    };
-  }
+    const tokensStripped = raw.trim().split(/\s+/).map(stripSpaces).filter(Boolean);
 
-  function search(raw){
-    const ctx = buildContext(raw);
-    const scored = records.map(r=>({r, score:scoreRecord(r, ctx)}))
-      .filter(x=>x.score > 0)
-      .sort((a,b)=> b.score - a.score || a.r.name.localeCompare(b.r.name,'th'));
-    return { ctx, results: scored.map(x=>x.r), topScore: scored.length ? scored[0].score : 0 };
+    // 1) รหัสประจำตัว (T001 / S036 ฯลฯ)
+    const idMatch = records.find(r => r.id && rawStripped.length>=3 && rawStripped.toUpperCase() === r.id.toUpperCase());
+    if(idMatch) return { mode:'id', results:[idMatch] };
+
+    // 2) อีเมล
+    if(rawNorm.indexOf('@') !== -1){
+      const list = records.filter(r => r.email && rawNorm.indexOf(norm(r.email)) !== -1);
+      if(list.length) return { mode:'email', results:list };
+    }
+
+    // 3) ชื่อ-นามสกุล (ตรงตัวก่อน แล้วค่อย token แล้วค่อย fuzzy)
+    if(rawStripped.length >= 2){
+      let list = findByNameExact(rawStripped);
+      if(list.length) return { mode:'name', results:list };
+      list = findByNameToken(tokensStripped);
+      if(list.length) return { mode:'name', results:list };
+      list = findByNameFuzzy(tokensStripped);
+      if(list.length) return { mode:'name-fuzzy', results:list };
+    }
+
+    // 4) ตำแหน่งบริหารแบบมีลำดับชั้น (คณบดี / รองคณบดี / ผู้ช่วยคณบดี)
+    const tier = findHierarchyTier(rawNorm);
+    if(tier){
+      let list = records.filter(r => positionMatchesTier(r.position, tier));
+      if(list.length){
+        const hint = PORTFOLIO_HINTS.find(h => rawNorm.indexOf(norm(h)) !== -1 && list.some(r=> r.position && r.position.indexOf(h)!==-1));
+        if(hint){
+          const narrowed = list.filter(r => r.position && r.position.indexOf(hint) !== -1);
+          if(narrowed.length) list = narrowed;
+        }
+        return { mode:'position', results:list, tier };
+      }
+    }
+
+    // 5) ห้องพัก (ตัวเลข 2-4 หลัก + ตัวอักษรทางเลือก) — ต้องเจาะจงพอ ไม่ปนกับปีหรือคำอื่น
+    const roomTokens = detectRoomTokens(rawStripped);
+    if(roomTokens.length){
+      let list = records.filter(r => r.room && roomTokens.some(t => stripSpaces(r.room).toUpperCase().indexOf(t.toUpperCase()) !== -1));
+      const building0 = detectBuilding(rawStripped);
+      if(building0) list = list.filter(r => r.building && r.building.toUpperCase() === building0.toUpperCase());
+      if(list.length) return { mode:'room', results:list };
+    }
+
+    // 6) สาขา/หน่วยงาน — กรองเฉพาะ dept ตรงตัวเท่านั้น (hard filter)
+    const dept = detectDept(rawNorm);
+    if(dept){
+      let list = records.filter(r => r.dept === dept);
+      const building1 = detectBuilding(rawStripped);
+      if(building1) list = list.filter(r => r.building && r.building.toUpperCase() === building1.toUpperCase());
+      if(list.length) return { mode:'dept', results:list, dept };
+    }
+
+    // 7) ฝ่ายงาน/หน้าที่เฉพาะ (พัสดุ, การเงิน, ธุรการ ฯลฯ) จับคู่กับคอลัมน์ตำแหน่งตรงๆ
+    const funcKw = FUNCTION_KEYWORDS.find(k => rawNorm.indexOf(norm(k)) !== -1);
+    if(funcKw){
+      const list = records.filter(r => r.position && r.position.indexOf(funcKw) !== -1);
+      if(list.length) return { mode:'function', results:list, keyword:funcKw };
+    }
+
+    // 8) อาคาร (+ ชั้น ถ้ามี)
+    const building2 = detectBuilding(rawStripped);
+    if(building2){
+      let list = records.filter(r => r.building && r.building.toUpperCase() === building2.toUpperCase());
+      const floor = detectFloor(raw);
+      if(floor){
+        const narrowed = list.filter(r => String(r.floor) === String(floor));
+        if(narrowed.length) list = narrowed;
+      }
+      if(list.length) return { mode:'building', results:list, building:building2, floor:detectFloor(raw) };
+    }
+
+    // 9) ตำแหน่งทางวิชาการ (ศาสตราจารย์ / รองศาสตราจารย์ ฯลฯ)
+    const acad = ACAD_KEYWORDS.find(k => rawNorm.indexOf(norm(k)) !== -1);
+    if(acad){
+      const list = records.filter(r => r.acadTitle && r.acadTitle.indexOf(acad) !== -1);
+      if(list.length) return { mode:'acad', results:list, keyword:acad };
+    }
+
+    // 10) fallback: ค้นหาทั่วไปแบบให้คะแนนเบาๆ (กันไม่ให้ตอบ "ไม่พบ" ง่ายเกินไป)
+    if(rawNorm.length >= 2){
+      const scored = records
+        .map(r => ({ r, hit: norm([r.name,r.position,r.dept,r.acadTitle,r.note].join(' ')).indexOf(rawNorm) !== -1 }))
+        .filter(x => x.hit)
+        .map(x => x.r);
+      if(scored.length) return { mode:'fallback', results:scored };
+    }
+
+    return { mode:'none', results:[] };
   }
 
   function isGreeting(q){
@@ -801,7 +910,7 @@
       return { html, speak: "คณะวิศวกรรมศาสตร์มีบุคลากรทั้งหมด " + records.length + " ท่าน กรุณาเลื่อนไปดูที่ทำเนียบบุคลากรด้านล่าง หรือระบุอาคารและสาขาวิชาเพื่อจำกัดผลการค้นหาครับ" };
     }
 
-    const { ctx, results, topScore } = search(q);
+    const { mode, results, dept, tier, keyword, building, floor } = classify(q);
 
     if(!results.length){
       const html = '<div class="ans-title">ไม่พบข้อมูลที่ตรงกับคำค้นหา</div>' +
@@ -811,7 +920,8 @@
 
     if(results.length === 1){
       const r = results[0];
-      const html = '<div class="ans-title">พบข้อมูล 1 ท่าน</div>' + personCardHtml(r);
+      const badge = mode === 'name-fuzzy' ? '<div class="ans-note">ผลลัพธ์นี้ใกล้เคียงที่สุดกับคำที่พูด/พิมพ์มา ลองตรวจสอบชื่ออีกครั้งหากไม่ตรงกับที่ต้องการ</div>' : '';
+      const html = '<div class="ans-title">พบข้อมูล 1 ท่าน</div>' + personCardHtml(r) + badge;
       const speak = fullName(r) + " ตำแหน่ง " + (r.position||"-") + " สังกัด " + (r.dept||"-") +
         " ประจำอยู่ที่ " + locationText(r).replace(/·/g,",");
       return { html, speak };
@@ -821,13 +931,16 @@
     const cap = 24;
     const shown = results.slice(0, cap);
     let headTitle = "พบบุคลากร " + results.length + " ท่าน";
-    if(ctx.building) headTitle += " ในอาคาร " + ctx.building;
-    if(ctx.dept) headTitle += " สาขา " + deptKeyword(ctx.dept);
+    if(mode === 'dept') headTitle += " ในสาขา/หน่วยงาน " + dept;
+    else if(mode === 'building') headTitle += " ในอาคาร " + building + (floor ? (" ชั้น "+floor) : "");
+    else if(mode === 'position') headTitle += " ตำแหน่ง " + tier;
+    else if(mode === 'function') headTitle += " (" + keyword + ")";
+    else if(mode === 'acad') headTitle += " (" + keyword + ")";
     const html = '<div class="ans-title">'+escapeHtml(headTitle)+'</div>' +
       personGridHtml(shown) +
       (results.length > cap ? '<div class="more-note">แสดง '+cap+' จากทั้งหมด '+results.length+' ท่าน ลองระบุชื่อให้เจาะจงขึ้นเพื่อผลลัพธ์ที่แคบลงครับ</div>' : '');
     const speakNames = shown.slice(0,5).map(r=>r.name).join(", ");
-    const speak = "พบบุคลากรทั้งหมด " + results.length + " ท่าน" + (ctx.building? " ในอาคาร "+ctx.building : "") + (ctx.dept? " สาขา "+deptKeyword(ctx.dept):"") + " เช่น " + speakNames;
+    const speak = "พบบุคลากรทั้งหมด " + results.length + " ท่าน เช่น " + speakNames;
     return { html, speak };
   }
 
@@ -1100,7 +1213,7 @@
       syncFromSheet();
       return;
     }
-    setSyncState('loading', 'กำลังซิงก์ข้อมูลพร้อมรูปภาพ… (ครั้งแรกอาจใช้เวลาถึง 30-50 วินาที)');
+    setSyncState('loading', 'กำลังซิงก์ข้อมูลพร้อมรูปภาพ…');
     syncBtn.disabled = true;
     syncNote.textContent = "";
 
@@ -1141,7 +1254,7 @@
     script.onerror = function(){ fail('โหลดสคริปต์ไม่สำเร็จ (ตรวจสอบว่า Deploy เป็น "Anyone" แล้ว)'); };
     document.body.appendChild(script);
     // ให้เวลานานกว่าปกติ เพราะต้องดึงรูปภาพหลายสิบ-หลายร้อยรูปในการเรียกครั้งเดียว
-    gasTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับ (ข้อมูลรูปภาพเยอะอาจใช้เวลานานถึง 1 นาทีในการซิงก์ครั้งแรก)'); }, 55000);
+    gasTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับจาก Apps Script'); }, 25000);
   }
 
   syncBtn.addEventListener('click', syncFromAppsScript);
