@@ -2,813 +2,1156 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-<title>ระบบผู้ช่วยค้นหาบุคลากร | คณะวิศวกรรมศาสตร์ มมส.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ผู้ช่วยค้นหาบุคลากร | คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</title>
+<meta name="description" content="ระบบผู้ช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม ค้นหาด้วยเสียงหรือพิมพ์ก็ได้">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --y1:#FFC72C; --y2:#FFD95A; --y3:#FFF3CD; --y4:#FFFBEF;
-  --g1:#2E3238; --g2:#4A515A; --g3:#8A929C; --g4:#D9DEE4; --g5:#F1F3F6;
-  --white:#fff; --ok:#1F9D55; --info:#2B7FD4; --warn:#E2762B; --danger:#D1434B;
-  --sh:0 1px 2px rgba(16,24,40,.06),0 4px 12px rgba(16,24,40,.06);
-  --sh2:0 8px 28px rgba(16,24,40,.14);
-  --r:14px;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:'Sarabun',system-ui,sans-serif;background:var(--white);color:var(--g1);font-size:15px;line-height:1.6}
-button,input,select,textarea{font-family:inherit}
-::-webkit-scrollbar{width:9px;height:9px}
-::-webkit-scrollbar-thumb{background:var(--g4);border-radius:9px}
-::-webkit-scrollbar-thumb:hover{background:var(--g3)}
+  :root{
+    /* ---- โทนสีหลัก: ขาว-เหลือง-เทา ไล่โทนอ่อน สไตล์ ERP มืออาชีพ ---- */
+    --bg:#FFFFFF;
+    --bg-gradient: linear-gradient(160deg, #FFFCF2 0%, #FBF7EA 22%, #F4F2EA 55%, #EFEFEC 100%);
+    --surface:#FFFFFF;
+    --surface-alt:#FFFCF3;
+    --border:#EDE7D6;
+    --border-strong:#DED2A9;
+    --text:#2B2A25;
+    --text-soft:#6E6A5C;
+    --text-faint:#A79F89;
 
-/* ===== TOP BAR ===== */
-.topbar{position:sticky;top:0;z-index:60;background:var(--white);border-bottom:1px solid var(--g4);box-shadow:var(--sh)}
-.topbar-in{max-width:1360px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:14px}
-.brand{display:flex;align-items:center;gap:12px;min-width:0}
-.logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--y1),var(--y2));display:grid;place-items:center;font-weight:800;color:var(--g1);font-size:17px;box-shadow:0 3px 10px rgba(255,199,44,.45);flex:none}
-.brand h1{font-size:16px;font-weight:700;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brand p{font-size:11.5px;color:var(--g3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.spacer{flex:1}
-.tbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--g4);background:var(--white);color:var(--g2);
-  padding:8px 13px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:.18s;white-space:nowrap}
-.tbtn:hover{border-color:var(--y1);background:var(--y4);color:var(--g1)}
-.tbtn.on{background:linear-gradient(135deg,var(--y1),var(--y2));border-color:var(--y1);color:var(--g1)}
-.tbtn.off{background:var(--g5);color:var(--g3)}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--g4)}
-.dot.live{background:var(--ok);box-shadow:0 0 0 3px rgba(31,157,85,.16);animation:pulse 2s infinite}
-@keyframes pulse{50%{opacity:.45}}
+    --gold-50:#FFFBEF;
+    --gold-100:#FBF1D2;
+    --gold-300:#EAD07C;
+    --gold-500:#C99A2E;
+    --gold-600:#AD8021;
+    --gold-700:#8C6519;
 
-/* ===== TABS ===== */
-.tabs{max-width:1360px;margin:0 auto;padding:0 18px;display:flex;gap:4px;border-bottom:1px solid var(--g4)}
-.tab{padding:11px 18px;font-size:14px;font-weight:600;color:var(--g3);border:0;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:.18s}
-.tab:hover{color:var(--g1)}
-.tab.active{color:var(--g1);border-bottom-color:var(--y1)}
+    --gray-100:#F2F1ED;
+    --gray-200:#E4E2DA;
+    --gray-400:#B9B5A6;
+    --gray-600:#7A7666;
+    --gray-800:#4A473C;
 
-/* ===== LAYOUT ===== */
-.wrap{max-width:1360px;margin:0 auto;padding:18px}
-.page{display:none} .page.show{display:block;animation:fade .25s}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+    --accent:var(--gold-600);
+    --accent-soft:var(--gold-100);
+    --accent-strong:var(--gold-700);
+    --accent-grad: linear-gradient(135deg, var(--gold-500), var(--gray-600));
 
-/* ===== HERO SEARCH ===== */
-.hero{background:linear-gradient(135deg,var(--y4) 0%,var(--white) 45%,var(--g5) 100%);
-  border:1px solid var(--g4);border-radius:18px;padding:22px;margin-bottom:18px;position:relative;overflow:hidden}
-.hero::after{content:"";position:absolute;right:-70px;top:-70px;width:230px;height:230px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,199,44,.38),transparent 70%)}
-.hero h2{font-size:20px;font-weight:800;margin-bottom:4px}
-.hero p{font-size:13px;color:var(--g2);margin-bottom:14px}
-.searchbar{display:flex;gap:9px;align-items:center;background:var(--white);border:2px solid var(--g4);
-  border-radius:14px;padding:7px 8px 7px 15px;box-shadow:var(--sh);position:relative;z-index:2;transition:.2s}
-.searchbar:focus-within{border-color:var(--y1);box-shadow:0 0 0 4px rgba(255,199,44,.2)}
-.searchbar input{flex:1;border:0;outline:0;font-size:15px;background:none;min-width:0}
-.icobtn{width:42px;height:42px;border-radius:11px;border:0;cursor:pointer;display:grid;place-items:center;transition:.18s;flex:none}
-.mic{background:linear-gradient(135deg,var(--y1),var(--y2));color:var(--g1)}
-.mic:hover{filter:brightness(1.05)}
-.mic.rec{background:linear-gradient(135deg,#FF5A5F,#FF8A8E);color:#fff;animation:rec 1.1s infinite}
-@keyframes rec{0%,100%{box-shadow:0 0 0 0 rgba(255,90,95,.55)}50%{box-shadow:0 0 0 12px rgba(255,90,95,0)}}
-.go{background:var(--g1);color:#fff}
-.go:hover{background:var(--g2)}
-.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;position:relative;z-index:2}
-.chip{padding:6px 13px;border-radius:999px;border:1px solid var(--g4);background:var(--white);
-  font-size:12.5px;font-weight:600;color:var(--g2);cursor:pointer;transition:.18s}
-.chip:hover{border-color:var(--y1);background:var(--y4)}
-.chip.active{background:linear-gradient(135deg,var(--y1),var(--y2));border-color:var(--y1);color:var(--g1)}
+    --success:#3F7D5C;
+    --success-soft:#E7F1EA;
+    --warn:#B4841F;
+    --warn-soft:#FBF1DE;
+    --danger:#B5504A;
+    --danger-soft:#FBEAE8;
 
-/* ===== STATS ===== */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
-.stat{background:var(--white);border:1px solid var(--g4);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);position:relative;overflow:hidden}
-.stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(var(--y1),var(--y2))}
-.stat .k{font-size:11.5px;color:var(--g3);font-weight:600;letter-spacing:.3px}
-.stat .v{font-size:26px;font-weight:800;line-height:1.2}
-.stat.c2::before{background:linear-gradient(var(--info),#7EB6F0)}
-.stat.c3::before{background:linear-gradient(var(--ok),#7ED2A3)}
-.stat.c4::before{background:linear-gradient(var(--warn),#F5B183)}
+    --radius:14px;
+    --radius-sm:9px;
+    --shadow:0 1px 2px rgba(43,42,37,0.05), 0 8px 24px rgba(43,42,37,0.06);
+    --shadow-sm:0 1px 2px rgba(43,42,37,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
+    background:var(--bg-gradient);
+    background-attachment:fixed;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+    min-height:100vh;
+  }
+  .mono{font-family:'IBM Plex Mono', ui-monospace, monospace;}
+  a{color:var(--accent-strong);}
 
-/* ===== CARDS ===== */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-.card{background:var(--white);border:1px solid var(--g4);border-radius:var(--r);overflow:hidden;
-  box-shadow:var(--sh);cursor:pointer;transition:.2s;display:flex;flex-direction:column}
-.card:hover{transform:translateY(-4px);box-shadow:var(--sh2);border-color:var(--y1)}
-.card-top{background:linear-gradient(135deg,var(--y3),var(--g5));padding:18px 16px 0;display:flex;justify-content:center}
-.ava{width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid var(--white);
-  box-shadow:0 4px 14px rgba(16,24,40,.16);background:var(--g5);margin-bottom:-26px}
-.ava.ph{display:grid;place-items:center;font-size:30px;font-weight:800;color:var(--g2);
-  background:linear-gradient(135deg,var(--y1),var(--y2))}
-.card-body{padding:34px 16px 14px;text-align:center;flex:1;display:flex;flex-direction:column;gap:5px}
-.c-name{font-size:15.5px;font-weight:700;line-height:1.35}
-.c-pos{font-size:12.5px;color:var(--info);font-weight:600}
-.c-dep{font-size:12px;color:var(--g3)}
-.c-meta{margin-top:8px;display:flex;flex-direction:column;gap:5px;text-align:left;border-top:1px dashed var(--g4);padding-top:9px}
-.mrow{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--g2)}
-.mrow b{color:var(--g1);font-weight:600}
-.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;
-  background:var(--y3);color:#8A6300;font-size:12px;font-weight:700;align-self:center;margin-top:2px}
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:22px 18px 40px;
+  }
 
-/* ===== ASSISTANT ===== */
-.chatwrap{display:grid;grid-template-columns:1fr 320px;gap:16px}
-@media(max-width:980px){.chatwrap{grid-template-columns:1fr}}
-.chatbox{background:var(--white);border:1px solid var(--g4);border-radius:18px;box-shadow:var(--sh);display:flex;flex-direction:column;height:calc(100vh - 250px);min-height:460px}
-.chat-head{padding:13px 16px;border-bottom:1px solid var(--g4);display:flex;align-items:center;gap:10px;
-  background:linear-gradient(135deg,var(--y4),var(--white));border-radius:18px 18px 0 0}
-.chat-head .ai{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--y1),var(--y2));display:grid;place-items:center;font-size:18px}
-.chat-log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:
-  linear-gradient(var(--white),var(--white)) padding-box}
-.msg{max-width:82%;padding:11px 15px;border-radius:16px;font-size:14.2px;box-shadow:var(--sh);white-space:pre-wrap;word-break:break-word}
-.msg.u{align-self:flex-end;background:linear-gradient(135deg,var(--y1),var(--y2));color:var(--g1);border-bottom-right-radius:5px;font-weight:500}
-.msg.a{align-self:flex-start;background:var(--g5);border:1px solid var(--g4);border-bottom-left-radius:5px}
-.msg.a .hl{color:#8A6300;font-weight:700}
-.reslist{display:flex;flex-direction:column;gap:8px;margin-top:9px}
-.rescard{display:flex;gap:10px;align-items:center;background:var(--white);border:1px solid var(--g4);
-  border-radius:11px;padding:9px;cursor:pointer;transition:.16s}
-.rescard:hover{border-color:var(--y1);background:var(--y4)}
-.rescard img,.rescard .ph2{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:none;
-  background:linear-gradient(135deg,var(--y1),var(--y2));display:grid;place-items:center;font-weight:800;font-size:15px}
-.rescard .t1{font-size:13.5px;font-weight:700}
-.rescard .t2{font-size:11.8px;color:var(--g3)}
-.typing{display:flex;gap:4px;padding:14px 16px}
-.typing i{width:7px;height:7px;border-radius:50%;background:var(--g3);animation:tp 1.2s infinite}
-.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
-@keyframes tp{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
-.chat-in{padding:12px;border-top:1px solid var(--g4);display:flex;gap:8px;align-items:center}
-.chat-in input{flex:1;border:2px solid var(--g4);border-radius:12px;padding:11px 14px;outline:0;font-size:14.5px;transition:.2s;min-width:0}
-.chat-in input:focus{border-color:var(--y1);box-shadow:0 0 0 4px rgba(255,199,44,.18)}
-.side{display:flex;flex-direction:column;gap:12px}
-.panel{background:var(--white);border:1px solid var(--g4);border-radius:var(--r);padding:14px;box-shadow:var(--sh)}
-.panel h3{font-size:13px;font-weight:700;color:var(--g2);margin-bottom:10px;display:flex;align-items:center;gap:7px}
-.sug{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:10px;border:1px solid var(--g4);
-  background:var(--white);font-size:13px;color:var(--g2);cursor:pointer;margin-bottom:7px;transition:.16s}
-.sug:hover{border-color:var(--y1);background:var(--y4);color:var(--g1)}
-.switch{display:flex;align-items:center;justify-content:space-between;padding:9px 0;font-size:13.5px;font-weight:600;color:var(--g2)}
-.tg{width:46px;height:26px;border-radius:999px;background:var(--g4);position:relative;cursor:pointer;transition:.22s;border:0;flex:none}
-.tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.22s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
-.tg.on{background:linear-gradient(135deg,var(--y1),var(--y2))}
-.tg.on::after{left:23px}
-.rng{width:100%;accent-color:var(--y1)}
+  /* ================= HEADER ================= */
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px 22px;
+    box-shadow:var(--shadow);
+    margin-bottom:16px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.top::before{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(120deg, var(--gold-50) 0%, transparent 55%);
+    pointer-events:none;
+  }
+  .brand{
+    display:flex; align-items:center; gap:14px;
+    position:relative; z-index:1;
+  }
+  .brand-emblem{
+    width:52px;height:52px;flex-shrink:0;
+    border-radius:50%;
+    background:var(--accent-grad);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 10px rgba(173,128,33,0.35);
+  }
+  .brand-emblem svg{ width:30px;height:30px; }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.13em;
+    text-transform:uppercase;
+    color:var(--accent-strong);
+    font-weight:600;
+    margin-bottom:3px;
+  }
+  h1{
+    font-size:19px;
+    font-weight:700;
+    margin:0 0 3px;
+    letter-spacing:-0.01em;
+    color:var(--text);
+  }
+  .subtitle{
+    font-size:12.5px;
+    color:var(--text-soft);
+    margin:0;
+  }
+  .sync-box{ text-align:right; position:relative; z-index:1; }
+  .sync-status-inline{
+    font-size:11.5px;
+    color:var(--text-soft);
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .sync-dot{ width:7px;height:7px; border-radius:50%; background:var(--text-faint); flex-shrink:0; }
+  .sync-dot.live{background:var(--success);}
+  .sync-dot.err{background:var(--danger);}
+  .sync-dot.loading{background:var(--warn); animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .sync-btn{
+    font-family:inherit; font-size:11.5px; font-weight:500;
+    padding:6px 12px; border-radius:8px; margin-top:6px;
+    border:1px solid var(--border-strong); background:var(--surface); color:var(--text);
+    cursor:pointer;
+  }
+  .sync-btn:hover{background:var(--accent-soft); border-color:var(--accent);}
+  .sync-btn:disabled{opacity:.55; cursor:default;}
+  .sync-note{ font-size:11px; color:var(--danger); margin-top:4px; max-width:280px; text-align:right; margin-left:auto; }
 
-/* ===== MODAL ===== */
-.mask{position:fixed;inset:0;background:rgba(24,28,33,.55);backdrop-filter:blur(4px);z-index:100;display:none;
-  align-items:center;justify-content:center;padding:16px}
-.mask.show{display:flex;animation:fade .2s}
-.modal{background:var(--white);border-radius:20px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--sh2)}
-.m-head{background:linear-gradient(135deg,var(--y1),var(--y3));padding:24px;display:flex;gap:18px;align-items:center;
-  border-radius:20px 20px 0 0;position:relative;flex-wrap:wrap}
-.m-head img,.m-head .ph3{width:104px;height:104px;border-radius:20px;object-fit:cover;border:4px solid #fff;
-  box-shadow:var(--sh2);background:var(--g5);display:grid;place-items:center;font-size:34px;font-weight:800;flex:none}
-.m-head h2{font-size:20px;font-weight:800}
-.m-head p{font-size:13.5px;color:var(--g2);font-weight:600}
-.mclose{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.85);cursor:pointer;font-size:17px;font-weight:700}
-.m-body{padding:20px}
-.frow{display:flex;gap:12px;padding:11px 0;border-bottom:1px dashed var(--g4);font-size:14px;align-items:flex-start}
-.frow:last-child{border:0}
-.frow .fk{width:150px;flex:none;color:var(--g3);font-weight:600;font-size:13px}
-.frow .fv{flex:1;font-weight:500;word-break:break-word}
-.acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
-.act{flex:1;min-width:130px;padding:11px;border-radius:11px;border:1px solid var(--g4);background:var(--white);
-  font-weight:700;font-size:13.5px;cursor:pointer;text-align:center;text-decoration:none;color:var(--g1);transition:.18s}
-.act:hover{border-color:var(--y1);background:var(--y4)}
-.act.p{background:linear-gradient(135deg,var(--y1),var(--y2));border-color:var(--y1)}
+  /* ================= STAT TILES ================= */
+  .stat-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .stat-tile{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    box-shadow:var(--shadow-sm);
+  }
+  .stat-tile .num{ font-size:20px; font-weight:700; color:var(--accent-strong); font-family:'IBM Plex Mono',monospace; }
+  .stat-tile .lbl{ font-size:11px; color:var(--text-soft); margin-top:2px; }
 
-/* ===== MISC ===== */
-.empty{text-align:center;padding:60px 20px;color:var(--g3)}
-.empty .em{font-size:52px;margin-bottom:10px;opacity:.55}
-.note{background:var(--y4);border:1px solid var(--y1);border-radius:12px;padding:13px 15px;font-size:13.5px;color:#7A5800;margin-bottom:14px}
-.err{background:#FDECEC;border:1px solid #F3B5B8;color:#9B2C31}
-.loading{display:grid;place-items:center;padding:70px;gap:14px}
-.spin{width:44px;height:44px;border:4px solid var(--g4);border-top-color:var(--y1);border-radius:50%;animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-.foot{text-align:center;padding:26px;color:var(--g3);font-size:12.5px;border-top:1px solid var(--g4);margin-top:26px}
-.fabmic{position:fixed;right:18px;bottom:18px;width:60px;height:60px;border-radius:50%;border:0;z-index:70;
-  background:linear-gradient(135deg,var(--y1),var(--y2));box-shadow:0 8px 24px rgba(255,199,44,.5);cursor:pointer;font-size:25px;display:none}
-.fabmic.rec{background:linear-gradient(135deg,#FF5A5F,#FF8A8E);animation:rec 1.1s infinite}
-@media(max-width:900px){.fabmic{display:block}.brand p{display:none}.hero{padding:16px}}
-@media(max-width:560px){
-  .tabs{overflow-x:auto}.tab{padding:11px 13px;font-size:13px}
-  .msg{max-width:92%}.frow{flex-direction:column;gap:2px}.frow .fk{width:auto}
-  .chatbox{height:calc(100vh - 230px)}
-}
-.vhint{font-size:12px;color:var(--g3);margin-top:8px;text-align:center;min-height:18px}
+  /* ================= QUICK FILTER CHIPS ================= */
+  .filter-panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    box-shadow:var(--shadow-sm);
+    margin-bottom:16px;
+  }
+  .filter-panel-title{
+    font-size:12px; font-weight:600; color:var(--text-soft);
+    margin-bottom:9px; display:flex; align-items:center; gap:6px;
+  }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{
+    font-family:inherit; font-size:12.5px; font-weight:500;
+    color:var(--gray-800);
+    background:var(--gray-100);
+    border:1px solid transparent;
+    padding:7px 13px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:all .12s ease;
+  }
+  .chip:hover{ background:var(--accent-soft); color:var(--accent-strong); }
+  .chip.active{ background:var(--accent-grad); color:#fff; box-shadow:0 2px 6px rgba(173,128,33,.3);}
+  .chip.clear-chip{ background:transparent; border:1px solid var(--border-strong); color:var(--text-soft); }
+  .chip-sep{ width:1px; background:var(--border); margin:2px 4px; }
+  select.dept-select{
+    font-family:inherit; font-size:12.5px;
+    padding:7px 10px; border-radius:9px;
+    border:1px solid var(--border-strong); background:#fff; color:var(--text);
+    max-width:230px;
+  }
+
+  /* ================= CHAT CARD ================= */
+  .chat-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    display:flex; flex-direction:column;
+    height:60vh; min-height:420px;
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .chat-head{
+    padding:12px 16px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(90deg, var(--gold-50), transparent);
+  }
+  .chat-head-title{ font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:7px; }
+  .chat-head-badge{
+    font-size:10.5px; font-family:'IBM Plex Mono',monospace; color:var(--gray-600);
+    background:var(--gray-100); padding:3px 8px; border-radius:6px;
+  }
+  .chat-scroll{
+    flex:1; overflow-y:auto; padding:16px;
+    display:flex; flex-direction:column; gap:12px;
+    scroll-behavior:smooth;
+  }
+  .msg{ max-width:92%; display:flex; flex-direction:column; gap:4px; }
+  .msg.user{ align-self:flex-end; align-items:flex-end; }
+  .msg.assistant{ align-self:flex-start; align-items:flex-start; }
+  .bubble{
+    padding:11px 14px; border-radius:14px; font-size:13.5px; line-height:1.6;
+  }
+  .msg.user .bubble{
+    background:var(--accent-grad); color:#fff; border-bottom-right-radius:4px;
+  }
+  .msg.assistant .bubble{
+    background:var(--surface-alt); color:var(--text); border:1px solid var(--border);
+    border-bottom-left-radius:4px;
+  }
+  .msg-time{ font-size:10px; color:var(--text-faint); padding:0 4px; }
+
+  .ans-title{ font-size:13.5px; font-weight:700; margin-bottom:6px; color:var(--accent-strong); }
+  .ans-note{ font-size:12px; color:var(--text-soft); margin-top:6px; }
+
+  /* person card (used in chat + directory grid) */
+  .person-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin-top:8px; }
+  .person-card{
+    background:#fff; border:1px solid var(--border); border-radius:12px;
+    padding:12px; display:flex; gap:11px; align-items:flex-start;
+    box-shadow:var(--shadow-sm);
+  }
+  .person-card.detailed{ flex-direction:column; }
+  .avatar{
+    width:46px;height:46px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff; font-weight:700; font-size:16px;
+    background-size:cover; background-position:center;
+    border:2px solid var(--gold-100);
+  }
+  .avatar-lg{ width:64px;height:64px; font-size:22px; }
+  .person-main{ flex:1; min-width:0; }
+  .person-name{ font-size:13.5px; font-weight:700; color:var(--text); line-height:1.35; }
+  .person-acad{ font-size:11px; color:var(--text-faint); }
+  .person-position{
+    display:inline-block; font-size:10.5px; font-weight:600; color:var(--accent-strong);
+    background:var(--accent-soft); padding:2px 8px; border-radius:6px; margin-top:5px;
+  }
+  .person-dept{ font-size:11.5px; color:var(--text-soft); margin-top:4px; }
+  .person-loc{
+    margin-top:8px; font-size:12.5px; font-weight:600; color:var(--gray-800);
+    background:var(--gray-100); border-radius:8px; padding:6px 10px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .person-loc .locpin{ color:var(--accent-strong); }
+  .person-contact{ margin-top:7px; font-size:11.5px; }
+  .person-contact a{ color:var(--accent-strong); text-decoration:none; }
+  .person-contact a:hover{ text-decoration:underline; }
+  .person-status{ font-size:10px; font-weight:600; padding:2px 7px; border-radius:6px; margin-top:6px; display:inline-block; }
+  .person-status.ok{ background:var(--success-soft); color:var(--success); }
+  .person-status.other{ background:var(--warn-soft); color:var(--warn); }
+  .person-note{ font-size:11px; color:var(--text-soft); margin-top:5px; font-style:italic; }
+  .person-header-row{ display:flex; gap:11px; width:100%; }
+
+  .more-note{ font-size:11.5px; color:var(--text-soft); margin-top:8px; }
+
+  .typing{ display:flex; gap:4px; padding:4px 0; }
+  .typing span{ width:6px;height:6px;border-radius:50%; background:var(--text-faint); animation:blink 1.2s infinite; }
+  .typing span:nth-child(2){ animation-delay:.2s; }
+  .typing span:nth-child(3){ animation-delay:.4s; }
+  @keyframes blink{ 0%,80%,100%{opacity:.25;} 40%{opacity:1;} }
+
+  /* ================= INPUT ROW ================= */
+  .chat-input-row{
+    display:flex; align-items:flex-end; gap:8px;
+    padding:12px 14px; border-top:1px solid var(--border);
+    background:var(--surface-alt);
+  }
+  .mic-btn, .mute-btn{
+    flex-shrink:0; width:40px;height:40px; border-radius:50%;
+    border:1px solid var(--border-strong); background:#fff; cursor:pointer;
+    font-size:17px; display:flex; align-items:center; justify-content:center;
+    transition:all .15s ease;
+  }
+  .mic-btn:hover, .mute-btn:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .mic-btn.listening{
+    background:var(--danger); border-color:var(--danger); color:#fff;
+    animation:mic-pulse 1s infinite;
+  }
+  @keyframes mic-pulse{
+    0%{ box-shadow:0 0 0 0 rgba(181,80,74,.5); }
+    70%{ box-shadow:0 0 0 10px rgba(181,80,74,0); }
+    100%{ box-shadow:0 0 0 0 rgba(181,80,74,0); }
+  }
+  .mic-btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .mute-btn.muted{ background:var(--gray-200); color:var(--gray-600); }
+  .chat-input{
+    flex:1; resize:none; font-family:inherit; font-size:13.5px;
+    border:1px solid var(--border-strong); border-radius:12px;
+    padding:10px 13px; max-height:100px; min-height:40px;
+    background:#fff; color:var(--text);
+  }
+  .chat-input:focus{ outline:none; border-color:var(--accent); }
+  .send-btn{
+    flex-shrink:0; font-family:inherit; font-weight:600; font-size:13px;
+    padding:0 18px; height:40px; border-radius:12px; border:none;
+    background:var(--accent-grad); color:#fff; cursor:pointer;
+  }
+  .send-btn:hover{ filter:brightness(1.06); }
+  .voice-status{
+    font-size:11.5px; color:var(--accent-strong); padding:0 14px 10px; min-height:16px;
+    display:flex; align-items:center; gap:6px;
+  }
+
+  .examples{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:18px; }
+  .example-chip{
+    font-family:inherit; font-size:12px; color:var(--gray-800);
+    background:#fff; border:1px solid var(--border-strong);
+    padding:6px 12px; border-radius:20px; cursor:pointer;
+  }
+  .example-chip:hover{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-strong); }
+
+  /* ================= DIRECTORY SECTION ================= */
+  .directory-panel{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+  }
+  .directory-head{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    margin-bottom:12px;
+  }
+  .directory-title{ font-size:14px; font-weight:700; display:flex; align-items:center; gap:7px; }
+  .directory-count{ font-size:11.5px; color:var(--text-soft); }
+  .toggle-btn{
+    font-family:inherit; font-size:12px; font-weight:600;
+    padding:7px 13px; border-radius:9px; border:1px solid var(--border-strong);
+    background:#fff; cursor:pointer; color:var(--text);
+  }
+  .toggle-btn:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .browse-search{
+    width:100%; font-family:inherit; font-size:13px; padding:9px 12px;
+    border:1px solid var(--border-strong); border-radius:10px; margin-bottom:12px;
+  }
+  .browse-search:focus{ outline:none; border-color:var(--accent); }
+  .empty-note{ font-size:12.5px; color:var(--text-soft); text-align:center; padding:26px 10px; }
+
+  footer.foot{
+    text-align:center; font-size:11px; color:var(--text-faint); padding:14px 0 6px;
+    line-height:1.8;
+  }
+  footer.foot b{ color:var(--text-soft); }
+
+  @media (max-width:720px){
+    .stat-row{ grid-template-columns:repeat(2,1fr); }
+    header.top{ flex-direction:column; align-items:flex-start; }
+    .sync-box{ text-align:left; width:100%; }
+    .sync-note{ margin-left:0; text-align:left; }
+    .chat-card{ height:64vh; }
+    .person-grid{ grid-template-columns:1fr; }
+  }
 </style>
 </head>
 <body>
 
-<!-- ══════════ TOP BAR ══════════ -->
-<header class="topbar">
-  <div class="topbar-in">
+<div class="wrap">
+
+  <header class="top">
     <div class="brand">
-      <div class="logo">MSU</div>
+      <div class="brand-emblem">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#fff"/>
+          <path d="M6 10.5V15c0 1.5 2.5 3 6 3s6-1.5 6-3v-4.5" stroke="#fff" stroke-width="1.4" fill="none"/>
+          <path d="M22 7v6" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div>
-        <h1>ระบบผู้ช่วยค้นหาข้อมูลบุคลากร</h1>
-        <p>คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม · Engineering Personnel Directory</p>
+        <div class="brand-eyebrow">ENGINEERING · MSU DIRECTORY</div>
+        <h1>ผู้ช่วยค้นหาข้อมูลบุคลากร</h1>
+        <p class="subtitle">คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม — ค้นหาด้วยเสียงหรือพิมพ์ก็ได้</p>
       </div>
     </div>
-    <div class="spacer"></div>
-    <button class="tbtn on" id="btnVoice" title="เปิด/ปิดเสียงตอบกลับ">🔊 <span>เสียงเปิด</span></button>
-    <button class="tbtn" id="btnReload" title="โหลดข้อมูลใหม่">🔄 <span>รีเฟรช</span></button>
-    <span class="tbtn" style="cursor:default"><span class="dot" id="dot"></span><span id="dotTxt">กำลังเชื่อมต่อ</span></span>
-  </div>
-  <nav class="tabs">
-    <button class="tab active" data-page="assist">🤖 ผู้ช่วยอัจฉริยะ</button>
-    <button class="tab" data-page="dir">📇 ทำเนียบบุคลากร</button>
-    <button class="tab" data-page="map">🏢 ผังห้องพัก</button>
-  </nav>
-</header>
-
-<main class="wrap">
-
-<!-- ══════════ PAGE : ASSISTANT ══════════ -->
-<section class="page show" id="p-assist">
-  <div class="chatwrap">
-    <div class="chatbox">
-      <div class="chat-head">
-        <div class="ai">🤖</div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:14.5px">ผู้ช่วย MSU Engineering</div>
-          <div style="font-size:11.5px;color:var(--g3)" id="aiState">พร้อมให้บริการ · พูดหรือพิมพ์ได้เลย</div>
-        </div>
-        <button class="tbtn" id="btnStop" title="หยุดพูด">⏹ หยุดเสียง</button>
-      </div>
-      <div class="chat-log" id="log"></div>
-      <div class="chat-in">
-        <button class="icobtn mic" id="micChat" title="กดเพื่อพูด">🎙️</button>
-        <input id="chatInput" placeholder="พิมพ์คำถาม เช่น &quot;ห้องพักอาจารย์สมชายอยู่ที่ไหน&quot;" autocomplete="off">
-        <button class="icobtn go" id="sendChat">➤</button>
-      </div>
-      <div class="vhint" id="vhint"></div>
+    <div class="sync-box">
+      <span class="sync-status-inline"><span class="sync-dot" id="syncDot"></span><span id="syncText">กำลังเตรียมข้อมูล…</span></span>
+      <div><button class="sync-btn" id="syncBtn">🔄 ซิงก์ข้อมูลล่าสุด</button></div>
+      <div class="sync-note" id="syncNote"></div>
     </div>
+  </header>
 
-    <aside class="side">
-      <div class="panel">
-        <h3>⚡ ตัวอย่างคำถาม</h3>
-        <div id="sugBox"></div>
-      </div>
-      <div class="panel">
-        <h3>🔊 ตั้งค่าเสียงตอบกลับ</h3>
-        <div class="switch">พูดตอบอัตโนมัติ <button class="tg on" id="tgSpeak"></button></div>
-        <div class="switch">ฟังต่อเนื่อง (Hands-free) <button class="tg" id="tgCont"></button></div>
-        <label style="font-size:12.5px;color:var(--g3);font-weight:600">ความเร็วเสียง <span id="rateV">1.0x</span></label>
-        <input type="range" class="rng" id="rate" min="0.6" max="1.6" step="0.1" value="1">
-        <label style="font-size:12.5px;color:var(--g3);font-weight:600">เสียงพูด (ภาษาไทย)</label>
-        <select id="voiceSel" style="width:100%;padding:8px;border:1px solid var(--g4);border-radius:9px;font-size:13px"></select>
-      </div>
-      <div class="panel">
-        <h3>📊 สถานะข้อมูล</h3>
-        <div style="font-size:13px;color:var(--g2)" id="sideStat">—</div>
-      </div>
-    </aside>
+  <div class="stat-row" id="statRow"></div>
+
+  <div class="filter-panel">
+    <div class="filter-panel-title">🏢 ค้นหาด่วนตามอาคาร / สาขาวิชา</div>
+    <div class="chip-row" id="buildingChips"></div>
+    <div class="chip-row" id="deptChipsRow" style="margin-top:8px;"></div>
   </div>
-</section>
 
-<!-- ══════════ PAGE : DIRECTORY ══════════ -->
-<section class="page" id="p-dir">
-  <div class="hero">
-    <h2>ค้นหาบุคลากร</h2>
-    <p>พิมพ์ชื่อ · ตำแหน่ง · ภาควิชา · เลขห้อง หรือกดไมค์เพื่อพูดค้นหา</p>
-    <div class="searchbar">
-      <span style="font-size:18px">🔍</span>
-      <input id="q" placeholder="เช่น ผศ.ดร. / ไฟฟ้า / EN-301 ...">
-      <button class="icobtn mic" id="micSearch" title="ค้นหาด้วยเสียง">🎙️</button>
-      <button class="icobtn go" id="btnSearch">➤</button>
+  <div class="chat-card">
+    <div class="chat-head">
+      <div class="chat-head-title">💬 ผู้ช่วยค้นหาบุคลากร</div>
+      <div class="chat-head-badge">ไม่ใช้ AI · ค้นหาตามกฎที่กำหนดไว้</div>
     </div>
-    <div class="chips" id="chips"></div>
+    <div class="chat-scroll" id="chatScroll"></div>
+    <div class="chat-input-row">
+      <button class="mic-btn" id="micBtn" type="button" title="พูดถาม (ไมโครโฟน)">🎤</button>
+      <textarea class="chat-input" id="chatInput" rows="1" placeholder="พิมพ์ชื่อ, ห้อง, อาคาร, หรือสาขาวิชา เช่น EN1-207 หรือ อาจารย์วิศวกรรมไฟฟ้า"></textarea>
+      <button class="mute-btn" id="muteBtn" type="button" title="ปิด/เปิดเสียงตอบ">🔊</button>
+      <button class="send-btn" id="sendBtn">ถาม</button>
+    </div>
+    <div class="voice-status" id="voiceStatus"></div>
   </div>
-  <div class="stats" id="stats"></div>
-  <div id="dirArea"></div>
-</section>
 
-<!-- ══════════ PAGE : ROOM MAP ══════════ -->
-<section class="page" id="p-map">
-  <div class="note">🏢 รวมตำแหน่งห้องพักของคณาจารย์และบุคลากรทั้งหมด จัดกลุ่มตามอาคาร/ชั้น เพื่อความสะดวกในการเข้าติดต่องาน</div>
-  <div id="mapArea"></div>
-</section>
+  <div class="examples" id="examples"></div>
 
-<div class="foot">
-  © <span id="yy"></span> คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม · Faculty of Engineering, Mahasarakham University<br>
-  ข้อมูลเชื่อมต่อแบบเรียลไทม์จาก Google Sheets · พัฒนาโดยทีมสารสนเทศคณะฯ
+  <div class="directory-panel">
+    <div class="directory-head">
+      <div class="directory-title">📋 ทำเนียบบุคลากรทั้งหมด <span class="directory-count" id="dirCount"></span></div>
+      <button class="toggle-btn" id="dirToggleBtn">ซ่อนทำเนียบ</button>
+    </div>
+    <div id="dirBody">
+      <input class="browse-search" id="browseSearch" type="text" placeholder="พิมพ์เพื่อกรองทำเนียบด้านล่าง (ชื่อ, ตำแหน่ง, สาขา, ห้อง)…">
+      <div class="person-grid" id="directoryGrid"></div>
+    </div>
+  </div>
+
+  <footer class="foot">
+    ระบบนี้ค้นหาข้อมูลด้วยกฎที่กำหนดไว้ล่วงหน้าเท่านั้น <b>ไม่มีการใช้ปัญญาประดิษฐ์ (AI)</b> ในการประมวลผลคำตอบ<br>
+    ข้อมูลบุคลากรซิงก์แบบเรียลไทม์จาก Google Sheets ของคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม (รูปภาพซิงก์ผ่าน Google Apps Script — ดูวิธีตั้งค่าในไฟล์ Code.gs ที่แนบมา)<br>
+    หากพบข้อมูลผิดพลาด กรุณาแจ้งฝ่ายธุรการคณะ
+  </footer>
+
 </div>
-</main>
 
-<button class="fabmic" id="fab">🎙️</button>
-
-<!-- ══════════ MODAL ══════════ -->
-<div class="mask" id="mask">
-  <div class="modal" id="modal"></div>
-</div>
+<script id="recordData" type="application/json">[{"id": "T001", "acadTitle": "ศาสตราจารย์ ดร.", "name": "อนงค์ฤทธิ์  แข็งแรง", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "anongrit.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T002", "acadTitle": "ศาสตราจารย์ ดร.", "name": "วรวัฒน์  เสงี่ยมวิบูล", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "wor_nui@yahoo.com", "note": "", "photo": ""}, {"id": "T003", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "จักรมาส  เลาหวณิช", "position": "คณบดีคณะวิศวกรรมศาสตร์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "2", "room": "คณบดี", "status": "ปกติ", "email": "juckamas.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T004", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "เกียรติศักดิ์  ศรีประทีป", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "keartisaks@hotmail.com", "note": "", "photo": ""}, {"id": "T005", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุดสาคร  อินธิเดช", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "220A-220B", "status": "ปกติ", "email": "sudsakorn.i@msu.ac.th", "note": "", "photo": ""}, {"id": "T006", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "บพิธ  บุปผโชติ", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "bopit.b@msu.ac.th", "note": "", "photo": ""}, {"id": "T007", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "อภินันท์  อุรโสภณ", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "Aurasopon@yahoo.com", "note": "", "photo": ""}, {"id": "T008", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "อดิศักดิ์  ปัตติยะ", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN3", "floor": "1", "room": "101", "status": "ปกติ", "email": "adisak_pattiya@yahoo.com", "note": "", "photo": ""}, {"id": "T009", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "กริสน์  ชัยมูล", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN2", "floor": "2", "room": "202", "status": "ปกติ", "email": "k.chaimoon@msu.ac.th", "note": "", "photo": ""}, {"id": "T010", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สหลาภ  หอมวุฒิวงศ์", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายอำนวยการ", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "", "status": "ปกติ", "email": "sahalaph.h@msu.ac.th", "note": "", "photo": ""}, {"id": "T011", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "เรืองรุชดิ์  ชีระโรจน์", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "220A-220B", "status": "ปกติ", "email": "raungrut.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T012", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุพรรณ  ยั่งยืน", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN2", "floor": "2", "room": "203", "status": "ปกติ", "email": "suphan.y@msu.ac.th", "note": "", "photo": ""}, {"id": "T013", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ชลธี  โพธิ์ทอง", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายวิจัย นวัตกรรมและวิเทศสัมพันธ์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN2", "floor": "2", "room": "201", "status": "ปกติ", "email": "chonlatee.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T014", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "เกียรติสิน กาญจนวนิชกุล", "position": "อาจารย์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "", "status": "ปกติ", "email": "kiattisin.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T015", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ยศฐา ศรีเทพ", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "yottha.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T016", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "วสันต์  ด้วงคำจันทร์", "position": "อาจารย์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN3", "floor": "3", "room": "", "status": "ปกติ", "email": "wasan.d@msu.ac.th", "note": "", "photo": ""}, {"id": "T017", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "นิวัตร์ อังควิศิษฐพันธ์", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "niwat.a@msu.ac.th", "note": "", "photo": ""}, {"id": "T018", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุพรรณนิกา  วัฒนะ", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN2", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "supannika.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T019", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "พิทักษ์  พร้อมไธสง", "position": "อาจารย์", "dept": "วิศวกรรมรถไฟความเร็วสูง", "building": "EN1", "floor": "1", "room": "105", "status": "ปกติ", "email": "pitak.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T020", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "กฤต โง้วธนสุวรรณ", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "1", "room": "104", "status": "ปกติ", "email": "Grit.n@msu.ac.th", "note": "", "photo": ""}, {"id": "T021", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ณัฐพล  ภูมิสะอาด", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายบริหารและวางแผน", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "nattapol.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T022", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "จินดาพร  จำรัสเลิศลักษณ์", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "220A-220B", "status": "ปกติ", "email": "jindaporn.msu@gmail.com", "note": "", "photo": ""}, {"id": "T023", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ธีรยุทธ  ชาติชนะยืนยง", "position": "อาจารย์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "theerayuth.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T024", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "อลงกรณ์  ละม่อม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "alongkorn_lamom@msu.ac.t", "note": "", "photo": ""}, {"id": "T025", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นิดา  ชัยมูล", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN2", "floor": "2", "room": "202", "status": "ปกติ", "email": "n.seelsaen@gmail.com", "note": "", "photo": ""}, {"id": "T026", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ทรงชัย  วิริยะอำไพวงศ์", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "songchai.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T027", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ละมุล  วิเศษ", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "lamulwiset@hotmail.com", "note": "", "photo": ""}, {"id": "T028", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "เพชร  เพ็งชัย", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "petchpengchai@zoho.com", "note": "", "photo": ""}, {"id": "T029", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "โสภา  แคนสี", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN2", "floor": "2", "room": "", "status": "ปกติ", "email": "sopa.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T030", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "เกสร  วงศ์เกษม", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายวิชาการและพัฒนานิสิต", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "2", "room": "221A-221B", "status": "ปกติ", "email": "siriluk.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T031", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ธีรพัฒน์ ชมภูคำ", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "teerapat.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T032", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ธวัฒน์ชัย  คุณะโคตร", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "tawatchai.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T033", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ณัฐวุฒิ สุวรรณทา", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "nattawoot.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T034", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นพปฎล เสงี่ยมศักดิ์", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "noppadol.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T035", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ศิวา แก้วปลั่ง", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "siwa.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T036", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นเรศ  มีโส", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "n_meeso@yahoo.com", "note": "", "photo": ""}, {"id": "T037", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ชัยชาญ โชติถนอม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "chaicharn.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T038", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "รัตนา  หอมวิเชียร", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "rattana.h@msu.ac.th", "note": "", "photo": ""}, {"id": "T039", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นวรัตน์ พิลาแดง", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "nawarat.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T040", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ชัยยงค์  เสริมผล", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "chaiyong.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T041", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "พงษ์พันธ์  แทนเกษม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "civilphongphan@gmail.com", "note": "", "photo": ""}, {"id": "T042", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "เชิดพงษ์  เชี่ยวชาญวัฒนา", "position": "อาจารย์", "dept": "วิศวกรรมรถไฟความเร็วสูง", "building": "EN2", "floor": "2", "room": "203", "status": "ปกติ", "email": "cherdpong.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T043", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นบปนม  แก้วหานาม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "napanom.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T044", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ศตวรรษ  ทวงชน", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "sattawat.t@msu.ac.th", "note": "", "photo": ""}, {"id": "T045", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "วจัสกร กาญจนะ", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "1", "room": "403H", "status": "ปกติ", "email": "wajussakorn.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T046", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุรชัย วงชารี", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "2", "room": "221A-221B", "status": "ปกติ", "email": "surachai.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T047", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นรินทร์  ศิริวรรณ", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "narin.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T048", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "บัญชา  วัฒนะ", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "2", "room": "218A", "status": "ปกติ", "email": "buncha.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T049", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "สริญญา ศาลางาม", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "221A-221B", "status": "ปกติ", "email": "sarinya.sa@msu.ac.th", "note": "", "photo": ""}, {"id": "T050", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "กิตตินันท์  วันสาสืบ", "position": "อาจารย์", "dept": "วิศวกรรมยานยนต์ไฟฟ้า", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "kittinan.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T051", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ธนายุทธ ไชยธงรัตน์", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "1", "room": "104", "status": "ปกติ", "email": "Tanayut.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T052", "acadTitle": "อาจารย์ ดร.", "name": "ณรงค์กรณ์  อุทาทิพย์", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมยานยนต์ไฟฟ้า", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "narongkorn.u@msu.ac.th", "note": "", "photo": ""}, {"id": "T053", "acadTitle": "อาจารย์ ดร.", "name": "ณัฏฐพล  ไชยดวงศรี", "position": "ผู้ช่วยคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายสารสนเทศ", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "nuttapon.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T054", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ปิยณัฐ จันโทสุทธิ์", "position": "ผู้ช่วยคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายปฏิบัติการวิศวกรรม", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "piyanat.j@msu.ac.th", "note": "", "photo": ""}, {"id": "T055", "acadTitle": "อาจารย์ ดร.", "name": "ปริญญ์ ชุปวา", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "prarin.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T056", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "คเณศ ถุงออด", "position": "หัวหน้าสำนักวิชาวิศวกรรมศาสตร์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "kaned.th@msu.ac.th", "note": "", "photo": ""}, {"id": "T057", "acadTitle": "อาจารย์ ดร.", "name": "ทวีศักดิ์ ทองแสน", "position": "ผู้ช่วยคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายกิจการนิสิต", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "taweesak.th@msu.ac.th", "note": "", "photo": ""}, {"id": "T058", "acadTitle": "อาจารย์ ดร.", "name": "รพีภัทร เตชะรุ่งเรืองสกุล", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "rapeepat.tee@msu.ac.th", "note": "", "photo": ""}, {"id": "T059", "acadTitle": "อาจารย์", "name": "สุรพงษ์ ลิวไธสง", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "1", "room": "104", "status": "ปกติ", "email": "Surapong.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T060", "acadTitle": "อาจารย์", "name": "ณัฏฐพงษ์ ลาดบัตร", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN2", "floor": "2", "room": "", "status": "ปกติ", "email": "Nuttapong.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T061", "acadTitle": "อาจารย์ ดร.", "name": "ชณัฐ วิพัทนะพร", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-308", "status": "ปกติ", "email": "chanat.v@msu.ac.th", "note": "", "photo": ""}, {"id": "T062", "acadTitle": "อาจารย์", "name": "กฤษฏิ์  เลิศล้ำ", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมปฏิบัติ", "building": "EN2", "floor": "2", "room": "201", "status": "ปกติ", "email": "krit.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T063", "acadTitle": "อาจารย์", "name": "เดชา อินทร์โท่โล่", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมรถไฟความเร็วสูง", "building": "EN5", "floor": "2", "room": "202", "status": "ปกติ", "email": "decha.i@msu.ac.th", "note": "", "photo": ""}, {"id": "T064", "acadTitle": "อาจารย์", "name": "ณัฐนิชา อิ่มน้ำขาว", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "nutnicha.i@msu.ac.th", "note": "", "photo": ""}, {"id": "T065", "acadTitle": "อาจารย์", "name": "บัณริ เข็มกลัดมุกต์", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "banri.k@msu.ac.th", "note": "", "photo": ""}, {"id": "S001", "acadTitle": "หัวหน้าสำนักงานเลขานุการคณะวิศวกรรมศาสตร์", "name": "วิรายา ภมรสมิต", "position": "หัวหน้าสำนักงานเลขานุการคณะวิศวกรรมศาสตร์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "viraya.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S002", "acadTitle": "ชำนาญการพิเศษ", "name": "พยุงศักดิ์ ภักดีพล", "position": "หัวหน้ากลุ่มงานบริหาร นักวิเคราะห์นโยบายและแผน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "phayungsak.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S003", "acadTitle": "ปฏิบัติการ", "name": "เกศรินทร์ ภูผานี", "position": "ฝ่ายงานงานบุคคล", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "kessarin.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S004", "acadTitle": "ปฏิบัติการ", "name": "พัชนี คำวงษา", "position": "ฝ่ายงานธุรการและงานเลขานุการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "phatchanee.k@msu.ac.th", "note": "", "photo": ""}, {"id": "S005", "acadTitle": "ปฏิบัติงาน", "name": "ชญาภา ชาดา", "position": "งานห้องสมุดและงานเลขานุการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "chayapa.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S006", "acadTitle": "ปฏิบัติการ", "name": "พัชรา ติตะสี", "position": "ฝ่ายงานวิจัย และวิเทศสัมพันธ์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "patchara.ti@msu.ac.th", "note": "", "photo": ""}, {"id": "S007", "acadTitle": "ปฏิบัติการ", "name": "นิตยา คำมูลนาม", "position": "ฝ่ายงานคอมพิวเตอร์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "2", "room": "ห้องสมุด", "status": "ปกติ", "email": "nittaya.ku@msu.ac.th", "note": "", "photo": ""}, {"id": "S008", "acadTitle": "ปฏิบัติการ", "name": "ปัญญา จีระฉัตร", "position": "ฝ่ายงานงานโสตทัศนูปกรณ์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "3", "room": "ห้องพักเจ้าหน้าระหว่างห้องปฏิบัติการคอมพิวเตอร์ 313 - 314 , 312", "status": "ปกติ", "email": "panya.j@msu.ac.th", "note": "", "photo": ""}, {"id": "S009", "acadTitle": "ปฏิบัติงาน", "name": "ดนัย ไชยมาตย์", "position": "ฝ่ายงานสวน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "ติดห้อง EN1-105 ห้องพักเจ้าหน้าที่", "status": "ปกติ", "email": "Danai.C@msu.ac.th", "note": "", "photo": ""}, {"id": "S010", "acadTitle": "ปฏิบัติงาน", "name": "ชัชวาล หมวดนา", "position": "ฝ่ายงานยานยนต์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "Chatchawal.M@msu.ac.th", "note": "", "photo": ""}, {"id": "S011", "acadTitle": "ปฏิบัติงาน", "name": "จีระศักดิ์ บรรจงปรุ", "position": "ฝ่ายงานยานยนต์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "", "note": "", "photo": ""}, {"id": "S012", "acadTitle": "ปฏิบัติการ", "name": "ลำพูน ศรีโพธิ์ผา", "position": "หัวหน้ากลุ่มงานนโยบาย แผนและคลัง นักวิชาการเงินและบัญชีปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "lumpoon.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S013", "acadTitle": "ปฏิบัติการ", "name": "พักตร์วิภา วิระหา", "position": "ฝ่ายงานการเงิน และบัญชี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "Pukwipha.K@msu.ac.th", "note": "", "photo": ""}, {"id": "S014", "acadTitle": "ปฏิบัติการ", "name": "วิรุฬ พลชำนิ", "position": "ฝ่ายงานพัสดุ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "wirun.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S015", "acadTitle": "ปฏิบัติการ", "name": "จันทิมา ไวยกรรณ์", "position": "ฝ่ายงานพัสดุ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "jantima.w@msu.ac.th", "note": "", "photo": ""}, {"id": "S016", "acadTitle": "ปฏิบัติการ", "name": "สถาพร พวงมะลัย", "position": "งานกรอบคำรับรองการปฏิบัติงานราชการ(ก.พ.ร.)", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "sataporn.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S017", "acadTitle": "ปฏิบัติการ", "name": "อนุชา ชังชั่ว", "position": "ฝ่ายงานประกันคุณภาพการศึกษา/EdPEx", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "anucha.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S018", "acadTitle": "ชำนาญการ", "name": "นางสาวเสาวลักษณ์ เรียงพรม", "position": "ฝ่ายงานวิชาการระดับปริญญาตรี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "saowaluk.ria@msu.ac.th", "note": "", "photo": ""}, {"id": "S019", "acadTitle": "ปฏิบัติการ", "name": "สุภาวดี กั้วพงษ์", "position": "ฝ่ายงานวิชาการระดับปริญญาตรี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "supawadee@msu.ac.th", "note": "", "photo": ""}, {"id": "S020", "acadTitle": "ปฏิบัติการ", "name": "เมธินี ไชยวงษา", "position": "ฝ่ายงานวิชาการระดับปริญญาตรี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "methinee.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S021", "acadTitle": "ปฏิบัติการ", "name": "วรินญา ชื่นใจ", "position": "ฝ่ายงานวิชาการระดับบัณฑิตศึกษา", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "warinya.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S022", "acadTitle": "ปฏิบัติการ", "name": "วรลักษณ์ ศิริประเสริฐ", "position": "ฝ่ายงานวิชาการระดับบัณฑิตศึกษา", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "woralak.si@msu.ac.th", "note": "", "photo": ""}, {"id": "S023", "acadTitle": "ปฏิบัติการ", "name": "อธิวัฒน์ อุดมก้านตง", "position": "ฝ่ายงานกิจการนิสิต", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "atiwat.u@msu.ac.th", "note": "", "photo": ""}, {"id": "S024", "acadTitle": "ปฏิบัติการ", "name": "ตรีญาภัทร์ แสงตา", "position": "หัวหน้างานฝ่ายบริการวิชาการและบริการวิชาชีพ นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "treeyapat.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S025", "acadTitle": "ปฏิบัติการ", "name": "นัฐราช แสนมีมา", "position": "หัวหน้างานห้องปฏิบัติการ นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "nattarat.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S026", "acadTitle": "ปฏิบัติการ", "name": "สุระ ทับสีแก้ว", "position": "หัวหน้างานอาคารสถานที่ ผู้ปฏิบัติงานวิทยาศาสตร์ปฏิบัติงาน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "sura.t@msu.ac.th", "note": "", "photo": ""}, {"id": "S027", "acadTitle": "ปฏิบัติการ", "name": "ภูพิงค์ ช่วยอุดม", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "4", "room": "418", "status": "ปกติ", "email": "pooping.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S028", "acadTitle": "ปฏิบัติการ", "name": "ศิวณัทร ศรีโลห้อ", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "4", "room": "414", "status": "ปกติ", "email": "siwanut.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S029", "acadTitle": "ชำนาญการ", "name": "มีศักดิ์ธนา พัวพิทยาธร", "position": "วิศวกรโยธาปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "103", "status": "ปกติ", "email": "meesakthana.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S030", "acadTitle": "ปฏิบัติการ", "name": "สุวิทย์ เสนาลาด", "position": "ผู้ปฏิบัติงานวิทยาศาสตร์ปฏิบัติงาน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "suwit.sena@msu.ac.th", "note": "", "photo": ""}, {"id": "S031", "acadTitle": "ปฏิบัติการ", "name": "สมนึก พันเสนา", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "somnuek.pa@msu.ac.th", "note": "", "photo": ""}, {"id": "S032", "acadTitle": "ปฏิบัติการ", "name": "สุรเชษฐ สวนจันทร์", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "3", "room": "318", "status": "ปกติ", "email": "surachet.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S033", "acadTitle": "ปฏิบัติการ", "name": "จตุพล สายจันทา", "position": "นักวิชาการศึกษา", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "jatapon.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S034", "acadTitle": "ปฏิบัติการ", "name": "ปริวัตร เวฬุวนารักษ์", "position": "ผู้ปฏิบัติงานวิทยาศาสตร์ปฏิบัติงาน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "pariwat.w@msu.ac.th", "note": "", "photo": ""}, {"id": "S035", "acadTitle": "ปฏิบัติการ", "name": "สัจจพงษ์ แสนงาม", "position": "วิศวกรโยธาปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "sutchapong.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S036", "acadTitle": "ปฏิบัติการ", "name": "ธีระเดช ทรงอาจ", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "Teeradet.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S037", "acadTitle": "ปฏิบัติการ", "name": "วันชัย พิลึก", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "wanchai.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S038", "acadTitle": "ปฏิบัติการ", "name": "ณัชพร สอนสี", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "natchaporn.s@msu.ac.th", "note": "", "photo": ""}]</script>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   1) CONFIG
-═══════════════════════════════════════════════════ */
-const CFG = {
-  SHEET_ID : '1aHKzP3MQw7YJNTIhIqHgFeq_eM1_eHNBceHZUVPCoTw',
-  GID      : '0',
-  ORG      : 'คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม'
-};
+(function(){
+  "use strict";
 
-/* ═══════════════════════════════════════════════════
-   2) COLUMN AUTO-MAPPING (รองรับหัวคอลัมน์ภาษาไทย/อังกฤษ)
-═══════════════════════════════════════════════════ */
-const MAP = {
-  name      : ['ชื่อ-สกุล','ชื่อ - สกุล','ชื่อ-นามสกุล','ชื่อสกุล','ชื่อ','นาม','fullname','full name','name','บุคลากร','อาจารย์'],
-  position  : ['ตำแหน่งทางวิชาการ','ตำแหน่งวิชาการ','ตำแหน่ง','position','title','ระดับ'],
-  dept      : ['ภาควิชา','สาขาวิชา','สาขา','สังกัด','หน่วยงาน','กลุ่มงาน','ฝ่าย','department','dept','division'],
-  room      : ['ห้องพัก','ห้องทำงาน','เลขห้อง','ห้อง','room','office','office room'],
-  building  : ['อาคาร','ตึก','building','สถานที่'],
-  floor     : ['ชั้น','floor'],
-  phone     : ['เบอร์โทรศัพท์','เบอร์โทร','โทรศัพท์','เบอร์ภายใน','เบอร์','โทร','phone','tel','mobile','contact'],
-  email     : ['อีเมล','อีเมล์','e-mail','email','mail'],
-  photo     : ['รูปภาพ','รูปถ่าย','ภาพถ่าย','รูป','ภาพ','photo','image','img','picture','avatar','url รูป'],
-  expert    : ['ความเชี่ยวชาญ','ความชำนาญ','งานที่รับผิดชอบ','ภาระงาน','หน้าที่','expertise','specialty','skill'],
-  edu       : ['วุฒิการศึกษา','การศึกษา','วุฒิ','education','degree'],
-  website   : ['เว็บไซต์','website','url','link','เว็บ'],
-  line      : ['line','ไลน์','line id']
-};
-const norm = s => String(s||'').toLowerCase().replace(/[\s\.\-_()（）:：]/g,'').trim();
-function detectKey(header){
-  const h = norm(header);
-  for(const k in MAP){
-    for(const alias of MAP[k]){
-      const a = norm(alias);
-      if(h === a) return k;
+  /* ================= CONFIG ================= */
+  // แก้ SHEET_ID / SHEET_GID ให้ตรงกับ Google Sheet ของคุณ
+  // ต้องแชร์ชีทเป็น "ทุกคนที่มีลิงก์ - ผู้ดู (Viewer)" จึงจะซิงก์สดได้
+  const SHEET_ID = "1aHKzP3MQw7YJNTIhIqHgFeq_eM1_eHNBceHZUVPCoTw";
+  const SHEET_GID = "0";
+  // รูปภาพที่ฝังแบบ "Insert image in cell" ใน Google Sheets ไม่สามารถอ่านผ่าน
+  // gviz/CSV ได้เลย (เป็นข้อจำกัดของ Google เอง) จึงต้องใช้ Google Apps Script
+  // เป็นตัวกลางอ่านรูปแล้วส่งกลับมาเป็น JSON แทน — ดูวิธีติดตั้งท้ายไฟล์นี้
+  // (ค้นหาคำว่า "APPS SCRIPT SETUP") แล้วนำ Web app URL มาใส่ตรงนี้
+  const APPS_SCRIPT_URL = ""; // เช่น "https://script.google.com/macros/s/XXXXXXXX/exec"
+
+  const elChatScroll = document.getElementById('chatScroll');
+  const elChatInput = document.getElementById('chatInput');
+  const elSendBtn = document.getElementById('sendBtn');
+  const elMicBtn = document.getElementById('micBtn');
+  const elMuteBtn = document.getElementById('muteBtn');
+  const elVoiceStatus = document.getElementById('voiceStatus');
+  const elExamples = document.getElementById('examples');
+  const elBuildingChips = document.getElementById('buildingChips');
+  const elDeptChipsRow = document.getElementById('deptChipsRow');
+  const elStatRow = document.getElementById('statRow');
+  const elDirectoryGrid = document.getElementById('directoryGrid');
+  const elDirCount = document.getElementById('dirCount');
+  const elBrowseSearch = document.getElementById('browseSearch');
+  const elDirToggleBtn = document.getElementById('dirToggleBtn');
+  const elDirBody = document.getElementById('dirBody');
+  const syncDot = document.getElementById('syncDot');
+  const syncText = document.getElementById('syncText');
+  const syncBtn = document.getElementById('syncBtn');
+  const syncNote = document.getElementById('syncNote');
+
+  let records = JSON.parse(document.getElementById('recordData').textContent || "[]");
+  let ttsEnabled = true;
+  let activeBuildingFilter = null;
+  let activeDeptFilter = null;
+
+  /* ================= UTIL ================= */
+  function escapeHtml(s){
+    return (s===null||s===undefined?"":String(s))
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function stripSpaces(s){ return (s||"").toString().trim().replace(/\s+/g,""); }
+  function norm(s){ return (s||"").toString().trim().toLowerCase(); }
+  function fmtTime(d){ return d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}); }
+
+  const AVATAR_PALETTE = ["#C99A2E","#8C6519","#7A7666","#AD8021","#6E6A5C","#B9975A","#9C8752","#8A8168"];
+  function hashStr(s){
+    let h=0; s=s||"";
+    for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; }
+    return h;
+  }
+  function avatarColor(name){ return AVATAR_PALETTE[hashStr(name) % AVATAR_PALETTE.length]; }
+  function initials(name){
+    const n = (name||"").trim();
+    if(!n) return "?";
+    return n.charAt(0);
+  }
+  function normalizePhotoUrl(url){
+    url = (url||"").trim();
+    if(!url) return "";
+    let m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    if(m) return "https://drive.google.com/uc?export=view&id=" + m[1];
+    m = url.match(/drive\.google\.com\/open\?id=([^&]+)/);
+    if(m) return "https://drive.google.com/uc?export=view&id=" + m[1];
+    return url;
+  }
+
+  function locationText(r){
+    const parts = [];
+    if(r.building) parts.push(r.building);
+    if(r.floor) parts.push("ชั้น " + r.floor);
+    if(r.room) parts.push("ห้อง " + r.room);
+    return parts.length ? parts.join(" · ") : "ไม่ระบุตำแหน่งห้อง";
+  }
+  function fullName(r){
+    return [r.acadTitle, r.name].filter(Boolean).join(" ").replace(/\s+/g," ").trim();
+  }
+
+  /* ================= DERIVED LISTS ================= */
+  function uniqueSorted(arr){ return Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>a.localeCompare(b,'th')); }
+  function getBuildings(){ return uniqueSorted(records.map(r=>r.building)); }
+  function getDepts(){ return uniqueSorted(records.map(r=>r.dept)); }
+  function deptKeyword(dept){ return dept.replace(/^วิศวกรรม/,"").trim() || dept; }
+
+  /* ================= PERSON CARD RENDER ================= */
+  function personAvatarHtml(r, sizeClass){
+    const photo = normalizePhotoUrl(r.photo);
+    const cls = "avatar " + (sizeClass||"");
+    if(photo){
+      return '<div class="'+cls+'" style="background-image:url(\''+escapeHtml(photo)+'\');"></div>';
     }
+    return '<div class="'+cls+'" style="background:'+avatarColor(r.name)+';">'+escapeHtml(initials(r.name))+'</div>';
   }
-  for(const k in MAP){
-    for(const alias of MAP[k]){
-      const a = norm(alias);
-      if(a.length>2 && h.includes(a)) return k;
+
+  function personCardHtml(r){
+    const statusClass = (r.status||"").indexOf("ปกติ") !== -1 ? "ok" : "other";
+    return '' +
+    '<div class="person-card detailed">' +
+      '<div class="person-header-row">' +
+        personAvatarHtml(r,'avatar-lg') +
+        '<div class="person-main">' +
+          '<div class="person-name">'+escapeHtml(fullName(r))+'</div>' +
+          (r.position ? '<div class="person-position">'+escapeHtml(r.position)+'</div>' : '') +
+          (r.status ? '<span class="person-status '+statusClass+'">'+escapeHtml(r.status)+'</span>' : '') +
+        '</div>' +
+      '</div>' +
+      (r.dept ? '<div class="person-dept">🏷️ สาขา/หน่วยงาน: '+escapeHtml(r.dept)+'</div>' : '') +
+      '<div class="person-loc"><span class="locpin">📍</span> '+escapeHtml(locationText(r))+'</div>' +
+      (r.email ? '<div class="person-contact">✉️ <a href="mailto:'+escapeHtml(r.email)+'">'+escapeHtml(r.email)+'</a></div>' : '<div class="person-contact" style="color:var(--text-faint);">✉️ ไม่มีข้อมูลอีเมล</div>') +
+      (r.note ? '<div class="person-note">หมายเหตุ: '+escapeHtml(r.note)+'</div>' : '') +
+    '</div>';
+  }
+
+  function personGridHtml(list){
+    if(!list.length) return '<div class="empty-note">ไม่พบข้อมูลบุคลากรที่ตรงกับเงื่อนไข</div>';
+    return '<div class="person-grid">' + list.map(personCardHtml).join('') + '</div>';
+  }
+
+  /* ================= STAT TILES ================= */
+  function renderStats(){
+    const buildings = getBuildings();
+    const depts = getDepts();
+    elStatRow.innerHTML =
+      '<div class="stat-tile"><div class="num">'+records.length+'</div><div class="lbl">บุคลากรทั้งหมด</div></div>' +
+      '<div class="stat-tile"><div class="num">'+buildings.length+'</div><div class="lbl">อาคาร</div></div>' +
+      '<div class="stat-tile"><div class="num">'+depts.length+'</div><div class="lbl">สาขา/หน่วยงาน</div></div>' +
+      '<div class="stat-tile"><div class="num">🎙️/⌨️</div><div class="lbl">ถามด้วยเสียงหรือพิมพ์</div></div>';
+  }
+
+  /* ================= FILTER CHIPS ================= */
+  function renderChips(){
+    const buildings = getBuildings();
+    elBuildingChips.innerHTML = '<button class="chip clear-chip" data-clear="building">✕ ล้างตัวกรองอาคาร</button>' +
+      buildings.map(b=>'<button class="chip" data-building="'+escapeHtml(b)+'">🏢 '+escapeHtml(b)+'</button>').join('');
+
+    const depts = getDepts();
+    elDeptChipsRow.innerHTML = '<button class="chip clear-chip" data-clear="dept">✕ ล้างตัวกรองสาขา</button>' +
+      depts.map(d=>'<button class="chip" data-dept="'+escapeHtml(d)+'">🎓 '+escapeHtml(deptKeyword(d))+'</button>').join('');
+
+    elBuildingChips.querySelectorAll('[data-building]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const b = btn.getAttribute('data-building');
+        elChatInput.value = "มีใครอยู่อาคาร " + b + " บ้าง";
+        handleSend();
+      });
+    });
+    elBuildingChips.querySelector('[data-clear="building"]').addEventListener('click', ()=>{
+      activeBuildingFilter = null; elBrowseSearch.value=""; renderDirectory();
+    });
+    elDeptChipsRow.querySelectorAll('[data-dept]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const d = btn.getAttribute('data-dept');
+        elChatInput.value = "อาจารย์สาขา " + deptKeyword(d) + " มีใครบ้าง";
+        handleSend();
+      });
+    });
+    elDeptChipsRow.querySelector('[data-clear="dept"]').addEventListener('click', ()=>{
+      activeDeptFilter = null; elBrowseSearch.value=""; renderDirectory();
+    });
+  }
+
+  /* ================= DIRECTORY GRID (browse mode) ================= */
+  function renderDirectory(){
+    const q = norm(elBrowseSearch.value);
+    let list = records.slice().sort((a,b)=> (a.building+a.floor+a.room).localeCompare(b.building+b.floor+b.room,'th') || a.name.localeCompare(b.name,'th'));
+    if(q){
+      list = list.filter(r=>{
+        const combined = norm([r.name,r.acadTitle,r.position,r.dept,r.building,r.floor,r.room,r.email].join(" "));
+        return combined.indexOf(q) !== -1;
+      });
     }
+    elDirCount.textContent = "(" + list.length + " ท่าน)";
+    elDirectoryGrid.innerHTML = list.length ? list.map(personCardHtml).join('') : '<div class="empty-note">ไม่พบข้อมูลบุคลากรที่ตรงกับคำค้นหา</div>';
   }
-  return null;
-}
-
-/* ═══════════════════════════════════════════════════
-   3) STATE
-═══════════════════════════════════════════════════ */
-let DATA = [], HEADERS = [], FIELD = {}, FILTER = '', VIEW = [];
-const $ = s => document.querySelector(s);
-const $ = s => [...document.querySelectorAll(s)];
-document.getElementById('yy').textContent = new Date().getFullYear()+543;
-
-/* ═══════════════════════════════════════════════════
-   4) LOAD GOOGLE SHEET (gviz -> fallback CSV)
-═══════════════════════════════════════════════════ */
-async function loadSheet(){
-  setStatus('loading');
-  $('#dirArea').innerHTML = `<div class="loading"><div class="spin"></div><div style="color:var(--g3)">กำลังเชื่อมต่อฐานข้อมูลบุคลากร...</div></div>`;
-  try{
-    const url = `https://docs.google.com/spreadsheets/d/${CFG.SHEET_ID}/gviz/tq?tqx=out:json&gid=${CFG.GID}&_=${Date.now()}`;
-    const txt = await (await fetch(url)).text();
-    const json = JSON.parse(txt.substring(txt.indexOf('{'), txt.lastIndexOf('}')+1));
-    parseGviz(json);
-  }catch(e){
-    try{
-      const url2 = `https://docs.google.com/spreadsheets/d/${CFG.SHEET_ID}/export?format=csv&gid=${CFG.GID}&_=${Date.now()}`;
-      parseCSV(await (await fetch(url2)).text());
-    }catch(e2){ return showError(); }
-  }
-  buildAll();
-}
-function parseGviz(j){
-  const cols = j.table.cols.map(c => (c.label||'').trim());
-  let rows = j.table.rows.map(r => (r.c||[]).map(c => c ? (c.f ?? c.v ?? '') : ''));
-  let head = cols;
-  if(head.every(x => !x || /^[A-Z]{1,2}$/.test(x))){ head = (rows.shift()||[]).map(String); }
-  build(head, rows);
-}
-function parseCSV(t){
-  const rows=[]; let cur=[], f='', q=false;
-  for(let i=0;i<t.length;i++){
-    const c=t[i];
-    if(q){ if(c==='"'){ if(t[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
-    else { if(c==='"') q=true;
-      else if(c===','){cur.push(f);f='';}
-      else if(c==='\n'){cur.push(f);rows.push(cur);cur=[];f='';}
-      else if(c!=='\r') f+=c; }
-  }
-  if(f||cur.length){cur.push(f);rows.push(cur);}
-  build(rows.shift()||[], rows);
-}
-function build(head, rows){
-  HEADERS = head.map(h=>String(h||'').trim());
-  FIELD = {};
-  HEADERS.forEach((h,i)=>{ const k=detectKey(h); if(k && FIELD[k]===undefined) FIELD[k]=i; });
-  if(FIELD.name===undefined) FIELD.name = 0;
-  DATA = rows.filter(r => r.some(c=>String(c||'').trim()))
-    .map((r,idx)=>{
-      const o = {_i:idx, _raw:{}};
-      HEADERS.forEach((h,i)=>{ if(h) o._raw[h]=String(r[i]??'').trim(); });
-      for(const k in FIELD) o[k] = String(r[FIELD[k]]??'').trim();
-      o.photo = toImg(o.photo);
-      o._blob = Object.values(o._raw).join(' ').toLowerCase();
-      return o;
-    })
-    .filter(o => o.name);
-  setStatus(DATA.length ? 'ok' : 'empty');
-}
-function toImg(u){
-  if(!u) return '';
-  u = u.trim();
-  const m = u.match(/\/d\/([\w-]{20,})/) || u.match(/[?&]id=([\w-]{20,})/) || u.match(/^([\w-]{25,})$/);
-  if(m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w400`;
-  return /^https?:\/\//.test(u) ? u : '';
-}
-function setStatus(s){
-  const d=$('#dot'), t=$('#dotTxt');
-  d.className='dot'+(s==='ok'?' live':'');
-  t.textContent = s==='ok'?`ออนไลน์ · ${DATA.length} รายการ` : s==='loading'?'กำลังโหลด...' : s==='empty'?'ไม่พบข้อมูล':'เชื่อมต่อไม่ได้';
-  $('#sideStat').innerHTML = s==='ok'
-    ? `✅ เชื่อมต่อสำเร็จ<br>บุคลากร <b>${DATA.length}</b> คน<br>คอลัมน์ที่อ่านได้ <b>${HEADERS.filter(Boolean).length}</b> คอลัมน์<br><span style="color:var(--g3);font-size:12px">อัปเดต ${new Date().toLocaleTimeString('th-TH')}</span>`
-    : 'กำลังตรวจสอบการเชื่อมต่อ...';
-}
-function showError(){
-  setStatus('err');
-  const html = `<div class="note err"><b>⚠️ ไม่สามารถอ่านข้อมูลจาก Google Sheets ได้</b><br>
-   กรุณาเปิดสิทธิ์ชีตเป็น <b>“ผู้ที่มีลิงก์ · ผู้อ่าน (Anyone with the link · Viewer)”</b><br>
-   Share → General access → Anyone with the link → Viewer แล้วกด 🔄 รีเฟรช</div>`;
-  $('#dirArea').innerHTML = html; $('#mapArea').innerHTML = html;
-  say('ขออภัยค่ะ ไม่สามารถเชื่อมต่อฐานข้อมูลบุคลากรได้ กรุณาตรวจสอบสิทธิ์การเข้าถึงกูเกิลชีต');
-}
-
-/* ═══════════════════════════════════════════════════
-   5) RENDER
-═══════════════════════════════════════════════════ */
-function buildAll(){ renderChips(); renderStats(); renderList(DATA); renderMap(); renderSug(); }
-
-function depts(){ return [...new Set(DATA.map(d=>d.dept).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th')); }
-
-function renderChips(){
-  const box=$('#chips'); const ds=depts();
-  box.innerHTML = `<button class="chip active" data-d="">ทั้งหมด (${DATA.length})</button>`+
-    ds.map(d=>`<button class="chip" data-d="${esc(d)}">${esc(d)} (${DATA.filter(x=>x.dept===d).length})</button>`).join('');
-  box.onclick = e=>{
-    const b=e.target.closest('.chip'); if(!b) return;
-    $('#chips .chip').forEach(c=>c.classList.remove('active')); b.classList.add('active');
-    FILTER=b.dataset.d; doSearch($('#q').value);
-  };
-}
-function renderStats(){
-  const rooms=new Set(DATA.map(d=>d.room).filter(Boolean));
-  const bld=new Set(DATA.map(d=>d.building).filter(Boolean));
-  const ac = DATA.filter(d=>/ศาสตราจารย์|ผศ|รศ|ศ\.|อาจารย์|ดร/.test(d.position||d.name)).length;
-  $('#stats').innerHTML = [
-    ['บุคลากรทั้งหมด',DATA.length+' คน',''],
-    ['ภาควิชา/หน่วยงาน',depts().length+' หน่วย','c2'],
-    ['ห้องพักที่บันทึก',rooms.size+' ห้อง','c3'],
-    [bld.size?'อาคาร':'สายวิชาการ', bld.size? bld.size+' อาคาร' : ac+' คน','c4']
-  ].map(([k,v,c])=>`<div class="stat ${c}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
-}
-function avatar(p,cls='ava'){
-  return p.photo
-    ? `<img class="${cls}" src="${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy" onerror="this.outerHTML='<div class=\\'${cls} ph\\'>${initial(p.name)}</div>'">`
-    : `<div class="${cls} ph">${initial(p.name)}</div>`;
-}
-const initial = n => esc(String(n||'?').replace(/^(นาย|นาง|นางสาว|ผศ|รศ|ศ|ดร|อ)\.?\s*/g,'').trim().charAt(0)||'?');
-
-function card(p){
-  return `<div class="card" data-i="${p._i}">
-    <div class="card-top">${avatar(p)}</div>
-    <div class="card-body">
-      <div class="c-name">${esc(p.name)}</div>
-      ${p.position?`<div class="c-pos">${esc(p.position)}</div>`:''}
-      ${p.dept?`<div class="c-dep">🏛️ ${esc(p.dept)}</div>`:''}
-      ${p.room?`<div class="badge">🚪 ห้อง ${esc(p.room)}${p.building?' · '+esc(p.building):''}</div>`:''}
-      <div class="c-meta">
-        ${p.phone?`<div class="mrow">📞 <b>${esc(p.phone)}</b></div>`:''}
-        ${p.email?`<div class="mrow">✉️ ${esc(p.email)}</div>`:''}
-        ${p.expert?`<div class="mrow">🎓 ${esc(cut(p.expert,52))}</div>`:''}
-      </div>
-    </div></div>`;
-}
-function renderList(list){
-  VIEW=list;
-  $('#dirArea').innerHTML = list.length
-    ? `<div style="margin:4px 0 12px;font-size:13.5px;color:var(--g3)">พบ <b style="color:var(--g1)">${list.length}</b> รายการ</div><div class="grid">${list.map(card).join('')}</div>`
-    : `<div class="empty"><div class="em">🔍</div><div style="font-weight:700;color:var(--g1)">ไม่พบข้อมูลที่ค้นหา</div><div>ลองใช้คำอื่น เช่น ชื่อย่อ ภาควิชา หรือเลขห้อง</div></div>`;
-  $('#dirArea').onclick = e=>{ const c=e.target.closest('.card'); if(c) openModal(+c.dataset.i); };
-}
-function renderMap(){
-  const g={};
-  DATA.filter(d=>d.room).forEach(d=>{ const k=d.building||'อาคารคณะวิศวกรรมศาสตร์'; (g[k]=g[k]||[]).push(d); });
-  const keys=Object.keys(g).sort();
-  $('#mapArea').innerHTML = keys.length ? keys.map(k=>`
-    <div class="panel" style="margin-bottom:14px">
-      <h3 style="font-size:15px">🏢 ${esc(k)} <span style="color:var(--g3);font-weight:600">· ${g[k].length} ห้อง</span></h3>
-      <div class="grid">${g[k].sort((a,b)=>String(a.room).localeCompare(String(b.room),'th',{numeric:true})).map(card).join('')}</div>
-    </div>`).join('')
-    : `<div class="empty"><div class="em">🏢</div><div>ยังไม่มีข้อมูลห้องพักในชีต</div></div>`;
-  $('#mapArea').onclick = e=>{ const c=e.target.closest('.card'); if(c) openModal(+c.dataset.i); };
-}
-function openModal(i){
-  const p = DATA.find(x=>x._i===i); if(!p) return;
-  const rows = Object.entries(p._raw).filter(([k,v])=>v && !MAP.photo.some(a=>norm(k)===norm(a)))
-    .map(([k,v])=>`<div class="frow"><div class="fk">${esc(k)}</div><div class="fv">${linkify(v)}</div></div>`).join('');
-  $('#modal').innerHTML = `
-    <div class="m-head">
-      <button class="mclose" onclick="closeModal()">✕</button>
-      ${p.photo?`<img src="${esc(p.photo)}" alt="" onerror="this.outerHTML='<div class=\\'ph3\\'>${initial(p.name)}</div>'">`:`<div class="ph3">${initial(p.name)}</div>`}
-      <div style="flex:1;min-width:180px">
-        <h2>${esc(p.name)}</h2>
-        ${p.position?`<p>${esc(p.position)}</p>`:''}
-        ${p.dept?`<p style="color:var(--g2)">${esc(p.dept)}</p>`:''}
-        ${p.room?`<div class="badge" style="background:#fff;align-self:flex-start;margin-top:8px">🚪 ห้อง ${esc(p.room)}${p.building?' · '+esc(p.building):''}</div>`:''}
-      </div>
-    </div>
-    <div class="m-body">
-      ${rows}
-      <div class="acts">
-        <button class="act p" onclick="speakPerson(${i})">🔊 อ่านออกเสียง</button>
-        ${p.phone?`<a class="act" href="tel:${esc(p.phone.replace(/[^0-9+]/g,''))}">📞 โทร</a>`:''}
-        ${p.email?`<a class="act" href="mailto:${esc(p.email)}">✉️ ส่งอีเมล</a>`:''}
-        <button class="act" onclick="copyInfo(${i})">📋 คัดลอกข้อมูล</button>
-      </div>
-    </div>`;
-  $('#mask').classList.add('show');
-}
-function closeModal(){ $('#mask').classList.remove('show'); }
-$('#mask').onclick = e=>{ if(e.target.id==='mask') closeModal(); };
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
-function copyInfo(i){
-  const p=DATA.find(x=>x._i===i);
-  navigator.clipboard.writeText(Object.entries(p._raw).filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join('\n'));
-  toast('คัดลอกข้อมูลแล้ว ✓');
-}
-function toast(t){
-  const d=document.createElement('div');
-  d.textContent=t;
-  d.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--g1);color:#fff;padding:11px 22px;border-radius:999px;z-index:200;font-size:14px;box-shadow:var(--sh2)';
-  document.body.appendChild(d); setTimeout(()=>d.remove(),2200);
-}
-const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const cut = (s,n) => s.length>n ? s.slice(0,n)+'…' : s;
-function linkify(v){
-  const e=esc(v);
-  if(/^https?:\/\//.test(v)) return `<a href="${e}" target="_blank" style="color:var(--info)">${cut(e,60)}</a>`;
-  if(/^[\w.+-]+@[\w-]+\.[\w.]+$/.test(v)) return `<a href="mailto:${e}" style="color:var(--info)">${e}</a>`;
-  if(/^[0-9\-\s()+]{6,}$/.test(v)) return `<a href="tel:${e.replace(/[^0-9+]/g,'')}" style="color:var(--info)">${e}</a>`;
-  return e;
-}
-
-/* ═══════════════════════════════════════════════════
-   6) SEARCH ENGINE
-═══════════════════════════════════════════════════ */
-const clean = s => String(s||'').toLowerCase()
-  .replace(/(ศาสตราจารย์|รองศาสตราจารย์|ผู้ช่วยศาสตราจารย์|อาจารย์|ดอกเตอร์|ผศ|รศ|ศ|ดร|อ|นาย|นางสาว|นาง|คุณ)\.?/g,' ')
-  .replace(/\s+/g,' ').trim();
-
-function score(p, q){
-  const nq = clean(q); if(!nq) return 0;
-  const nm = clean(p.name);
-  let s = 0;
-  if(nm === nq) s += 100;
-  if(nm.includes(nq)) s += 60;
-  const toks = nq.split(' ').filter(t=>t.length>1);
-  toks.forEach(t=>{
-    if(nm.includes(t)) s += 22;
-    if(clean(p.dept).includes(t)) s += 12;
-    if(clean(p.position).includes(t)) s += 9;
-    if(String(p.room).toLowerCase().includes(t)) s += 18;
-    if(clean(p.expert).includes(t)) s += 7;
-    if(p._blob.includes(t)) s += 3;
+  elBrowseSearch.addEventListener('input', renderDirectory);
+  elDirToggleBtn.addEventListener('click', ()=>{
+    const hidden = elDirBody.style.display === 'none';
+    elDirBody.style.display = hidden ? '' : 'none';
+    elDirToggleBtn.textContent = hidden ? 'ซ่อนทำเนียบ' : 'แสดงทำเนียบ';
   });
-  return s;
-}
-function search(q, limit=0){
-  let base = FILTER ? DATA.filter(d=>d.dept===FILTER) : DATA;
-  if(!clean(q)) return base;
-  const r = base.map(p=>({p,s:score(p,q)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).map(x=>x.p);
-  return limit ? r.slice(0,limit) : r;
-}
-function doSearch(q){ renderList(search(q)); }
-$('#btnSearch').onclick = ()=>doSearch($('#q').value);
-$('#q').oninput = e=>doSearch(e.target.value);
-$('#q').onkeydown = e=>{ if(e.key==='Enter') doSearch(e.target.value); };
 
-/* ═══════════════════════════════════════════════════
-   7) ASSISTANT NLU
-═══════════════════════════════════════════════════ */
-const INTENT = {
-  room  : /ห้อง|ที่ไหน|อยู่ตรงไหน|ออฟฟิศ|office|room|ไปหา|ติดต่อที่|พบได้ที่/i,
-  phone : /เบอร์|โทร|phone|tel|ติดต่อเบอร์|โทรศัพท์/i,
-  email : /อีเมล|เมล|email|mail/i,
-  dept  : /ภาควิชา|สาขา|สังกัด|หน่วยงาน|department/i,
-  pos   : /ตำแหน่ง|position|วิชาการ/i,
-  count : /กี่คน|จำนวน|ทั้งหมดมี|มีกี่/i,
-  list  : /มีใครบ้าง|รายชื่อ|ใครบ้าง|list|แสดงทั้งหมด/i,
-  expert: /เชี่ยวชาญ|ถนัด|ความชำนาญ|วิจัย|สอนวิชา/i,
-  hello : /^(สวัสดี|หวัดดี|ดีครับ|ดีค่ะ|hello|hi|ทดสอบ)/i,
-  help  : /ช่วย|ทำอะไรได้|วิธีใช้|help|แนะนำ/i
-};
-function extractName(q){
-  return q.replace(/(ห้องพัก|ห้องทำงาน|ห้อง|เบอร์โทรศัพท์|เบอร์โทร|เบอร์|โทรศัพท์|อีเมล|เมล|ภาควิชา|สาขา|สังกัด|ตำแหน่ง|ความเชี่ยวชาญ|อยู่ที่ไหน|อยู่ตรงไหน|ที่ไหน|ของ|คือ|อะไร|ครับ|ค่ะ|คะ|หน่อย|ขอ|ช่วย|บอก|หา|ค้นหา|ใคร|ไหม|มั้ย|\?)/g,' ')
-          .replace(/\s+/g,' ').trim();
-}
-function answer(q){
-  if(!DATA.length) return {text:'ขออภัยค่ะ ขณะนี้ยังไม่สามารถเชื่อมต่อฐานข้อมูลบุคลากรได้ กรุณากดปุ่มรีเฟรชอีกครั้ง', speak:'ขออภัยค่ะ ยังไม่สามารถเชื่อมต่อฐานข้อมูลบุคลากรได้', list:[]};
-  if(INTENT.hello.test(q.trim()))
-    return {text:`สวัสดีค่ะ 🙏 ดิฉันคือผู้ช่วยค้นหาข้อมูลบุคลากร ${CFG.ORG}\nขณะนี้มีข้อมูลบุคลากร ${DATA.length} คน\nสอบถามได้เลยค่ะ เช่น “ห้องพักอาจารย์...อยู่ที่ไหน” หรือ “ภาควิชาไฟฟ้ามีใครบ้าง”`,
-            speak:`สวัสดีค่ะ ดิฉันคือผู้ช่วยค้นหาข้อมูลบุคลากร ${CFG.ORG} ขณะนี้มีข้อมูลบุคลากร ${DATA.length} คน สอบถามได้เลยค่ะ`, list:[]};
-  if(INTENT.help.test(q) && q.length<25)
-    return {text:'ดิฉันช่วยค้นหาได้ค่ะ 💡\n• ห้องพัก/อาคาร — “ห้องอาจารย์สมชายอยู่ที่ไหน”\n• เบอร์โทร/อีเมล — “เบอร์โทรอาจารย์...”\n• รายชื่อตามภาควิชา — “ภาควิชาโยธามีใครบ้าง”\n• ความเชี่ยวชาญ — “ใครเชี่ยวชาญด้าน AI”',
-            speak:'ดิฉันช่วยค้นหาห้องพัก เบอร์โทร อีเมล รายชื่อตามภาควิชา และความเชี่ยวชาญได้ค่ะ ลองถามได้เลย', list:[]};
+  /* ================= SEARCH ENGINE (rule-based, no AI) ================= */
+  const ACAD_KEYWORDS = ["ศาสตราจารย์","รองศาสตราจารย์","ผู้ช่วยศาสตราจารย์","อาจารย์","ดร."];
+  const POSITION_KEYWORDS = [
+    "คณบดี","รองคณบดี","ผู้ช่วยคณบดี","หัวหน้าสำนักงาน","หัวหน้าสำนักวิชา","หัวหน้ากลุ่มงาน","หัวหน้างาน",
+    "เลขานุการ","นักวิทยาศาสตร์","นักวิชาการศึกษา","นักวิเคราะห์","นักวิชาการเงิน","วิศวกรโยธา",
+    "ประธานหลักสูตร","ธุรการ","พัสดุ","การเงิน","บุคคล","กิจการนิสิต","โสตทัศนูปกรณ์","คอมพิวเตอร์",
+    "ยานยนต์","สวน","ห้องสมุด","วิจัย","วิเทศสัมพันธ์","ประกันคุณภาพ","บัณฑิตศึกษา","ปริญญาตรี","อาจารย์"
+  ];
 
-  if(INTENT.count.test(q)){
-    const d = depts().find(x=>clean(q).includes(clean(x)));
-    const n = d ? DATA.filter(x=>x.dept===d).length : DATA.length;
-    const t = d ? `${d} มีบุคลากรทั้งหมด ${n} คนค่ะ` : `${CFG.ORG} มีบุคลากรในระบบทั้งหมด ${DATA.length} คนค่ะ`;
-    return {text:t, speak:t, list: d?DATA.filter(x=>x.dept===d).slice(0,8):[]};
-  }
-  const dmatch = depts().find(x=> clean(q).includes(clean(x)) || clean(x).includes(clean(extractName(q))) );
-  if(dmatch && (INTENT.list.test(q) || INTENT.dept.test(q))){
-    const g = DATA.filter(x=>x.dept===dmatch);
-    return {text:`${dmatch} มีบุคลากร ${g.length} คนค่ะ 👇`, speak:`${dmatch} มีบุคลากร ${g.length} คนค่ะ แสดงรายชื่อด้านล่างนะคะ`, list:g.slice(0,20)};
-  }
-  if(INTENT.expert.test(q)){
-    const kw = extractName(q);
-    const r = DATA.filter(p=>clean(p.expert).includes(clean(kw)) && kw.length>1);
-    if(r.length) return {text:`พบผู้เชี่ยวชาญด้าน “${kw}” จำนวน ${r.length} ท่านค่ะ`, speak:`พบผู้เชี่ยวชาญด้าน ${kw} จำนวน ${r.length} ท่านค่ะ`, list:r.slice(0,10)};
-  }
-
-  const nameQ = extractName(q) || q;
-  const found = search(nameQ, 6);
-  if(!found.length)
-    return {text:`ขออภัยค่ะ ไม่พบข้อมูล “${esc(q)}” ในฐานข้อมูล\nลองพิมพ์เฉพาะชื่อ หรือชื่อภาควิชาดูนะคะ`,
-            speak:`ขออภัยค่ะ ไม่พบข้อมูล ${q} ในฐานข้อมูล ลองระบุเฉพาะชื่อ หรือชื่อภาควิชาดูนะคะ`, list:[]};
-
-  const p = found[0];
-  const T=[], S=[];
-  T.push(`<b>${esc(p.name)}</b>`); S.push(p.name);
-  if(p.position){T.push(`ตำแหน่ง: ${esc(p.position)}`); S.push(`ตำแหน่ง ${p.position}`);}
-  if(p.dept){T.push(`สังกัด: ${esc(p.dept)}`); S.push(`สังกัด ${p.dept}`);}
-
-  if(INTENT.room.test(q) || (!INTENT.phone.test(q)&&!INTENT.email.test(q)&&!INTENT.pos.test(q))){
-    if(p.room){
-      const loc = `ห้อง ${p.room}${p.building?` ${p.building}`:''}${p.floor?` ชั้น ${p.floor}`:''}`;
-      T.push(`🚪 <span class="hl">${esc(loc)}</span>`); S.push(`ห้องพักอยู่ที่ ${loc}`);
-    } else { T.push('🚪 ยังไม่ระบุห้องพักในระบบ'); S.push('ยังไม่ได้ระบุห้องพักในระบบค่ะ'); }
-  }
-  if(INTENT.phone.test(q) || p.phone){ if(p.phone){T.push(`📞 ${esc(p.phone)}`); if(INTENT.phone.test(q)) S.push(`เบอร์โทร ${p.phone.split('').join(' ')}`);} }
-  if(p.email){ T.push(`✉️ ${esc(p.email)}`); }
-  if(p.expert) T.push(`🎓 ${esc(cut(p.expert,90))}`);
-
-  const more = found.length>1 ? `\n\nพบผู้ที่ชื่อใกล้เคียงอีก ${found.length-1} ท่าน — เลือกดูด้านล่างได้ค่ะ` : '';
-  return {text:T.join('\n')+more, speak:S.join(' '), list:found};
-}
-
-/* ═══════════════════════════════════════════════════
-   8) CHAT UI
-═══════════════════════════════════════════════════ */
-const log = $('#log');
-function push(who, html, list){
-  const d=document.createElement('div');
-  d.className='msg '+who;
-  d.innerHTML = html + (list&&list.length ? `<div class="reslist">${list.map(p=>`
-      <div class="rescard" data-i="${p._i}">
-        ${p.photo?`<img src="${esc(p.photo)}" onerror="this.outerHTML='<div class=\\'ph2\\'>${initial(p.name)}</div>'">`:`<div class="ph2">${initial(p.name)}</div>`}
-        <div style="min-width:0">
-          <div class="t1">${esc(p.name)}</div>
-          <div class="t2">${esc([p.dept,p.room?'ห้อง '+p.room:''].filter(Boolean).join(' · ')||p.position||'')}</div>
-        </div></div>`).join('')}</div>` : '');
-  log.appendChild(d); log.scrollTop = log.scrollHeight;
-  d.onclick = e=>{ const c=e.target.closest('.rescard'); if(c) openModal(+c.dataset.i); };
-}
-function typing(on){
-  let t=$('#typing');
-  if(on && !t){ t=document.createElement('div'); t.id='typing'; t.className='msg a typing'; t.innerHTML='<i></i><i></i><i></i>'; log.appendChild(t); log.scrollTop=log.scrollHeight; }
-  if(!on && t) t.remove();
-}
-function ask(q){
-  q=q.trim(); if(!q) return;
-  push('u', esc(q)); $('#chatInput').value='';
-  typing(true); $('#aiState').textContent='กำลังค้นหาข้อมูล...';
-  setTimeout(()=>{
-    typing(false);
-    const a = answer(q);
-    push('a', a.text.replace(/\n/g,'<br>'), a.list);
-    say(a.speak);
-    $('#aiState').textContent='พร้อมให้บริการ · พูดหรือพิมพ์ได้เลย';
-  }, 420);
-}
-$('#sendChat').onclick = ()=>ask($('#chatInput').value);
-$('#chatInput').onkeydown = e=>{ if(e.key==='Enter') ask($('#chatInput').value); };
-function renderSug(){
-  const d = depts()[0] || 'ภาควิชา';
-  const n = DATA[0]?.name || 'อาจารย์';
-  $('#sugBox').innerHTML = [
-    `ห้องพักของ ${cut(n,22)} อยู่ที่ไหน`,
-    `${cut(d,24)} มีใครบ้าง`,
-    `คณะมีบุคลากรทั้งหมดกี่คน`,
-    `ขอเบอร์โทรติดต่อ ${cut(n,20)}`
-  ].map(s=>`<button class="sug">${esc(s)}</button>`).join('');
-  $('#sugBox').onclick = e=>{ if(e.target.classList.contains('sug')) ask(e.target.textContent); };
-}
-
-/* ═══════════════════════════════════════════════════
-   9) TEXT-TO-SPEECH (ภาษาไทย)
-═══════════════════════════════════════════════════ */
-let VOICE_ON = true, VOICES = [], PICKED = null;
-const synth = window.speechSynthesis;
-function loadVoices(){
-  VOICES = synth.getVoices();
-  const th = VOICES.filter(v=>/th|thai/i.test(v.lang+v.name));
-  const sel = $('#voiceSel');
-  const pool = th.length ? th : VOICES;
-  sel.innerHTML = pool.map((v,i)=>`<option value="${VOICES.indexOf(v)}">${esc(v.name)} (${v.lang})</option>`).join('') || '<option>ระบบเสียงเริ่มต้น</option>';
-  PICKED = pool[0] || null;
-  sel.onchange = ()=>{ PICKED = VOICES[+sel.value]; say('ทดสอบเสียงภาษาไทยค่ะ'); };
-}
-if(synth){ loadVoices(); synth.onvoiceschanged = loadVoices; }
-function say(t){
-  if(!VOICE_ON || !synth || !t) return;
-  synth.cancel();
-  const clean = String(t).replace(/<[^>]+>/g,'').replace(/[*_#`]/g,'').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,'').trim();
-  if(!clean) return;
-  const u = new SpeechSynthesisUtterance(clean.slice(0,600));
-  u.lang='th-TH'; u.rate=parseFloat($('#rate').value)||1; u.pitch=1;
-  if(PICKED) u.voice = PICKED;
-  u.onstart = ()=>$('#aiState').textContent='🔊 กำลังพูด...';
-  u.onend   = ()=>{ $('#aiState').textContent='พร้อมให้บริการ · พูดหรือพิมพ์ได้เลย'; if(CONT) startRec(lastTarget); };
-  synth.speak(u);
-}
-function speakPerson(i){
-  const p=DATA.find(x=>x._i===i);
-  say(`${p.name} ${p.position||''} ${p.dept?'สังกัด '+p.dept:''} ${p.room?'ห้องพักหมายเลข '+p.room:''} ${p.building||''} ${p.phone?'เบอร์โทร '+p.phone.split('').join(' '):''}`);
-}
-$('#btnStop').onclick = ()=>{ synth&&synth.cancel(); $('#aiState').textContent='หยุดเสียงแล้ว'; };
-$('#rate').oninput = e=>$('#rateV').textContent = (+e.target.value).toFixed(1)+'x';
-
-function setVoice(on){
-  VOICE_ON=on;
-  $('#btnVoice').className='tbtn '+(on?'on':'off');
-  $('#btnVoice').innerHTML = on?'🔊 <span>เสียงเปิด</span>':'🔇 <span>ปิดเสียง</span>';
-  $('#tgSpeak').className='tg'+(on?' on':'');
-  if(!on && synth) synth.cancel();
-}
-$('#btnVoice').onclick = ()=>setVoice(!VOICE_ON);
-$('#tgSpeak').onclick  = ()=>setVoice(!VOICE_ON);
-
-/* ═══════════════════════════════════════════════════
-   10) SPEECH-TO-TEXT (พูดค้นหา)
-═══════════════════════════════════════════════════ */
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec=null, RECING=false, CONT=false, lastTarget='chat';
-if(SR){
-  rec = new SR();
-  rec.lang='th-TH'; rec.continuous=false; rec.interimResults=true; rec.maxAlternatives=1;
-  rec.onstart = ()=>{ RECING=true; micUI(true); $('#vhint').textContent='🎙️ กำลังฟัง... พูดได้เลยค่ะ'; };
-  rec.onresult = e=>{
-    let fin='', itm='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const tr=e.results[i][0].transcript;
-      e.results[i].isFinal ? fin+=tr : itm+=tr;
+  function detectBuilding(qStripped){
+    const buildings = getBuildings();
+    // ตรงตัวเช่น EN1, en-2
+    const m = qStripped.match(/EN0*([0-9]+)/i);
+    if(m){
+      const code = "EN" + m[1];
+      const found = buildings.find(b=>b.toUpperCase()===code.toUpperCase());
+      if(found) return found;
     }
-    if(itm){
-      $('#vhint').textContent='🎙️ '+itm;
-      if(lastTarget==='search') $('#q').value=itm; else $('#chatInput').value=itm;
+    const m2 = qStripped.match(/อาคาร0*([0-9]+)/);
+    if(m2){
+      const code = "EN" + m2[1];
+      const found = buildings.find(b=>b.toUpperCase()===code.toUpperCase());
+      if(found) return found;
     }
-    if(fin){
-      $('#vhint').textContent='';
-      if(lastTarget==='search'){ $('#q').value=fin; doSearch(fin);
-        const r=search(fin,3);
-        say(r.length? `พบ ${r.length>=3?'มากกว่า':''} ${search(fin).length} รายการที่ตรงกับ ${fin} ค่ะ` : `ไม่พบข้อมูล ${fin} ค่ะ`);
-      } else ask(fin);
+    for(const b of buildings){ if(qStripped.toUpperCase().indexOf(b.toUpperCase())!==-1) return b; }
+    return null;
+  }
+  function detectFloor(q){
+    const m = q.match(/ชั้น\s*([0-9]+)/);
+    return m ? m[1] : null;
+  }
+  function detectRoomTokens(qStripped){
+    const out = [];
+    const re = /[0-9]{2,4}[A-Za-z]?/g;
+    let m;
+    while((m = re.exec(qStripped))){ out.push(m[0]); }
+    return out;
+  }
+  function detectDept(q){
+    const depts = getDepts();
+    let best = null;
+    for(const d of depts){
+      const kw = deptKeyword(d);
+      if(kw && q.indexOf(norm(kw)) !== -1){
+        if(!best || kw.length > best.kwLen) best = {dept:d, kwLen:kw.length};
+      }
     }
+    return best ? best.dept : null;
+  }
+  function detectPositionKeywords(q){
+    return POSITION_KEYWORDS.filter(k=> q.indexOf(norm(k)) !== -1);
+  }
+  function detectAcadKeywords(q){
+    return ACAD_KEYWORDS.filter(k=> q.indexOf(norm(k)) !== -1);
+  }
+
+  function scoreRecord(r, ctx){
+    let score = 0;
+    const nameStripped = stripSpaces(r.name).toLowerCase();
+    const emailNorm = norm(r.email);
+
+    // รหัสประจำตัว (T001 / S036 ฯลฯ) ตรงตัว
+    if(ctx.rawStripped && r.id && ctx.rawStripped.toUpperCase() === r.id.toUpperCase()){
+      score += 100;
+    }
+    // อีเมล
+    if(ctx.raw.indexOf('@') !== -1 && emailNorm && norm(ctx.raw).indexOf(emailNorm) !== -1){
+      score += 60;
+    }
+    // ชื่อ-นามสกุล (ตัดช่องว่างเทียบกัน)
+    if(ctx.rawStripped.length >= 2 && nameStripped.indexOf(ctx.rawStripped.toLowerCase()) !== -1){
+      score += ctx.rawStripped.length >= 4 ? 65 : 40;
+    } else {
+      // เทียบทีละ token ที่ยาวพอ
+      for(const tok of ctx.tokensStripped){
+        if(tok.length >= 2 && nameStripped.indexOf(tok.toLowerCase()) !== -1){ score += 30; break; }
+      }
+    }
+    // ห้อง
+    if(r.room){
+      const roomNorm = stripSpaces(r.room).toUpperCase();
+      for(const t of ctx.roomTokens){
+        if(roomNorm.indexOf(t.toUpperCase()) !== -1){ score += 45; break; }
+      }
+    }
+    // อาคาร
+    if(ctx.building && r.building && r.building.toUpperCase() === ctx.building.toUpperCase()){
+      score += 25;
+    }
+    // ชั้น (ให้คะแนนก็ต่อเมื่อมีการระบุอาคารด้วย หรือระบุชั้นเดี่ยวๆ)
+    if(ctx.floor && r.floor && String(r.floor) === String(ctx.floor)){
+      score += ctx.building ? 15 : 8;
+    }
+    // สาขา/หน่วยงาน
+    if(ctx.dept && r.dept === ctx.dept){
+      score += 30;
+    }
+    // ตำแหน่งงาน (keyword)
+    for(const kw of ctx.positionKeywords){
+      if(r.position && r.position.indexOf(kw) !== -1){ score += 32; break; }
+    }
+    // ตำแหน่งทางวิชาการ
+    for(const kw of ctx.acadKeywords){
+      if(r.acadTitle && r.acadTitle.indexOf(kw) !== -1){ score += 18; break; }
+    }
+    // fallback: substring ทั่วไป
+    const combined = norm([r.name,r.position,r.dept,r.note].join(" "));
+    if(ctx.rawNorm.length >= 2 && combined.indexOf(ctx.rawNorm) !== -1){ score += 6; }
+
+    return score;
+  }
+
+  function buildContext(raw){
+    const rawNorm = norm(raw);
+    const rawStripped = stripSpaces(raw);
+    const tokens = raw.trim().split(/\s+/).filter(Boolean);
+    const tokensStripped = tokens.map(stripSpaces);
+    return {
+      raw, rawNorm, rawStripped, tokens, tokensStripped,
+      building: detectBuilding(rawStripped),
+      floor: detectFloor(raw),
+      roomTokens: detectRoomTokens(rawStripped),
+      dept: detectDept(rawNorm),
+      positionKeywords: detectPositionKeywords(rawNorm),
+      acadKeywords: detectAcadKeywords(rawNorm)
+    };
+  }
+
+  function search(raw){
+    const ctx = buildContext(raw);
+    const scored = records.map(r=>({r, score:scoreRecord(r, ctx)}))
+      .filter(x=>x.score > 0)
+      .sort((a,b)=> b.score - a.score || a.r.name.localeCompare(b.r.name,'th'));
+    return { ctx, results: scored.map(x=>x.r), topScore: scored.length ? scored[0].score : 0 };
+  }
+
+  function isGreeting(q){
+    return /^(สวัสดี|หวัดดี|hello|hi|เฮลโล)/i.test(q.trim());
+  }
+  function isListAllRequest(q){
+    return /(ทั้งหมด|รายชื่อทั้งหมด|บุคลากรทั้งหมด|มีใครบ้าง)$/.test(q.trim()) && !detectBuilding(stripSpaces(q)) && !detectDept(norm(q));
+  }
+
+  /* ================= RESPONSE BUILDER ================= */
+  function buildResponse(raw){
+    const q = raw.trim();
+    if(!q){
+      return { html: '<div class="ans-title">พิมพ์หรือพูดคำถามได้เลยครับ</div>', speak: "กรุณาพิมพ์หรือพูดคำถามเกี่ยวกับบุคลากรที่ต้องการค้นหา" };
+    }
+    if(isGreeting(q)){
+      const html = '<div class="ans-title">สวัสดีครับ 👋</div>' +
+        '<div style="font-size:12.5px;color:var(--text-soft);">ผมช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มมส. ได้ครับ ลองพิมพ์หรือพูดชื่ออาจารย์ ห้องพัก อาคาร หรือสาขาวิชาที่ต้องการดูได้เลย เช่น "คณบดีอยู่ห้องไหน" หรือ "EN1 ชั้น 2 มีใครบ้าง"</div>';
+      return { html, speak: "สวัสดีครับ ผมช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคามได้ครับ ลองถามชื่อ ห้อง อาคาร หรือสาขาวิชาที่ต้องการดูได้เลยครับ" };
+    }
+    if(isListAllRequest(q)){
+      const html = '<div class="ans-title">บุคลากรทั้งหมด '+records.length+' ท่าน</div>' +
+        '<div class="ans-note">เลื่อนไปที่ "ทำเนียบบุคลากรทั้งหมด" ด้านล่างเพื่อดูรายชื่อทุกท่าน หรือระบุอาคาร/สาขาวิชาเพื่อจำกัดผลลัพธ์ได้ครับ</div>';
+      elBrowseSearch.value = "";
+      renderDirectory();
+      return { html, speak: "คณะวิศวกรรมศาสตร์มีบุคลากรทั้งหมด " + records.length + " ท่าน กรุณาเลื่อนไปดูที่ทำเนียบบุคลากรด้านล่าง หรือระบุอาคารและสาขาวิชาเพื่อจำกัดผลการค้นหาครับ" };
+    }
+
+    const { ctx, results, topScore } = search(q);
+
+    if(!results.length){
+      const html = '<div class="ans-title">ไม่พบข้อมูลที่ตรงกับคำค้นหา</div>' +
+        '<div class="ans-note">ลองค้นด้วยชื่อ-นามสกุล, รหัสห้อง (เช่น 207A), อาคาร (เช่น EN1), หรือชื่อสาขาวิชา (เช่น วิศวกรรมไฟฟ้า) ดูนะครับ</div>';
+      return { html, speak: "ขออภัยครับ ไม่พบข้อมูลบุคลากรที่ตรงกับคำค้นหานี้ ลองระบุชื่อ อาคาร หรือสาขาวิชาให้ชัดเจนขึ้นได้ครับ" };
+    }
+
+    if(results.length === 1){
+      const r = results[0];
+      const html = '<div class="ans-title">พบข้อมูล 1 ท่าน</div>' + personCardHtml(r);
+      const speak = fullName(r) + " ตำแหน่ง " + (r.position||"-") + " สังกัด " + (r.dept||"-") +
+        " ประจำอยู่ที่ " + locationText(r).replace(/·/g,",");
+      return { html, speak };
+    }
+
+    // หลายรายการ
+    const cap = 24;
+    const shown = results.slice(0, cap);
+    let headTitle = "พบบุคลากร " + results.length + " ท่าน";
+    if(ctx.building) headTitle += " ในอาคาร " + ctx.building;
+    if(ctx.dept) headTitle += " สาขา " + deptKeyword(ctx.dept);
+    const html = '<div class="ans-title">'+escapeHtml(headTitle)+'</div>' +
+      personGridHtml(shown) +
+      (results.length > cap ? '<div class="more-note">แสดง '+cap+' จากทั้งหมด '+results.length+' ท่าน ลองระบุชื่อให้เจาะจงขึ้นเพื่อผลลัพธ์ที่แคบลงครับ</div>' : '');
+    const speakNames = shown.slice(0,5).map(r=>r.name).join(", ");
+    const speak = "พบบุคลากรทั้งหมด " + results.length + " ท่าน" + (ctx.building? " ในอาคาร "+ctx.building : "") + (ctx.dept? " สาขา "+deptKeyword(ctx.dept):"") + " เช่น " + speakNames;
+    return { html, speak };
+  }
+
+  /* ================= CHAT UI ================= */
+  function addMessage(role, html){
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + role;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = html;
+    const time = document.createElement('div');
+    time.className = 'msg-time';
+    time.textContent = fmtTime(new Date());
+    wrap.appendChild(bubble);
+    wrap.appendChild(time);
+    elChatScroll.appendChild(wrap);
+    elChatScroll.scrollTop = elChatScroll.scrollHeight;
+    return wrap;
+  }
+
+  function handleSend(){
+    const text = elChatInput.value.trim();
+    if(!text) return;
+    addMessage('user', escapeHtml(text));
+    elChatInput.value = "";
+    elChatInput.style.height = 'auto';
+
+    const typingMsg = addMessage('assistant', '<div class="typing"><span></span><span></span><span></span></div>');
+
+    setTimeout(()=>{
+      typingMsg.remove();
+      const res = buildResponse(text);
+      addMessage('assistant', res.html);
+      speak(res.speak);
+    }, 220);
+  }
+  elSendBtn.addEventListener('click', handleSend);
+  elChatInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); handleSend(); }
+  });
+  elChatInput.addEventListener('input', function(){
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+  });
+
+  /* ================= VOICE OUTPUT (Text-to-Speech) ================= */
+  let thaiVoice = null;
+  function pickThaiVoice(){
+    if(!('speechSynthesis' in window)) return;
+    const voices = speechSynthesis.getVoices();
+    thaiVoice = voices.find(v=>/^th/i.test(v.lang)) || null;
+  }
+  if('speechSynthesis' in window){
+    pickThaiVoice();
+    speechSynthesis.onvoiceschanged = pickThaiVoice;
+  }
+  function speak(text){
+    if(!ttsEnabled || !text) return;
+    if(!('speechSynthesis' in window)) return;
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'th-TH';
+      if(thaiVoice) u.voice = thaiVoice;
+      u.rate = 1.0;
+      u.pitch = 1.0;
+      speechSynthesis.speak(u);
+    }catch(e){ /* เงียบไว้ ไม่รบกวนผู้ใช้ */ }
+  }
+  elMuteBtn.addEventListener('click', ()=>{
+    ttsEnabled = !ttsEnabled;
+    elMuteBtn.textContent = ttsEnabled ? '🔊' : '🔇';
+    elMuteBtn.classList.toggle('muted', !ttsEnabled);
+    elMuteBtn.title = ttsEnabled ? 'ปิดเสียงตอบ' : 'เปิดเสียงตอบ';
+    if(!ttsEnabled && 'speechSynthesis' in window) speechSynthesis.cancel();
+  });
+
+  /* ================= VOICE INPUT (Speech Recognition) ================= */
+  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognizer = null;
+  let listening = false;
+  if(SpeechRecognitionAPI){
+    recognizer = new SpeechRecognitionAPI();
+    recognizer.lang = 'th-TH';
+    recognizer.continuous = false;
+    recognizer.interimResults = false;
+    recognizer.maxAlternatives = 1;
+
+    recognizer.onstart = function(){
+      listening = true;
+      elMicBtn.classList.add('listening');
+      elVoiceStatus.textContent = '🎙️ กำลังฟัง... พูดคำถามได้เลยครับ';
+    };
+    recognizer.onresult = function(e){
+      const transcript = e.results[0][0].transcript;
+      elChatInput.value = transcript;
+      handleSend();
+    };
+    recognizer.onerror = function(e){
+      elVoiceStatus.textContent = 'ไม่สามารถรับเสียงได้ (' + (e.error||'unknown') + ') ลองใหม่อีกครั้งหรือพิมพ์แทนได้ครับ';
+    };
+    recognizer.onend = function(){
+      listening = false;
+      elMicBtn.classList.remove('listening');
+      setTimeout(()=>{ if(!listening) elVoiceStatus.textContent = ''; }, 2500);
+    };
+    elMicBtn.addEventListener('click', ()=>{
+      if(listening){ recognizer.stop(); return; }
+      try{ recognizer.start(); }catch(e){ /* อาจถูกเรียกซ้ำระหว่าง state เปลี่ยน */ }
+    });
+  } else {
+    elMicBtn.disabled = true;
+    elMicBtn.title = 'เบราว์เซอร์นี้ไม่รองรับการสั่งงานด้วยเสียง กรุณาใช้ Chrome บนมือถือหรือคอมพิวเตอร์';
+    elVoiceStatus.textContent = '';
+  }
+
+  /* ================= EXAMPLE CHIPS ================= */
+  const EXAMPLE_QUESTIONS = [
+    "คณบดีคณะอยู่ห้องไหน",
+    "อาจารย์วิศวกรรมไฟฟ้ามีใครบ้าง",
+    "EN1 ชั้น 2 มีใครอยู่บ้าง",
+    "ห้อง 207A คือใคร",
+    "ติดต่อฝ่ายงานพัสดุ",
+    "รองคณบดีฝ่ายวิชาการคือใคร"
+  ];
+  elExamples.innerHTML = EXAMPLE_QUESTIONS.map((q,i)=>'<button class="example-chip" data-i="'+i+'">'+escapeHtml(q)+'</button>').join('');
+  elExamples.querySelectorAll('.example-chip').forEach((btn,i)=>{
+    btn.addEventListener('click', ()=>{ elChatInput.value = EXAMPLE_QUESTIONS[i]; handleSend(); });
+  });
+
+  /* ================= LIVE SYNC (Google Sheet, JSONP, gviz) ================= */
+  const HEADER_MAP = {
+    id:        ["ลำดับ"],
+    acadTitle: ["ตำแหน่งทางวิชาการ"],
+    name:      ["ชื่อ - นามสกุล","ชื่อ-นามสกุล","ชื่อ – นามสกุล"],
+    position:  ["ตำแหน่ง"],
+    dept:      ["หน่วยงาน/สาขา"],
+    building:  ["อาคาร"],
+    floor:     ["ชั้น"],
+    room:      ["ห้อง"],
+    status:    ["สถานะ"],
+    email:     ["E-Mail","E-mail","Email","อีเมล"],
+    note:      ["หมายเหตุ"],
+    photo:     ["รูปภาพ"]
   };
-  rec.onerror = e=>{
-    micUI(false); RECING=false;
-    const m = {'not-allowed':'⚠️ กรุณาอนุญาตให้เว็บไซต์ใช้ไมโครโฟน','no-speech':'ไม่ได้ยินเสียงพูด ลองใหม่อีกครั้งนะคะ','audio-capture':'⚠️ ไม่พบไมโครโฟนในอุปกรณ์'}[e.error] || 'เกิดข้อผิดพลาด: '+e.error;
-    $('#vhint').textContent=m;
-  };
-  rec.onend = ()=>{ RECING=false; micUI(false); };
-}else{
-  $('#vhint').textContent='ℹ️ เบราว์เซอร์นี้ยังไม่รองรับการสั่งงานด้วยเสียง (แนะนำ Google Chrome / Microsoft Edge / Safari)';
-}
-function micUI(on){ ['#micChat','#micSearch','#fab'].forEach(s=>$(s)&&$(s).classList.toggle('rec',on)); }
-function startRec(target){
-  if(!rec){ toast('เบราว์เซอร์นี้ไม่รองรับการพูด — กรุณาใช้ Chrome'); return; }
-  lastTarget = target||'chat';
-  if(RECING){ rec.stop(); return; }
-  try{ synth&&synth.cancel(); rec.start(); }catch(e){}
-}
-$('#micChat').onclick   = ()=>startRec('chat');
-$('#micSearch').onclick = ()=>startRec('search');
-$('#fab').onclick       = ()=>{ go($('#p-dir').classList.contains('show')?'dir':'assist'); startRec($('#p-dir').classList.contains('show')?'search':'chat'); };
-$('#tgCont').onclick = e=>{ CONT=!CONT; e.target.classList.toggle('on',CONT); toast(CONT?'เปิดโหมดสนทนาต่อเนื่อง':'ปิดโหมดสนทนาต่อเนื่อง'); };
 
-/* ═══════════════════════════════════════════════════
-   11) NAV + INIT
-═══════════════════════════════════════════════════ */
-function go(p){
-  $('.tab').forEach(t=>t.classList.toggle('active',t.dataset.page===p));
-  $('.page').forEach(s=>s.classList.toggle('show',s.id==='p-'+p));
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-$('.tab').forEach(t=>t.onclick=()=>go(t.dataset.page));
-$('#btnReload').onclick = ()=>{ loadSheet(); toast('กำลังโหลดข้อมูลล่าสุด...'); };
+  function buildHeaderIndex(cols, headerMap){
+    const labels = cols.map(c => ((c && (c.label || c.id)) || "").trim());
+    const idx = {};
+    Object.keys(headerMap).forEach(key=>{
+      const candidates = headerMap[key];
+      let found = -1;
+      for(let i=0;i<labels.length;i++){
+        if(candidates.indexOf(labels[i]) !== -1){ found = i; break; }
+      }
+      if(found === -1){
+        for(let i=0;i<labels.length;i++){
+          if(candidates.some(c => labels[i].indexOf(c) !== -1)){ found = i; break; }
+        }
+      }
+      idx[key] = found;
+    });
+    return idx;
+  }
+  function cellText(row, i){
+    if(i < 0 || !row.c || !row.c[i]) return "";
+    const cell = row.c[i];
+    const raw = (cell.f !== undefined && cell.f !== null) ? cell.f : cell.v;
+    return raw === null || raw === undefined ? "" : String(raw).trim();
+  }
+  function gvizToRecords(table){
+    const idx = buildHeaderIndex(table.cols || [], HEADER_MAP);
+    const out = [];
+    (table.rows || []).forEach(row=>{
+      if(!row.c) return;
+      const name = cellText(row, idx.name);
+      if(!name) return;
+      out.push({
+        id: cellText(row, idx.id),
+        acadTitle: cellText(row, idx.acadTitle),
+        name: name,
+        position: cellText(row, idx.position),
+        dept: cellText(row, idx.dept),
+        building: cellText(row, idx.building),
+        floor: cellText(row, idx.floor),
+        room: cellText(row, idx.room),
+        status: cellText(row, idx.status),
+        email: cellText(row, idx.email),
+        note: cellText(row, idx.note),
+        photo: cellText(row, idx.photo)
+      });
+    });
+    return out;
+  }
 
-(async function init(){
-  push('a', `สวัสดีค่ะ 🙏 ดิฉันคือ <b>ผู้ช่วยค้นหาข้อมูลบุคลากร</b><br>${CFG.ORG}<br><br>ถามได้ทั้ง <b>พิมพ์</b> หรือ <b>กดปุ่มไมค์ 🎙️ แล้วพูด</b> ระบบจะตอบทั้ง<b>ข้อความและเสียงภาษาไทย</b>พร้อมกันค่ะ<br><br>ตัวอย่าง: “ห้องพักอาจารย์...อยู่ที่ไหน”, “ภาควิชา...มีใครบ้าง”`);
-  await loadSheet();
-  if(DATA.length) push('a', `✅ เชื่อมต่อฐานข้อมูลสำเร็จ — พร้อมให้บริการข้อมูลบุคลากร <b>${DATA.length}</b> คน`);
+  function setSyncState(state, text){
+    syncDot.className = 'sync-dot' + (state ? ' ' + state : '');
+    syncText.textContent = text;
+  }
+
+  const CALLBACK_NAME = "__gvizStaffCallback";
+  let syncTimeoutId = null;
+
+  function refreshAll(){
+    renderStats();
+    renderChips();
+    renderDirectory();
+  }
+
+  function syncFromSheet(){
+    if(!SHEET_ID || SHEET_ID.indexOf("YOUR_") === 0){
+      setSyncState('', 'แสดงข้อมูลสำรองที่บันทึกไว้ในไฟล์ (ยังไม่ได้ตั้งค่า Sheet ID)');
+      return;
+    }
+    setSyncState('loading', 'กำลังซิงก์ข้อมูล…');
+    syncBtn.disabled = true;
+    syncNote.textContent = "";
+
+    const prevScript = document.getElementById('gviz-jsonp-script');
+    if(prevScript) prevScript.remove();
+
+    function finish(){
+      syncBtn.disabled = false;
+      if(syncTimeoutId){ clearTimeout(syncTimeoutId); syncTimeoutId = null; }
+    }
+    function fail(reasonText){
+      setSyncState('err', 'ซิงก์สดไม่สำเร็จ — แสดงข้อมูลสำรอง');
+      syncNote.textContent = 'เชื่อมต่อ Google Sheet ไม่ได้ (' + reasonText + ')';
+      finish();
+    }
+
+    window[CALLBACK_NAME] = function(response){
+      try{
+        if(!response || response.status === 'error'){
+          fail('ตรวจสอบสิทธิ์ "ทุกคนที่มีลิงก์ - ผู้ดู"');
+          return;
+        }
+        const newRecords = gvizToRecords(response.table);
+        if(!newRecords.length){ fail('ไม่พบแถวข้อมูลในชีท'); return; }
+        records = newRecords;
+        refreshAll();
+        setSyncState('live', 'ซิงก์สดล่าสุด ' + fmtTime(new Date()) + ' น. (ข้อความล้วน — ยังไม่ได้ตั้งค่า Apps Script สำหรับรูปภาพ)');
+        finish();
+      }catch(e){
+        fail('อ่านข้อมูลไม่สำเร็จ: ' + e.message);
+      }
+    };
+
+    const gidParam = SHEET_GID ? ("&gid=" + encodeURIComponent(SHEET_GID)) : "";
+    const url = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+      "/gviz/tq?tqx=out:json;responseHandler:" + CALLBACK_NAME + gidParam;
+
+    const script = document.createElement('script');
+    script.id = 'gviz-jsonp-script';
+    script.src = url;
+    script.onerror = function(){ fail('โหลดสคริปต์จาก Google Sheets ไม่สำเร็จ (เครือข่าย/สิทธิ์การเข้าถึง)'); };
+    document.body.appendChild(script);
+    syncTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับจากชีท'); }, 10000);
+  }
+  /* ================= LIVE SYNC พร้อมรูปภาพ (Google Apps Script) =================
+     gviz อ่านรูปแบบ "Insert image in cell" ไม่ได้ ระบบนี้จึงใช้ Apps Script
+     Web App เป็นแหล่งข้อมูลหลัก (ได้ทั้งข้อความและรูปภาพแบบเรียลไทม์) โดยยิงแบบ
+     JSONP เหมือน gviz ด้านบน (ไม่ติดปัญหา CORS) ถ้ายังไม่ได้ตั้งค่า APPS_SCRIPT_URL
+     หรือเรียกไม่สำเร็จ ระบบจะ fallback ไปใช้ gviz (ได้แต่ข้อความ ไม่มีรูป) แทน */
+  const GAS_CALLBACK_NAME = "__gasStaffCallback";
+  let gasTimeoutId = null;
+
+  function syncFromAppsScript(){
+    if(!APPS_SCRIPT_URL){
+      syncFromSheet();
+      return;
+    }
+    setSyncState('loading', 'กำลังซิงก์ข้อมูลพร้อมรูปภาพ… (อาจใช้เวลาสักครู่)');
+    syncBtn.disabled = true;
+    syncNote.textContent = "";
+
+    const prevScript = document.getElementById('gas-jsonp-script');
+    if(prevScript) prevScript.remove();
+
+    function finish(){
+      syncBtn.disabled = false;
+      if(gasTimeoutId){ clearTimeout(gasTimeoutId); gasTimeoutId = null; }
+    }
+    function fail(reasonText){
+      syncNote.textContent = 'ซิงก์รูปภาพผ่าน Apps Script ไม่สำเร็จ (' + reasonText + ') — ใช้ข้อมูลข้อความแทน';
+      finish();
+      syncFromSheet(); // ลอง fallback เป็น gviz (ข้อความล้วน)
+    }
+
+    window[GAS_CALLBACK_NAME] = function(response){
+      try{
+        if(!response || !response.records || !response.records.length){
+          fail('ไม่พบข้อมูลจาก Apps Script');
+          return;
+        }
+        records = response.records;
+        refreshAll();
+        setSyncState('live', 'ซิงก์สดพร้อมรูปภาพล่าสุด ' + fmtTime(new Date()) + ' น.');
+        finish();
+      }catch(e){
+        fail('อ่านข้อมูลไม่สำเร็จ: ' + e.message);
+      }
+    };
+
+    const sep = APPS_SCRIPT_URL.indexOf('?') !== -1 ? '&' : '?';
+    const url = APPS_SCRIPT_URL + sep + 'callback=' + GAS_CALLBACK_NAME;
+
+    const script = document.createElement('script');
+    script.id = 'gas-jsonp-script';
+    script.src = url;
+    script.onerror = function(){ fail('โหลดสคริปต์ไม่สำเร็จ (ตรวจสอบว่า Deploy เป็น "Anyone" แล้ว)'); };
+    document.body.appendChild(script);
+    // ให้เวลานานกว่าปกติ เพราะต้องดึงรูปภาพหลายสิบ-หลายร้อยรูปในการเรียกครั้งเดียว
+    gasTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับ (ข้อมูลรูปภาพเยอะอาจใช้เวลานาน)'); }, 30000);
+  }
+
+  syncBtn.addEventListener('click', syncFromAppsScript);
+
+  /* ================= INIT ================= */
+  refreshAll();
+  addMessage('assistant', '<div class="ans-title">สวัสดีครับ 👋</div><div style="font-size:12.5px; color:var(--text-soft);">ผมคือผู้ช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มมส. ครับ พิมพ์หรือกดไมค์ 🎤 เพื่อถามด้วยเสียงได้เลย เช่น "คณบดีอยู่ห้องไหน" หรือ "EN1 มีใครบ้าง" — ระบบนี้ค้นหาด้วยกฎที่ตั้งไว้ล่วงหน้า ไม่ได้ใช้ AI ครับ</div>');
+  setSyncState('', 'แสดงข้อมูลสำรองที่บันทึกไว้ในไฟล์');
+  syncFromAppsScript();
+
 })();
 </script>
 </body>
