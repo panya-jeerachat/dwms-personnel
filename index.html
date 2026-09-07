@@ -553,7 +553,14 @@
     const photo = normalizePhotoUrl(r.photo);
     const cls = "avatar " + (sizeClass||"");
     if(photo){
-      return '<div class="'+cls+'" style="background-image:url(\''+escapeHtml(photo)+'\');"></div>';
+      const bg = avatarColor(r.name);
+      const init = escapeHtml(initials(r.name));
+      // ถ้ารูปโหลดไม่ได้ (เช่นลิงก์หมดอายุ) จะสลับกลับเป็นวงกลมตัวอักษรย่อให้อัตโนมัติ ไม่ขึ้นไอคอนรูปพัง
+      return '<div class="'+cls+'" style="background:'+bg+';" data-fallback="1">' +
+        '<img src="'+escapeHtml(photo)+'" alt="" loading="lazy" ' +
+        'style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;" ' +
+        'onerror="this.parentElement.textContent=\''+init+'\'; this.remove();">' +
+        '</div>';
     }
     return '<div class="'+cls+'" style="background:'+avatarColor(r.name)+';">'+escapeHtml(initials(r.name))+'</div>';
   }
@@ -621,7 +628,8 @@
       .sort((a,b)=> (a.floor+a.room).localeCompare(b.floor+b.room,'th') || a.name.localeCompare(b.name,'th'));
     addMessage('user', escapeHtml('บุคลากรทั้งหมดในอาคาร ' + building));
     const html = '<div class="ans-title">พบบุคลากรในอาคาร '+escapeHtml(building)+' จำนวน '+list.length+' ท่าน</div>' + personGridHtml(list);
-    addMessage('assistant', html);
+    const msgEl = addMessage('assistant', html);
+    lastPersonMsgEl = msgEl; lastPersonIds = list.map(r=>r.id);
     speak('พบบุคลากรในอาคาร ' + building + ' ทั้งหมด ' + list.length + ' ท่าน');
   }
   function askDeptList(dept){
@@ -629,7 +637,8 @@
       .sort((a,b)=> a.name.localeCompare(b.name,'th'));
     addMessage('user', escapeHtml('บุคลากรทั้งหมดในสาขา/หน่วยงาน ' + dept));
     const html = '<div class="ans-title">พบบุคลากรในสาขา/หน่วยงาน '+escapeHtml(dept)+' จำนวน '+list.length+' ท่าน</div>' + personGridHtml(list);
-    addMessage('assistant', html);
+    const msgEl = addMessage('assistant', html);
+    lastPersonMsgEl = msgEl; lastPersonIds = list.map(r=>r.id);
     speak('พบบุคลากรในสาขา ' + dept + ' ทั้งหมด ' + list.length + ' ท่าน');
   }
 
@@ -924,7 +933,7 @@
       const html = '<div class="ans-title">พบข้อมูล 1 ท่าน</div>' + personCardHtml(r) + badge;
       const speak = fullName(r) + " ตำแหน่ง " + (r.position||"-") + " สังกัด " + (r.dept||"-") +
         " ประจำอยู่ที่ " + locationText(r).replace(/·/g,",");
-      return { html, speak };
+      return { html, speak, ids: [r.id] };
     }
 
     // หลายรายการ
@@ -941,7 +950,7 @@
       (results.length > cap ? '<div class="more-note">แสดง '+cap+' จากทั้งหมด '+results.length+' ท่าน ลองระบุชื่อให้เจาะจงขึ้นเพื่อผลลัพธ์ที่แคบลงครับ</div>' : '');
     const speakNames = shown.slice(0,5).map(r=>r.name).join(", ");
     const speak = "พบบุคลากรทั้งหมด " + results.length + " ท่าน เช่น " + speakNames;
-    return { html, speak };
+    return { html, speak, ids: shown.map(r=>r.id) };
   }
 
   /* ================= CHAT UI ================= */
@@ -961,6 +970,9 @@
     return wrap;
   }
 
+  let lastPersonMsgEl = null;
+  let lastPersonIds = null;
+
   function handleSend(){
     const text = elChatInput.value.trim();
     if(!text) return;
@@ -973,7 +985,8 @@
     setTimeout(()=>{
       typingMsg.remove();
       const res = buildResponse(text);
-      addMessage('assistant', res.html);
+      const msgEl = addMessage('assistant', res.html);
+      if(res.ids && res.ids.length){ lastPersonMsgEl = msgEl; lastPersonIds = res.ids; }
       speak(res.speak);
     }, 220);
   }
@@ -1150,26 +1163,81 @@
     renderDirectory();
   }
 
+  /* ================= แคชในเครื่อง (localStorage) =================
+     เนื่องจากข้อมูลบุคลากรไม่ได้เปลี่ยนบ่อย จึงเก็บชุดข้อมูลล่าสุด
+     (รวมรูปภาพ) ไว้ในเครื่องผู้ใช้ด้วย เพื่อให้ "เปิดแอปใหม่" แสดงผลได้
+     ทันทีโดยไม่ต้องรอเครือข่ายเลย แล้วค่อยอัปเดตข้อมูลสดแบบเงียบๆ ในพื้นหลัง
+     (ถ้ารูปภาพในแคชหมดอายุแล้ว การ์ดจะสลับไปแสดงตัวอักษรย่อให้อัตโนมัติ) */
+  const LOCAL_CACHE_KEY = 'staffDirectoryCacheV1';
+  function loadLocalCache(){
+    try{
+      const raw = localStorage.getItem(LOCAL_CACHE_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      if(parsed && Array.isArray(parsed.records) && parsed.records.length) return parsed;
+    }catch(e){ /* localStorage อาจถูกปิด (เช่นโหมดส่วนตัว) ไม่เป็นไร ข้ามไป */ }
+    return null;
+  }
+  function saveLocalCache(recs){
+    try{
+      localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify({ records: recs, savedAt: Date.now() }));
+    }catch(e){ /* พื้นที่เต็ม/ถูกปิดใช้งาน ไม่กระทบการทำงานหลัก */ }
+  }
+
+  /* รวมรูปภาพจาก Apps Script เข้ากับ records ปัจจุบัน โดยจับคู่ด้วย id
+     (ไม่แทนที่ทั้งก้อน เพื่อไม่ให้ไปทับข้อมูลข้อความที่อาจสดกว่าจาก gviz) */
+  function mergePhotosById(photoRecords){
+    const photoMap = {};
+    photoRecords.forEach(r=>{ if(r.id) photoMap[r.id] = r.photo || ''; });
+    let changed = false;
+    records = records.map(r=>{
+      if(r.id && photoMap[r.id] && photoMap[r.id] !== r.photo){
+        changed = true;
+        return Object.assign({}, r, { photo: photoMap[r.id] });
+      }
+      return r;
+    });
+    return changed;
+  }
+
+  /* เมื่อรูปภาพมาถึงทีหลัง ให้รีเฟรชการ์ดที่แสดงอยู่ (ทั้งทำเนียบ และข้อความล่าสุดในแชท)
+     โดยไม่ต้องให้ผู้ใช้ค้นหาใหม่ */
+  function refreshVisibleCards(){
+    renderDirectory();
+    if(lastPersonMsgEl && lastPersonIds && lastPersonMsgEl.isConnected){
+      const bubble = lastPersonMsgEl.querySelector('.bubble');
+      if(bubble){
+        const shown = lastPersonIds.map(id=>records.find(r=>r.id===id)).filter(Boolean);
+        if(shown.length){
+          const cards = bubble.querySelectorAll('.person-card');
+          if(cards.length === shown.length){
+            const newGridHtml = shown.length === 1 ? personCardHtml(shown[0]) : personGridHtml(shown);
+            const gridWrap = bubble.querySelector('.person-grid') || bubble.querySelector('.person-card');
+            if(gridWrap){
+              const tmp = document.createElement('div');
+              tmp.innerHTML = newGridHtml;
+              gridWrap.replaceWith(tmp.firstElementChild || tmp);
+            }
+          }
+        }
+      }
+    }
+  }
+
   function syncFromSheet(){
     if(!SHEET_ID || SHEET_ID.indexOf("YOUR_") === 0){
-      setSyncState('', 'แสดงข้อมูลสำรองที่บันทึกไว้ในไฟล์ (ยังไม่ได้ตั้งค่า Sheet ID)');
       return;
     }
     setSyncState('loading', 'กำลังซิงก์ข้อมูล…');
-    syncBtn.disabled = true;
     syncNote.textContent = "";
 
     const prevScript = document.getElementById('gviz-jsonp-script');
     if(prevScript) prevScript.remove();
 
-    function finish(){
-      syncBtn.disabled = false;
-      if(syncTimeoutId){ clearTimeout(syncTimeoutId); syncTimeoutId = null; }
-    }
     function fail(reasonText){
-      setSyncState('err', 'ซิงก์สดไม่สำเร็จ — แสดงข้อมูลสำรอง');
+      setSyncState('err', 'ซิงก์ข้อความไม่สำเร็จ — แสดงข้อมูลสำรอง');
       syncNote.textContent = 'เชื่อมต่อ Google Sheet ไม่ได้ (' + reasonText + ')';
-      finish();
+      if(syncTimeoutId){ clearTimeout(syncTimeoutId); syncTimeoutId = null; }
     }
 
     window[CALLBACK_NAME] = function(response){
@@ -1180,10 +1248,14 @@
         }
         const newRecords = gvizToRecords(response.table);
         if(!newRecords.length){ fail('ไม่พบแถวข้อมูลในชีท'); return; }
-        records = newRecords;
+        // เก็บรูปภาพเดิม (ถ้ามีจาก Apps Script/แคชไปแล้ว) ไว้ ไม่ให้ข้อความอย่างเดียวมาทับ
+        const photoById = {};
+        records.forEach(r=>{ if(r.id && r.photo) photoById[r.id] = r.photo; });
+        records = newRecords.map(r=> photoById[r.id] ? Object.assign({}, r, { photo: photoById[r.id] }) : r);
         refreshAll();
-        setSyncState('live', 'ซิงก์สดล่าสุด ' + fmtTime(new Date()) + ' น. (ข้อความล้วน — ยังไม่ได้ตั้งค่า Apps Script สำหรับรูปภาพ)');
-        finish();
+        const hasAnyPhoto = records.some(r=>r.photo);
+        setSyncState('live', 'ซิงก์ข้อความล่าสุด ' + fmtTime(new Date()) + ' น.' + (hasAnyPhoto ? '' : ' (กำลังโหลดรูปภาพเพิ่มเติม…)'));
+        if(syncTimeoutId){ clearTimeout(syncTimeoutId); syncTimeoutId = null; }
       }catch(e){
         fail('อ่านข้อมูลไม่สำเร็จ: ' + e.message);
       }
@@ -1200,34 +1272,27 @@
     document.body.appendChild(script);
     syncTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับจากชีท'); }, 10000);
   }
-  /* ================= LIVE SYNC พร้อมรูปภาพ (Google Apps Script) =================
-     gviz อ่านรูปแบบ "Insert image in cell" ไม่ได้ ระบบนี้จึงใช้ Apps Script
-     Web App เป็นแหล่งข้อมูลหลัก (ได้ทั้งข้อความและรูปภาพแบบเรียลไทม์) โดยยิงแบบ
-     JSONP เหมือน gviz ด้านบน (ไม่ติดปัญหา CORS) ถ้ายังไม่ได้ตั้งค่า APPS_SCRIPT_URL
-     หรือเรียกไม่สำเร็จ ระบบจะ fallback ไปใช้ gviz (ได้แต่ข้อความ ไม่มีรูป) แทน */
+
+  /* ================= ซิงก์รูปภาพ (Google Apps Script) — ทำงานคู่ขนาน =================
+     gviz อ่านรูปแบบ "Insert image in cell" ไม่ได้ จึงต้องใช้ Apps Script Web App
+     แยกต่างหากสำหรับรูปภาพเท่านั้น โดยทำงาน "คู่ขนาน" ไปกับ syncFromSheet() ด้านบน
+     ไม่ใช่รอต่อคิว — ผู้ใช้เห็นข้อมูลข้อความและค้นหาได้ทันทีจาก gviz (เร็ว) ในขณะที่
+     รูปภาพจะทยอย "โผล่" เข้ามาเสริมทีหลังเมื่อ Apps Script ตอบกลับ (อาจช้ากว่า) */
   const GAS_CALLBACK_NAME = "__gasStaffCallback";
   let gasTimeoutId = null;
 
-  function syncFromAppsScript(){
-    if(!APPS_SCRIPT_URL){
-      syncFromSheet();
-      return;
-    }
-    setSyncState('loading', 'กำลังซิงก์ข้อมูลพร้อมรูปภาพ…');
-    syncBtn.disabled = true;
-    syncNote.textContent = "";
+  function syncPhotosFromAppsScript(){
+    if(!APPS_SCRIPT_URL) return;
 
     const prevScript = document.getElementById('gas-jsonp-script');
     if(prevScript) prevScript.remove();
 
     function finish(){
-      syncBtn.disabled = false;
       if(gasTimeoutId){ clearTimeout(gasTimeoutId); gasTimeoutId = null; }
     }
     function fail(reasonText){
-      syncNote.textContent = 'ซิงก์รูปภาพผ่าน Apps Script ไม่สำเร็จ (' + reasonText + ') — ใช้ข้อมูลข้อความแทน';
+      syncNote.textContent = 'ซิงก์รูปภาพยังไม่สำเร็จ (' + reasonText + ') — ข้อมูลข้อความยังใช้งานได้ตามปกติ';
       finish();
-      syncFromSheet(); // ลอง fallback เป็น gviz (ข้อความล้วน)
     }
 
     window[GAS_CALLBACK_NAME] = function(response){
@@ -1236,8 +1301,11 @@
           fail('ไม่พบข้อมูลจาก Apps Script');
           return;
         }
-        records = response.records;
-        refreshAll();
+        const changed = mergePhotosById(response.records);
+        if(changed){
+          refreshVisibleCards();
+          saveLocalCache(records);
+        }
         setSyncState('live', 'ซิงก์สดพร้อมรูปภาพล่าสุด ' + fmtTime(new Date()) + ' น.');
         finish();
       }catch(e){
@@ -1254,17 +1322,30 @@
     script.src = url;
     script.onerror = function(){ fail('โหลดสคริปต์ไม่สำเร็จ (ตรวจสอบว่า Deploy เป็น "Anyone" แล้ว)'); };
     document.body.appendChild(script);
-    // ให้เวลานานกว่าปกติ เพราะต้องดึงรูปภาพหลายสิบ-หลายร้อยรูปในการเรียกครั้งเดียว
-    gasTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับจาก Apps Script (ปกติจะเร็ว ยกเว้นครั้งแรกหลังแคชหมดอายุอาจถึง 1 นาที)'); }, 50000);
+    // เผื่อเวลาไว้นานพอสมควร เพราะบางครั้ง Apps Script อาจใช้เวลาสร้างข้อมูลใหม่
+    // (ถ้าตั้งตัวจับเวลาอัตโนมัติ/แคชไว้แล้วตามคำแนะนำ ปกติจะเร็วกว่านี้มาก)
+    gasTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับจาก Apps Script'); }, 60000);
   }
 
-  syncBtn.addEventListener('click', syncFromAppsScript);
+  function syncAll(){
+    setSyncState('loading', 'กำลังซิงก์ข้อมูลล่าสุด…');
+    syncNote.textContent = "";
+    syncFromSheet();          // เร็ว — อัปเดตข้อความ/ค้นหาได้ทันที
+    syncPhotosFromAppsScript(); // อาจช้ากว่า — รูปภาพจะทยอยโผล่มาเสริมทีหลัง ไม่บล็อกการค้นหา
+  }
+  syncBtn.addEventListener('click', syncAll);
 
   /* ================= INIT ================= */
+  // 1) ถ้ามีแคชจากการเปิดใช้งานครั้งก่อนในเครื่องนี้ ให้แสดงผลทันทีก่อนเลย
+  //    (รวมรูปภาพที่เคยโหลดสำเร็จ) ผู้ใช้ค้นหาได้ทันทีโดยไม่ต้องรอเครือข่าย
+  const cached = loadLocalCache();
+  if(cached){ records = cached.records; }
   refreshAll();
   addMessage('assistant', '<div class="ans-title">สวัสดีครับ 👋</div><div style="font-size:12.5px; color:var(--text-soft);">ผมคือผู้ช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มมส. ครับ พิมพ์หรือกดไมค์ 🎤 เพื่อถามด้วยเสียงได้เลย เช่น "คณบดีอยู่ห้องไหน" หรือ "EN1 มีใครบ้าง" — ระบบนี้ค้นหาด้วยกฎที่ตั้งไว้ล่วงหน้า ไม่ได้ใช้ AI ครับ</div>');
-  setSyncState('', 'แสดงข้อมูลสำรองที่บันทึกไว้ในไฟล์');
-  syncFromAppsScript();
+  setSyncState('', cached ? 'แสดงข้อมูลล่าสุดที่เคยซิงก์ไว้ในเครื่องนี้ — กำลังตรวจสอบข้อมูลใหม่…' : 'แสดงข้อมูลสำรองที่บันทึกไว้ในไฟล์ — กำลังซิงก์ข้อมูลสด…');
+
+  // 2) ซิงก์ข้อความ (เร็ว) และรูปภาพ (อาจช้ากว่า) แบบคู่ขนาน — ไม่บล็อกการค้นหาเลย
+  syncAll();
 
 })();
 </script>
