@@ -719,14 +719,18 @@
   }
 
   /* ================= STAT TILES ================= */
+  let ratingStats = { avg: null, count: 0 };
   function renderStats(){
     const buildings = getBuildings();
     const depts = getDepts();
+    const ratingTile = ratingStats.count
+      ? '<div class="stat-tile"><div class="num">⭐ '+ratingStats.avg.toFixed(1)+'</div><div class="lbl">คะแนนความพึงพอใจ ('+ratingStats.count+' รีวิว)</div></div>'
+      : '<div class="stat-tile"><div class="num">⭐ —</div><div class="lbl">ยังไม่มีคะแนนความพึงพอใจ</div></div>';
     elStatRow.innerHTML =
       '<div class="stat-tile"><div class="num">'+records.length+'</div><div class="lbl">บุคลากรทั้งหมด</div></div>' +
       '<div class="stat-tile"><div class="num">'+buildings.length+'</div><div class="lbl">อาคาร</div></div>' +
       '<div class="stat-tile"><div class="num">'+depts.length+'</div><div class="lbl">สาขา/หน่วยงาน</div></div>' +
-      '<div class="stat-tile"><div class="num">🟢</div><div class="lbl">พร้อมให้บริการ</div></div>';
+      ratingTile;
   }
 
   /* ================= FILTER CHIPS ================= */
@@ -1432,6 +1436,7 @@
           refreshVisibleCards();
           saveLocalCache(records);
         }
+        if(response.ratingStats){ ratingStats = response.ratingStats; renderStats(); }
         setSyncState('live', 'ซิงก์สดพร้อมรูปภาพล่าสุด ' + fmtTime(new Date()) + ' น.');
         syncNote.textContent = '';
       }catch(e){
@@ -1562,6 +1567,7 @@
 
     submitRating(selectedRating, ratingComment.value.trim().slice(0, 1000)).then(result=>{
       if(result && result.ok){
+        if(result.ratingStats){ ratingStats = result.ratingStats; renderStats(); }
         showRatingThanks();
       } else {
         ratingSubmitBtn.disabled = false;
