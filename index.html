@@ -1485,10 +1485,11 @@
   });
 
   /* ================= ให้คะแนนความพึงพอใจ (1-5 ดาว) =================
-     ส่งไปเก็บที่ Google Apps Script (URL เดียวกับที่ใช้ซิงก์ข้อมูล) ผ่าน POST
-     ใช้ mode:'no-cors' + Content-Type: text/plain เพื่อเลี่ยงปัญหา CORS
-     preflight ที่ Apps Script ไม่รองรับ (เป็นวิธีมาตรฐานสำหรับส่งข้อมูลเข้า
-     Apps Script จากเว็บไซต์ภายนอกแบบไม่มีเซิร์ฟเวอร์ของตัวเอง) */
+     ส่งไปเก็บที่ Google Apps Script (URL เดียวกับที่ใช้ซิงก์ข้อมูลบุคลากร)
+     ผ่าน GET (action=rate) โดยใช้กลไกเดียวกับตอนซิงก์รูปภาพด้านบน
+     (ลอง fetch() ก่อน แล้วสำรองด้วย JSONP ผ่าน <script> tag) ซึ่งพิสูจน์แล้ว
+     ว่าใช้งานได้จริงข้ามเบราว์เซอร์ และสำคัญที่สุดคือเว็บไซต์จะ "รู้ผลจริง"
+     ว่าบันทึกสำเร็จหรือไม่ ไม่ใช่ขึ้น "ขอบคุณ" มั่วๆ แบบวิธี POST เดิม */
   let selectedRating = 0;
   const starEls = Array.from(ratingStars.querySelectorAll('span'));
 
@@ -1510,42 +1511,66 @@
     });
   });
 
+  function showRatingThanks(){
+    ratingStars.style.display = 'none';
+    ratingComment.style.display = 'none';
+    ratingSubmitBtn.style.display = 'none';
+    ratingThanks.style.display = 'block';
+    ratingThanks.textContent = '🙏 ขอบคุณสำหรับคะแนนและความคิดเห็นครับ!';
+    try{ sessionStorage.setItem('staffDirectoryRated', '1'); }catch(e){}
+  }
+
+  function submitRating(rating, comment){
+    return new Promise((resolve)=>{
+      if(!APPS_SCRIPT_URL){ resolve({ ok:false, error:'ยังไม่ได้ตั้งค่า Apps Script (APPS_SCRIPT_URL) ในไฟล์เว็บไซต์' }); return; }
+      let settled = false;
+      function onDone(payload){
+        if(settled) return;
+        settled = true;
+        resolve(payload);
+      }
+      const params = new URLSearchParams({ action:'rate', rating:String(rating), comment: comment||'', page: location.href });
+      const sep = APPS_SCRIPT_URL.indexOf('?') !== -1 ? '&' : '?';
+      const baseUrl = APPS_SCRIPT_URL + sep + params.toString();
+
+      // วิธีที่ 1: fetch() ตรงๆ
+      fetch(baseUrl + '&_ts=' + Date.now(), { method:'GET', cache:'no-store' })
+        .then(r=> r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+        .then(onDone)
+        .catch(()=>{ /* เงียบไว้ก่อน รอวิธีที่ 2 */ });
+
+      // วิธีที่ 2: JSONP สำรอง (เผื่อโดนตัวบล็อกโฆษณา/ส่วนขยายสกัด fetch)
+      setTimeout(()=>{
+        if(settled) return;
+        const cbName = '__ratingCb_' + Date.now();
+        window[cbName] = function(payload){ onDone(payload); try{ delete window[cbName]; }catch(e){} };
+        const script = document.createElement('script');
+        script.src = baseUrl + '&callback=' + cbName + '&_ts=' + Date.now();
+        script.onerror = function(){ onDone({ ok:false, error:'โหลดสคริปต์ไม่สำเร็จ' }); };
+        document.body.appendChild(script);
+      }, 3000);
+
+      // เผื่อเวลาไว้พอสมควร
+      setTimeout(()=>{ onDone({ ok:false, error:'หมดเวลารอการตอบกลับ' }); }, 20000);
+    });
+  }
+
   ratingSubmitBtn.addEventListener('click', ()=>{
     if(!selectedRating) return;
     ratingSubmitBtn.disabled = true;
     ratingSubmitBtn.textContent = 'กำลังส่ง…';
 
-    const payload = {
-      rating: selectedRating,
-      comment: ratingComment.value.trim().slice(0, 1000),
-      page: location.href
-    };
-
-    function showThanks(){
-      ratingStars.style.display = 'none';
-      ratingComment.style.display = 'none';
-      ratingSubmitBtn.style.display = 'none';
-      ratingThanks.style.display = 'block';
-      try{ sessionStorage.setItem('staffDirectoryRated', '1'); }catch(e){}
-    }
-
-    if(APPS_SCRIPT_URL){
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors', // Apps Script ไม่ส่ง CORS header กลับมา จึงอ่านผลลัพธ์ตรงๆ ไม่ได้ แต่คำขอจะถูกส่งและประมวลผลจริง
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // กัน CORS preflight
-        body: JSON.stringify(payload)
-      }).then(()=>{
-        showThanks();
-      }).catch(()=>{
-        // ส่งไม่สำเร็จจริงๆ (เช่นเน็ตหลุด) — ให้ลองใหม่ได้
+    submitRating(selectedRating, ratingComment.value.trim().slice(0, 1000)).then(result=>{
+      if(result && result.ok){
+        showRatingThanks();
+      } else {
         ratingSubmitBtn.disabled = false;
         ratingSubmitBtn.textContent = 'ลองส่งอีกครั้ง';
-      });
-    } else {
-      // ยังไม่ได้ตั้งค่า Apps Script — เก็บไว้ในเครื่องอย่างเดียวเป็นอย่างน้อย ไม่ให้ข้อมูลหาย
-      showThanks();
-    }
+        ratingThanks.style.display = 'block';
+        ratingThanks.style.color = 'var(--danger)';
+        ratingThanks.textContent = '⚠️ ส่งคะแนนไม่สำเร็จ (' + ((result && result.error) || 'ไม่ทราบสาเหตุ') + ') กรุณาลองใหม่อีกครั้ง';
+      }
+    });
   });
 
   // ถ้าเคยให้คะแนนไปแล้วในเซสชันนี้ ไม่ต้องรบกวนซ้ำ
@@ -1555,8 +1580,10 @@
       ratingComment.style.display = 'none';
       ratingSubmitBtn.style.display = 'none';
       ratingThanks.style.display = 'block';
+      ratingThanks.textContent = '🙏 ขอบคุณสำหรับคะแนนและความคิดเห็นครับ!';
     }
   }catch(e){}
+
 
   /* ================= INIT ================= */
   // 1) ถ้ามีแคชจากการเปิดใช้งานครั้งก่อนในเครื่องนี้ ให้แสดงผลทันทีก่อนเลย
