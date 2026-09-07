@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ผู้ช่วยค้นหาบุคลากร | คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</title>
-<meta name="description" content="ระบบผู้ช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม">
+<title>ผู้ช่วยค้นหาห้องพัก/ห้องทำงานบุคลากร | คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</title>
+<meta name="description" content="ระบบผู้ช่วยค้นหาห้องพัก/ห้องทำงานบุคลากรคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -253,6 +253,48 @@
 
   /* person card (used in chat + directory grid) */
   .person-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin-top:8px; }
+  .info-banner{
+    background:var(--gold-50); border:1px solid var(--border-strong);
+    border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:14px;
+    font-size:11.5px; color:var(--text-soft); line-height:1.7;
+  }
+  .info-banner b{ color:var(--accent-strong); }
+
+  /* ================= PERSON DETAIL MODAL ================= */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(20,30,22,0.55);
+    display:none; align-items:center; justify-content:center; z-index:1000;
+    padding:20px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
+    background:#fff; border-radius:18px; max-width:420px; width:100%;
+    max-height:88vh; overflow-y:auto; padding:22px 22px 24px;
+    box-shadow:0 20px 60px rgba(20,30,22,0.35);
+    position:relative; animation:modal-pop .16s ease;
+  }
+  @keyframes modal-pop{ from{ transform:scale(.96); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  .modal-close{
+    position:absolute; top:12px; right:12px; width:32px;height:32px;border-radius:50%;
+    border:1px solid var(--border-strong); background:#fff; cursor:pointer; font-size:15px;
+    display:flex; align-items:center; justify-content:center; color:var(--text-soft);
+  }
+  .modal-close:hover{ background:var(--accent-soft); color:var(--accent-strong); }
+  .modal-avatar-row{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:14px; }
+  .avatar-xl{ width:96px;height:96px; font-size:34px; margin-bottom:12px; border-width:3px; }
+  .modal-name{ font-size:17px; font-weight:700; color:var(--text); }
+  .modal-acad{ font-size:12px; color:var(--text-faint); margin-top:2px; }
+  .modal-field{
+    display:flex; gap:10px; padding:10px 0; border-top:1px solid var(--border);
+    font-size:13px;
+  }
+  .modal-field:first-of-type{ border-top:1px solid var(--border); margin-top:6px; }
+  .modal-field .f-icon{ flex-shrink:0; width:20px; text-align:center; }
+  .modal-field .f-label{ color:var(--text-faint); font-size:10.5px; display:block; margin-bottom:2px; }
+  .modal-field .f-value{ color:var(--text); font-weight:500; }
+  .modal-field .f-value a{ color:var(--accent-strong); text-decoration:none; }
+  .person-card{ cursor:pointer; transition:box-shadow .12s ease, transform .12s ease; }
+  .person-card:hover{ box-shadow:0 4px 14px rgba(30,50,33,0.12); transform:translateY(-1px); }
   .person-card{
     background:#fff; border:1px solid var(--border); border-radius:12px;
     padding:12px; display:flex; gap:11px; align-items:flex-start;
@@ -403,14 +445,14 @@
       </div>
       <div>
         <div class="brand-eyebrow">ENGINEERING · MSU DIRECTORY</div>
-        <h1>ผู้ช่วยค้นหาข้อมูลบุคลากร</h1>
+        <h1>ผู้ช่วยค้นหาห้องพัก/ห้องทำงานบุคลากร</h1>
         <p class="subtitle">คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</p>
       </div>
     </div>
     <div class="sync-box">
       <a class="home-link" href="https://panya-jeerachat.github.io/dwms/">🏠 กลับหน้าหลัก</a>
       <span class="sync-status-inline"><span class="sync-dot" id="syncDot"></span><span id="syncText">กำลังเตรียมข้อมูล…</span></span>
-      <div><button class="sync-btn" id="syncBtn">🔄 ซิงก์ข้อมูลล่าสุด</button></div>
+      <div><button class="sync-btn" id="syncBtn">🔄 ซิงก์ข้อมูลล่าสุด</button> <button class="sync-btn" id="retryPhotoBtn">🖼️ ลองซิงก์รูปภาพอีกครั้ง</button></div>
       <div class="sync-note" id="syncNote"></div>
     </div>
   </header>
@@ -423,9 +465,14 @@
     <div class="chip-row" id="deptChipsRow" style="margin-top:8px;"></div>
   </div>
 
+  <div class="info-banner">
+    💡 ข้อมูลตัวอักษร (ชื่อ/ห้อง/ตำแหน่ง) ค้นหาได้ทันที — ส่วน<b>รูปภาพ</b>อาจใช้เวลาโหลดเพิ่มเติมสูงสุดประมาณ 2 นาทีหลังเปิดหน้าเว็บ กรุณารอหากต้องการดูรูปเปรียบเทียบยืนยันตัวบุคคล<br>
+    🔊 หากต้องการให้ระบบ<b>ตอบด้วยเสียง</b> กรุณาพิมพ์หรือกดค้นหาอย่างน้อย 1 ครั้งก่อน (ข้อจำกัดของเบราว์เซอร์ที่ต้องมีการโต้ตอบจากผู้ใช้ก่อนจึงจะเล่นเสียงได้)
+  </div>
+
   <div class="chat-card">
     <div class="chat-head">
-      <div class="chat-head-title">💬 ผู้ช่วยค้นหาบุคลากร</div>
+      <div class="chat-head-title">💬 ผู้ช่วยค้นหาห้องพัก/ห้องทำงานบุคลากร</div>
       <div class="chat-head-badge">ไม่ใช้ AI · ค้นหาตามกฎที่กำหนดไว้</div>
     </div>
     <div class="chat-scroll" id="chatScroll"></div>
@@ -458,6 +505,10 @@
     พัฒนาโดย นายปัญญา จีระฉัตร | นักวิชาการโสตทัศนศึกษา | <a href="mailto:panya.j@msu.ac.th">panya.j@msu.ac.th</a>
   </footer>
 
+</div>
+
+<div class="modal-overlay" id="personModalOverlay">
+  <div class="modal-box" id="personModalBox"></div>
 </div>
 
 <script id="recordData" type="application/json">[{"id": "T001", "acadTitle": "ศาสตราจารย์ ดร.", "name": "อนงค์ฤทธิ์  แข็งแรง", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "anongrit.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T002", "acadTitle": "ศาสตราจารย์ ดร.", "name": "วรวัฒน์  เสงี่ยมวิบูล", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "wor_nui@yahoo.com", "note": "", "photo": ""}, {"id": "T003", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "จักรมาส  เลาหวณิช", "position": "คณบดีคณะวิศวกรรมศาสตร์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "2", "room": "คณบดี", "status": "ปกติ", "email": "juckamas.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T004", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "เกียรติศักดิ์  ศรีประทีป", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "keartisaks@hotmail.com", "note": "", "photo": ""}, {"id": "T005", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุดสาคร  อินธิเดช", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "220A-220B", "status": "ปกติ", "email": "sudsakorn.i@msu.ac.th", "note": "", "photo": ""}, {"id": "T006", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "บพิธ  บุปผโชติ", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "bopit.b@msu.ac.th", "note": "", "photo": ""}, {"id": "T007", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "อภินันท์  อุรโสภณ", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "Aurasopon@yahoo.com", "note": "", "photo": ""}, {"id": "T008", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "อดิศักดิ์  ปัตติยะ", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN3", "floor": "1", "room": "101", "status": "ปกติ", "email": "adisak_pattiya@yahoo.com", "note": "", "photo": ""}, {"id": "T009", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "กริสน์  ชัยมูล", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN2", "floor": "2", "room": "202", "status": "ปกติ", "email": "k.chaimoon@msu.ac.th", "note": "", "photo": ""}, {"id": "T010", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สหลาภ  หอมวุฒิวงศ์", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายอำนวยการ", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "", "status": "ปกติ", "email": "sahalaph.h@msu.ac.th", "note": "", "photo": ""}, {"id": "T011", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "เรืองรุชดิ์  ชีระโรจน์", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "220A-220B", "status": "ปกติ", "email": "raungrut.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T012", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุพรรณ  ยั่งยืน", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN2", "floor": "2", "room": "203", "status": "ปกติ", "email": "suphan.y@msu.ac.th", "note": "", "photo": ""}, {"id": "T013", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ชลธี  โพธิ์ทอง", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายวิจัย นวัตกรรมและวิเทศสัมพันธ์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN2", "floor": "2", "room": "201", "status": "ปกติ", "email": "chonlatee.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T014", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "เกียรติสิน กาญจนวนิชกุล", "position": "อาจารย์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "", "status": "ปกติ", "email": "kiattisin.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T015", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ยศฐา ศรีเทพ", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "yottha.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T016", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "วสันต์  ด้วงคำจันทร์", "position": "อาจารย์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN3", "floor": "3", "room": "", "status": "ปกติ", "email": "wasan.d@msu.ac.th", "note": "", "photo": ""}, {"id": "T017", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "นิวัตร์ อังควิศิษฐพันธ์", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "niwat.a@msu.ac.th", "note": "", "photo": ""}, {"id": "T018", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุพรรณนิกา  วัฒนะ", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN2", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "supannika.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T019", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "พิทักษ์  พร้อมไธสง", "position": "อาจารย์", "dept": "วิศวกรรมรถไฟความเร็วสูง", "building": "EN1", "floor": "1", "room": "105", "status": "ปกติ", "email": "pitak.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T020", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "กฤต โง้วธนสุวรรณ", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "1", "room": "104", "status": "ปกติ", "email": "Grit.n@msu.ac.th", "note": "", "photo": ""}, {"id": "T021", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ณัฐพล  ภูมิสะอาด", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายบริหารและวางแผน", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "nattapol.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T022", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "จินดาพร  จำรัสเลิศลักษณ์", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "220A-220B", "status": "ปกติ", "email": "jindaporn.msu@gmail.com", "note": "", "photo": ""}, {"id": "T023", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ธีรยุทธ  ชาติชนะยืนยง", "position": "อาจารย์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "theerayuth.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T024", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "อลงกรณ์  ละม่อม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "alongkorn_lamom@msu.ac.t", "note": "", "photo": ""}, {"id": "T025", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นิดา  ชัยมูล", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN2", "floor": "2", "room": "202", "status": "ปกติ", "email": "n.seelsaen@gmail.com", "note": "", "photo": ""}, {"id": "T026", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ทรงชัย  วิริยะอำไพวงศ์", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "songchai.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T027", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ละมุล  วิเศษ", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "lamulwiset@hotmail.com", "note": "", "photo": ""}, {"id": "T028", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "เพชร  เพ็งชัย", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "petchpengchai@zoho.com", "note": "", "photo": ""}, {"id": "T029", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "โสภา  แคนสี", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN2", "floor": "2", "room": "", "status": "ปกติ", "email": "sopa.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T030", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "เกสร  วงศ์เกษม", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายวิชาการและพัฒนานิสิต", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "2", "room": "221A-221B", "status": "ปกติ", "email": "siriluk.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T031", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ธีรพัฒน์ ชมภูคำ", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "teerapat.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T032", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ธวัฒน์ชัย  คุณะโคตร", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "tawatchai.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T033", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ณัฐวุฒิ สุวรรณทา", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "nattawoot.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T034", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นพปฎล เสงี่ยมศักดิ์", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "noppadol.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T035", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ศิวา แก้วปลั่ง", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "siwa.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T036", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นเรศ  มีโส", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "n_meeso@yahoo.com", "note": "", "photo": ""}, {"id": "T037", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ชัยชาญ โชติถนอม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "chaicharn.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T038", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "รัตนา  หอมวิเชียร", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "rattana.h@msu.ac.th", "note": "", "photo": ""}, {"id": "T039", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นวรัตน์ พิลาแดง", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "nawarat.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T040", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ชัยยงค์  เสริมผล", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "chaiyong.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T041", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "พงษ์พันธ์  แทนเกษม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "civilphongphan@gmail.com", "note": "", "photo": ""}, {"id": "T042", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "เชิดพงษ์  เชี่ยวชาญวัฒนา", "position": "อาจารย์", "dept": "วิศวกรรมรถไฟความเร็วสูง", "building": "EN2", "floor": "2", "room": "203", "status": "ปกติ", "email": "cherdpong.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T043", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นบปนม  แก้วหานาม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "napanom.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T044", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ศตวรรษ  ทวงชน", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "sattawat.t@msu.ac.th", "note": "", "photo": ""}, {"id": "T045", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "วจัสกร กาญจนะ", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "1", "room": "403H", "status": "ปกติ", "email": "wajussakorn.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T046", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุรชัย วงชารี", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "2", "room": "221A-221B", "status": "ปกติ", "email": "surachai.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T047", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นรินทร์  ศิริวรรณ", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "narin.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T048", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "บัญชา  วัฒนะ", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "2", "room": "218A", "status": "ปกติ", "email": "buncha.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T049", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "สริญญา ศาลางาม", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "221A-221B", "status": "ปกติ", "email": "sarinya.sa@msu.ac.th", "note": "", "photo": ""}, {"id": "T050", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "กิตตินันท์  วันสาสืบ", "position": "อาจารย์", "dept": "วิศวกรรมยานยนต์ไฟฟ้า", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "kittinan.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T051", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ธนายุทธ ไชยธงรัตน์", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "1", "room": "104", "status": "ปกติ", "email": "Tanayut.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T052", "acadTitle": "อาจารย์ ดร.", "name": "ณรงค์กรณ์  อุทาทิพย์", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมยานยนต์ไฟฟ้า", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "narongkorn.u@msu.ac.th", "note": "", "photo": ""}, {"id": "T053", "acadTitle": "อาจารย์ ดร.", "name": "ณัฏฐพล  ไชยดวงศรี", "position": "ผู้ช่วยคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายสารสนเทศ", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "nuttapon.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T054", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ปิยณัฐ จันโทสุทธิ์", "position": "ผู้ช่วยคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายปฏิบัติการวิศวกรรม", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "piyanat.j@msu.ac.th", "note": "", "photo": ""}, {"id": "T055", "acadTitle": "อาจารย์ ดร.", "name": "ปริญญ์ ชุปวา", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "prarin.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T056", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "คเณศ ถุงออด", "position": "หัวหน้าสำนักวิชาวิศวกรรมศาสตร์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "kaned.th@msu.ac.th", "note": "", "photo": ""}, {"id": "T057", "acadTitle": "อาจารย์ ดร.", "name": "ทวีศักดิ์ ทองแสน", "position": "ผู้ช่วยคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายกิจการนิสิต", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "taweesak.th@msu.ac.th", "note": "", "photo": ""}, {"id": "T058", "acadTitle": "อาจารย์ ดร.", "name": "รพีภัทร เตชะรุ่งเรืองสกุล", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "rapeepat.tee@msu.ac.th", "note": "", "photo": ""}, {"id": "T059", "acadTitle": "อาจารย์", "name": "สุรพงษ์ ลิวไธสง", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "1", "room": "104", "status": "ปกติ", "email": "Surapong.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T060", "acadTitle": "อาจารย์", "name": "ณัฏฐพงษ์ ลาดบัตร", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN2", "floor": "2", "room": "", "status": "ปกติ", "email": "Nuttapong.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T061", "acadTitle": "อาจารย์ ดร.", "name": "ชณัฐ วิพัทนะพร", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-308", "status": "ปกติ", "email": "chanat.v@msu.ac.th", "note": "", "photo": ""}, {"id": "T062", "acadTitle": "อาจารย์", "name": "กฤษฏิ์  เลิศล้ำ", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมปฏิบัติ", "building": "EN2", "floor": "2", "room": "201", "status": "ปกติ", "email": "krit.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T063", "acadTitle": "อาจารย์", "name": "เดชา อินทร์โท่โล่", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมรถไฟความเร็วสูง", "building": "EN5", "floor": "2", "room": "202", "status": "ปกติ", "email": "decha.i@msu.ac.th", "note": "", "photo": ""}, {"id": "T064", "acadTitle": "อาจารย์", "name": "ณัฐนิชา อิ่มน้ำขาว", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "nutnicha.i@msu.ac.th", "note": "", "photo": ""}, {"id": "T065", "acadTitle": "อาจารย์", "name": "บัณริ เข็มกลัดมุกต์", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "banri.k@msu.ac.th", "note": "", "photo": ""}, {"id": "S001", "acadTitle": "หัวหน้าสำนักงานเลขานุการคณะวิศวกรรมศาสตร์", "name": "วิรายา ภมรสมิต", "position": "หัวหน้าสำนักงานเลขานุการคณะวิศวกรรมศาสตร์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "viraya.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S002", "acadTitle": "ชำนาญการพิเศษ", "name": "พยุงศักดิ์ ภักดีพล", "position": "หัวหน้ากลุ่มงานบริหาร นักวิเคราะห์นโยบายและแผน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "phayungsak.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S003", "acadTitle": "ปฏิบัติการ", "name": "เกศรินทร์ ภูผานี", "position": "ฝ่ายงานงานบุคคล", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "kessarin.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S004", "acadTitle": "ปฏิบัติการ", "name": "พัชนี คำวงษา", "position": "ฝ่ายงานธุรการและงานเลขานุการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "phatchanee.k@msu.ac.th", "note": "", "photo": ""}, {"id": "S005", "acadTitle": "ปฏิบัติงาน", "name": "ชญาภา ชาดา", "position": "งานห้องสมุดและงานเลขานุการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "chayapa.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S006", "acadTitle": "ปฏิบัติการ", "name": "พัชรา ติตะสี", "position": "ฝ่ายงานวิจัย และวิเทศสัมพันธ์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "patchara.ti@msu.ac.th", "note": "", "photo": ""}, {"id": "S007", "acadTitle": "ปฏิบัติการ", "name": "นิตยา คำมูลนาม", "position": "ฝ่ายงานคอมพิวเตอร์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "2", "room": "ห้องสมุด", "status": "ปกติ", "email": "nittaya.ku@msu.ac.th", "note": "", "photo": ""}, {"id": "S008", "acadTitle": "ปฏิบัติการ", "name": "ปัญญา จีระฉัตร", "position": "ฝ่ายงานงานโสตทัศนูปกรณ์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "3", "room": "ห้องพักเจ้าหน้าระหว่างห้องปฏิบัติการคอมพิวเตอร์ 313 - 314 , 312", "status": "ปกติ", "email": "panya.j@msu.ac.th", "note": "", "photo": ""}, {"id": "S009", "acadTitle": "ปฏิบัติงาน", "name": "ดนัย ไชยมาตย์", "position": "ฝ่ายงานสวน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "ติดห้อง EN1-105 ห้องพักเจ้าหน้าที่", "status": "ปกติ", "email": "Danai.C@msu.ac.th", "note": "", "photo": ""}, {"id": "S010", "acadTitle": "ปฏิบัติงาน", "name": "ชัชวาล หมวดนา", "position": "ฝ่ายงานยานยนต์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "Chatchawal.M@msu.ac.th", "note": "", "photo": ""}, {"id": "S011", "acadTitle": "ปฏิบัติงาน", "name": "จีระศักดิ์ บรรจงปรุ", "position": "ฝ่ายงานยานยนต์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "", "note": "", "photo": ""}, {"id": "S012", "acadTitle": "ปฏิบัติการ", "name": "ลำพูน ศรีโพธิ์ผา", "position": "หัวหน้ากลุ่มงานนโยบาย แผนและคลัง นักวิชาการเงินและบัญชีปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "lumpoon.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S013", "acadTitle": "ปฏิบัติการ", "name": "พักตร์วิภา วิระหา", "position": "ฝ่ายงานการเงิน และบัญชี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "Pukwipha.K@msu.ac.th", "note": "", "photo": ""}, {"id": "S014", "acadTitle": "ปฏิบัติการ", "name": "วิรุฬ พลชำนิ", "position": "ฝ่ายงานพัสดุ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "wirun.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S015", "acadTitle": "ปฏิบัติการ", "name": "จันทิมา ไวยกรรณ์", "position": "ฝ่ายงานพัสดุ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "jantima.w@msu.ac.th", "note": "", "photo": ""}, {"id": "S016", "acadTitle": "ปฏิบัติการ", "name": "สถาพร พวงมะลัย", "position": "งานกรอบคำรับรองการปฏิบัติงานราชการ(ก.พ.ร.)", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "sataporn.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S017", "acadTitle": "ปฏิบัติการ", "name": "อนุชา ชังชั่ว", "position": "ฝ่ายงานประกันคุณภาพการศึกษา/EdPEx", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "anucha.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S018", "acadTitle": "ชำนาญการ", "name": "นางสาวเสาวลักษณ์ เรียงพรม", "position": "ฝ่ายงานวิชาการระดับปริญญาตรี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "saowaluk.ria@msu.ac.th", "note": "", "photo": ""}, {"id": "S019", "acadTitle": "ปฏิบัติการ", "name": "สุภาวดี กั้วพงษ์", "position": "ฝ่ายงานวิชาการระดับปริญญาตรี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "supawadee@msu.ac.th", "note": "", "photo": ""}, {"id": "S020", "acadTitle": "ปฏิบัติการ", "name": "เมธินี ไชยวงษา", "position": "ฝ่ายงานวิชาการระดับปริญญาตรี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "methinee.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S021", "acadTitle": "ปฏิบัติการ", "name": "วรินญา ชื่นใจ", "position": "ฝ่ายงานวิชาการระดับบัณฑิตศึกษา", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "warinya.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S022", "acadTitle": "ปฏิบัติการ", "name": "วรลักษณ์ ศิริประเสริฐ", "position": "ฝ่ายงานวิชาการระดับบัณฑิตศึกษา", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "woralak.si@msu.ac.th", "note": "", "photo": ""}, {"id": "S023", "acadTitle": "ปฏิบัติการ", "name": "อธิวัฒน์ อุดมก้านตง", "position": "ฝ่ายงานกิจการนิสิต", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "atiwat.u@msu.ac.th", "note": "", "photo": ""}, {"id": "S024", "acadTitle": "ปฏิบัติการ", "name": "ตรีญาภัทร์ แสงตา", "position": "หัวหน้างานฝ่ายบริการวิชาการและบริการวิชาชีพ นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "treeyapat.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S025", "acadTitle": "ปฏิบัติการ", "name": "นัฐราช แสนมีมา", "position": "หัวหน้างานห้องปฏิบัติการ นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "nattarat.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S026", "acadTitle": "ปฏิบัติการ", "name": "สุระ ทับสีแก้ว", "position": "หัวหน้างานอาคารสถานที่ ผู้ปฏิบัติงานวิทยาศาสตร์ปฏิบัติงาน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "sura.t@msu.ac.th", "note": "", "photo": ""}, {"id": "S027", "acadTitle": "ปฏิบัติการ", "name": "ภูพิงค์ ช่วยอุดม", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "4", "room": "418", "status": "ปกติ", "email": "pooping.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S028", "acadTitle": "ปฏิบัติการ", "name": "ศิวณัทร ศรีโลห้อ", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "4", "room": "414", "status": "ปกติ", "email": "siwanut.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S029", "acadTitle": "ชำนาญการ", "name": "มีศักดิ์ธนา พัวพิทยาธร", "position": "วิศวกรโยธาปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "103", "status": "ปกติ", "email": "meesakthana.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S030", "acadTitle": "ปฏิบัติการ", "name": "สุวิทย์ เสนาลาด", "position": "ผู้ปฏิบัติงานวิทยาศาสตร์ปฏิบัติงาน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "suwit.sena@msu.ac.th", "note": "", "photo": ""}, {"id": "S031", "acadTitle": "ปฏิบัติการ", "name": "สมนึก พันเสนา", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "somnuek.pa@msu.ac.th", "note": "", "photo": ""}, {"id": "S032", "acadTitle": "ปฏิบัติการ", "name": "สุรเชษฐ สวนจันทร์", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "3", "room": "318", "status": "ปกติ", "email": "surachet.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S033", "acadTitle": "ปฏิบัติการ", "name": "จตุพล สายจันทา", "position": "นักวิชาการศึกษา", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "jatapon.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S034", "acadTitle": "ปฏิบัติการ", "name": "ปริวัตร เวฬุวนารักษ์", "position": "ผู้ปฏิบัติงานวิทยาศาสตร์ปฏิบัติงาน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "pariwat.w@msu.ac.th", "note": "", "photo": ""}, {"id": "S035", "acadTitle": "ปฏิบัติการ", "name": "สัจจพงษ์ แสนงาม", "position": "วิศวกรโยธาปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "sutchapong.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S036", "acadTitle": "ปฏิบัติการ", "name": "ธีระเดช ทรงอาจ", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "Teeradet.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S037", "acadTitle": "ปฏิบัติการ", "name": "วันชัย พิลึก", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "wanchai.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S038", "acadTitle": "ปฏิบัติการ", "name": "ณัชพร สอนสี", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "natchaporn.s@msu.ac.th", "note": "", "photo": ""}]</script>
@@ -495,7 +546,10 @@
   const syncDot = document.getElementById('syncDot');
   const syncText = document.getElementById('syncText');
   const syncBtn = document.getElementById('syncBtn');
+  const retryPhotoBtn = document.getElementById('retryPhotoBtn');
   const syncNote = document.getElementById('syncNote');
+  const personModalOverlay = document.getElementById('personModalOverlay');
+  const personModalBox = document.getElementById('personModalBox');
 
   let records = JSON.parse(document.getElementById('recordData').textContent || "[]");
   let ttsEnabled = true;
@@ -567,8 +621,9 @@
 
   function personCardHtml(r){
     const statusClass = (r.status||"").indexOf("ปกติ") !== -1 ? "ok" : "other";
+    const safeId = escapeHtml(r.id);
     return '' +
-    '<div class="person-card detailed">' +
+    '<div class="person-card detailed" data-person-id="'+safeId+'" onclick="window.openPersonModal(\''+safeId+'\')">' +
       '<div class="person-header-row">' +
         personAvatarHtml(r,'avatar-lg') +
         '<div class="person-main">' +
@@ -579,10 +634,43 @@
       '</div>' +
       (r.dept ? '<div class="person-dept">🏷️ สาขา/หน่วยงาน: '+escapeHtml(r.dept)+'</div>' : '') +
       '<div class="person-loc"><span class="locpin">📍</span> '+escapeHtml(locationText(r))+'</div>' +
-      (r.email ? '<div class="person-contact">✉️ <a href="mailto:'+escapeHtml(r.email)+'">'+escapeHtml(r.email)+'</a></div>' : '<div class="person-contact" style="color:var(--text-faint);">✉️ ไม่มีข้อมูลอีเมล</div>') +
+      (r.email ? '<div class="person-contact">✉️ <a href="mailto:'+escapeHtml(r.email)+'" onclick="event.stopPropagation()">'+escapeHtml(r.email)+'</a></div>' : '<div class="person-contact" style="color:var(--text-faint);">✉️ ไม่มีข้อมูลอีเมล</div>') +
       (r.note ? '<div class="person-note">หมายเหตุ: '+escapeHtml(r.note)+'</div>' : '') +
     '</div>';
   }
+
+  /* ================= POPUP รายละเอียดรายบุคคล ================= */
+  function personModalHtml(r){
+    const statusClass = (r.status||"").indexOf("ปกติ") !== -1 ? "ok" : "other";
+    return '' +
+    '<button class="modal-close" onclick="window.closePersonModal()">✕</button>' +
+    '<div class="modal-avatar-row">' +
+      personAvatarHtml(r,'avatar-xl') +
+      '<div class="modal-name">'+escapeHtml(fullName(r))+'</div>' +
+      (r.acadTitle ? '<div class="modal-acad">'+escapeHtml(r.acadTitle)+'</div>' : '') +
+      (r.status ? '<span class="person-status '+statusClass+'" style="margin-top:8px;">'+escapeHtml(r.status)+'</span>' : '') +
+    '</div>' +
+    (r.position ? '<div class="modal-field"><span class="f-icon">💼</span><div><span class="f-label">ตำแหน่ง</span><span class="f-value">'+escapeHtml(r.position)+'</span></div></div>' : '') +
+    (r.dept ? '<div class="modal-field"><span class="f-icon">🏷️</span><div><span class="f-label">สาขา/หน่วยงาน</span><span class="f-value">'+escapeHtml(r.dept)+'</span></div></div>' : '') +
+    '<div class="modal-field"><span class="f-icon">📍</span><div><span class="f-label">ห้องพัก</span><span class="f-value">'+escapeHtml(locationText(r))+'</span></div></div>' +
+    (r.email ? '<div class="modal-field"><span class="f-icon">✉️</span><div><span class="f-label">อีเมล</span><span class="f-value"><a href="mailto:'+escapeHtml(r.email)+'">'+escapeHtml(r.email)+'</a></span></div></div>' : '') +
+    (r.note ? '<div class="modal-field"><span class="f-icon">📝</span><div><span class="f-label">หมายเหตุ</span><span class="f-value">'+escapeHtml(r.note)+'</span></div></div>' : '');
+  }
+  function openPersonModal(id){
+    const r = records.find(x=>x.id===id);
+    if(!r) return;
+    personModalBox.innerHTML = personModalHtml(r);
+    personModalOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closePersonModal(){
+    personModalOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  window.openPersonModal = openPersonModal;
+  window.closePersonModal = closePersonModal;
+  personModalOverlay.addEventListener('click', (e)=>{ if(e.target === personModalOverlay) closePersonModal(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closePersonModal(); });
 
   function personGridHtml(list){
     if(!list.length) return '<div class="empty-note">ไม่พบข้อมูลบุคลากรที่ตรงกับเงื่อนไข</div>';
@@ -1277,54 +1365,70 @@
      gviz อ่านรูปแบบ "Insert image in cell" ไม่ได้ จึงต้องใช้ Apps Script Web App
      แยกต่างหากสำหรับรูปภาพเท่านั้น โดยทำงาน "คู่ขนาน" ไปกับ syncFromSheet() ด้านบน
      ไม่ใช่รอต่อคิว — ผู้ใช้เห็นข้อมูลข้อความและค้นหาได้ทันทีจาก gviz (เร็ว) ในขณะที่
-     รูปภาพจะทยอย "โผล่" เข้ามาเสริมทีหลังเมื่อ Apps Script ตอบกลับ (อาจช้ากว่า) */
+     รูปภาพจะทยอย "โผล่" เข้ามาเสริมทีหลังเมื่อ Apps Script ตอบกลับ (อาจช้ากว่า)
+
+     ลองสองวิธีขนานกัน เพราะบางเบราว์เซอร์/ส่วนขยาย (เช่น ตัวบล็อกโฆษณาบางตัวใน
+     Chrome) อาจปิดกั้นการโหลดผ่าน <script> tag ได้ — ถ้าวิธีแรก (fetch) โดนบล็อก
+     วิธีที่สอง (JSONP) จะยังพยายามต่อให้ */
   const GAS_CALLBACK_NAME = "__gasStaffCallback";
-  let gasTimeoutId = null;
+  let gasOverallTimeoutId = null;
 
   function syncPhotosFromAppsScript(){
     if(!APPS_SCRIPT_URL) return;
+    let settled = false;
 
-    const prevScript = document.getElementById('gas-jsonp-script');
-    if(prevScript) prevScript.remove();
-
-    function finish(){
-      if(gasTimeoutId){ clearTimeout(gasTimeoutId); gasTimeoutId = null; }
-    }
-    function fail(reasonText){
-      syncNote.textContent = 'ซิงก์รูปภาพยังไม่สำเร็จ (' + reasonText + ') — ข้อมูลข้อความยังใช้งานได้ตามปกติ';
-      finish();
-    }
-
-    window[GAS_CALLBACK_NAME] = function(response){
+    function onSuccess(response){
+      if(settled) return;
       try{
         if(!response || !response.records || !response.records.length){
-          fail('ไม่พบข้อมูลจาก Apps Script');
+          syncNote.textContent = 'ไม่พบข้อมูลรูปภาพจาก Apps Script';
           return;
         }
+        settled = true;
+        if(gasOverallTimeoutId){ clearTimeout(gasOverallTimeoutId); gasOverallTimeoutId = null; }
         const changed = mergePhotosById(response.records);
         if(changed){
           refreshVisibleCards();
           saveLocalCache(records);
         }
         setSyncState('live', 'ซิงก์สดพร้อมรูปภาพล่าสุด ' + fmtTime(new Date()) + ' น.');
-        finish();
+        syncNote.textContent = '';
       }catch(e){
-        fail('อ่านข้อมูลไม่สำเร็จ: ' + e.message);
+        syncNote.textContent = 'อ่านข้อมูลรูปภาพไม่สำเร็จ: ' + e.message;
       }
-    };
+    }
 
-    const sep = APPS_SCRIPT_URL.indexOf('?') !== -1 ? '&' : '?';
-    // เติม timestamp กันเบราว์เซอร์แคชคำตอบเก่า (เช่นคำตอบที่เคยล้มเหลว/หมดเวลาไปก่อนหน้านี้)
-    const url = APPS_SCRIPT_URL + sep + 'callback=' + GAS_CALLBACK_NAME + '&_ts=' + Date.now();
+    // วิธีที่ 1: fetch() ตรงๆ — เร็วกว่า และมักไม่โดนตัวบล็อกโฆษณาสกัดเท่า <script> tag
+    const fetchUrl = APPS_SCRIPT_URL + (APPS_SCRIPT_URL.indexOf('?')!==-1?'&':'?') + '_ts=' + Date.now();
+    fetch(fetchUrl, { method:'GET', cache:'no-store' })
+      .then(r=> r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+      .then(onSuccess)
+      .catch(()=>{ /* เงียบไว้ก่อน รอวิธีที่ 2 */ });
 
-    const script = document.createElement('script');
-    script.id = 'gas-jsonp-script';
-    script.src = url;
-    script.onerror = function(){ fail('โหลดสคริปต์ไม่สำเร็จ (ตรวจสอบว่า Deploy เป็น "Anyone" แล้ว)'); };
-    document.body.appendChild(script);
-    // เผื่อเวลาไว้นานพอสมควร เพราะบางครั้ง Apps Script อาจใช้เวลาสร้างข้อมูลใหม่
-    // (ถ้าตั้งตัวจับเวลาอัตโนมัติ/แคชไว้แล้วตามคำแนะนำ ปกติจะเร็วกว่านี้มาก)
-    gasTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับจาก Apps Script'); }, 60000);
+    // วิธีที่ 2: JSONP ผ่าน <script> tag — สำรองไว้เผื่อวิธีแรกโดนบล็อก (CORS/extension)
+    setTimeout(()=>{
+      if(settled) return;
+      const prevScript = document.getElementById('gas-jsonp-script');
+      if(prevScript) prevScript.remove();
+      window[GAS_CALLBACK_NAME] = onSuccess;
+      const sep = APPS_SCRIPT_URL.indexOf('?') !== -1 ? '&' : '?';
+      const url = APPS_SCRIPT_URL + sep + 'callback=' + GAS_CALLBACK_NAME + '&_ts=' + Date.now();
+      const script = document.createElement('script');
+      script.id = 'gas-jsonp-script';
+      script.src = url;
+      script.onerror = function(){
+        if(!settled) syncNote.textContent = 'ยังซิงก์รูปภาพไม่สำเร็จ ลองกดปุ่ม "ลองซิงก์รูปภาพอีกครั้ง" หรือตรวจสอบส่วนขยาย/ตัวบล็อกโฆษณาในเบราว์เซอร์';
+      };
+      document.body.appendChild(script);
+    }, 3500);
+
+    // เผื่อเวลาไว้นานพอสมควร (พบว่าบางครั้ง Apps Script ใช้เวลาสร้างข้อมูลใหม่ถึง ~2 นาที
+    // ถ้าตั้งตัวจับเวลาอัตโนมัติ/แคชไว้แล้วตามคำแนะนำ ปกติจะเร็วกว่านี้มาก)
+    gasOverallTimeoutId = setTimeout(()=>{
+      if(!settled){
+        syncNote.textContent = 'ยังไม่สามารถซิงก์รูปภาพได้ในขณะนี้ ลองกดปุ่ม "ลองซิงก์รูปภาพอีกครั้ง" ด้านล่าง หรือตรวจสอบส่วนขยาย/ตัวบล็อกโฆษณาในเบราว์เซอร์ (ข้อมูลข้อความยังใช้งานค้นหาได้ตามปกติ)';
+      }
+    }, 130000);
   }
 
   function syncAll(){
@@ -1334,6 +1438,10 @@
     syncPhotosFromAppsScript(); // อาจช้ากว่า — รูปภาพจะทยอยโผล่มาเสริมทีหลัง ไม่บล็อกการค้นหา
   }
   syncBtn.addEventListener('click', syncAll);
+  retryPhotoBtn.addEventListener('click', ()=>{
+    syncNote.textContent = 'กำลังลองซิงก์รูปภาพอีกครั้ง…';
+    syncPhotosFromAppsScript();
+  });
 
   /* ================= INIT ================= */
   // 1) ถ้ามีแคชจากการเปิดใช้งานครั้งก่อนในเครื่องนี้ ให้แสดงผลทันทีก่อนเลย
