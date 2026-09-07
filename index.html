@@ -253,6 +253,31 @@
 
   /* person card (used in chat + directory grid) */
   .person-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin-top:8px; }
+  .rating-panel{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow-sm); padding:18px 20px; margin-bottom:16px; text-align:center;
+  }
+  .rating-title{ font-size:14px; font-weight:700; color:var(--text); }
+  .rating-sub{ font-size:11.5px; color:var(--text-soft); margin-top:3px; margin-bottom:12px; }
+  .stars{ font-size:32px; line-height:1; letter-spacing:6px; margin-bottom:12px; }
+  .stars span{ color:var(--gray-200); cursor:pointer; transition:color .1s ease, transform .1s ease; display:inline-block; }
+  .stars span:hover{ transform:scale(1.12); }
+  .stars.hover-preview span.on, .stars span.selected{ color:var(--gold-500); }
+  .rating-comment{
+    width:100%; max-width:420px; font-family:inherit; font-size:12.5px;
+    border:1px solid var(--border-strong); border-radius:10px; padding:9px 12px;
+    resize:vertical; margin-bottom:10px; display:block; margin-left:auto; margin-right:auto;
+  }
+  .rating-comment:focus{ outline:none; border-color:var(--accent); }
+  .rating-submit{
+    font-family:inherit; font-weight:600; font-size:13px; color:#fff;
+    background:var(--accent-grad); border:none; padding:9px 26px; border-radius:10px;
+    cursor:pointer;
+  }
+  .rating-submit:disabled{ opacity:.45; cursor:not-allowed; }
+  .rating-submit:not(:disabled):hover{ filter:brightness(1.06); }
+  .rating-thanks{ font-size:13px; color:var(--success); font-weight:600; margin-top:4px; }
+
   .info-banner{
     background:var(--gold-50); border:1px solid var(--border-strong);
     border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:14px;
@@ -498,6 +523,17 @@
     </div>
   </div>
 
+  <div class="rating-panel" id="ratingPanel">
+    <div class="rating-title">⭐ ให้คะแนนความพึงพอใจในการใช้งานระบบนี้</div>
+    <div class="rating-sub">ความเห็นของคุณช่วยให้เราปรับปรุงระบบให้ดีขึ้นได้ครับ</div>
+    <div class="stars" id="ratingStars">
+      <span data-star="1">★</span><span data-star="2">★</span><span data-star="3">★</span><span data-star="4">★</span><span data-star="5">★</span>
+    </div>
+    <textarea class="rating-comment" id="ratingComment" rows="2" placeholder="ความคิดเห็นเพิ่มเติม (ถ้ามี ไม่บังคับ)"></textarea>
+    <button class="rating-submit" id="ratingSubmitBtn" disabled>ส่งคะแนน</button>
+    <div class="rating-thanks" id="ratingThanks" style="display:none;">🙏 ขอบคุณสำหรับคะแนนและความคิดเห็นครับ!</div>
+  </div>
+
   <footer class="foot">
     ระบบนี้ค้นหาข้อมูลด้วยกฎที่กำหนดไว้ล่วงหน้าเท่านั้น <b>ไม่มีการใช้ปัญญาประดิษฐ์ (AI)</b> ในการประมวลผลคำตอบ<br>
     ข้อมูลบุคลากรซิงก์แบบเรียลไทม์จาก Google Sheets ของคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม<br><br>
@@ -550,6 +586,11 @@
   const syncNote = document.getElementById('syncNote');
   const personModalOverlay = document.getElementById('personModalOverlay');
   const personModalBox = document.getElementById('personModalBox');
+  const ratingStars = document.getElementById('ratingStars');
+  const ratingComment = document.getElementById('ratingComment');
+  const ratingSubmitBtn = document.getElementById('ratingSubmitBtn');
+  const ratingThanks = document.getElementById('ratingThanks');
+  const ratingPanel = document.getElementById('ratingPanel');
 
   let records = JSON.parse(document.getElementById('recordData').textContent || "[]");
   let ttsEnabled = true;
@@ -1442,6 +1483,80 @@
     syncNote.textContent = 'กำลังลองซิงก์รูปภาพอีกครั้ง…';
     syncPhotosFromAppsScript();
   });
+
+  /* ================= ให้คะแนนความพึงพอใจ (1-5 ดาว) =================
+     ส่งไปเก็บที่ Google Apps Script (URL เดียวกับที่ใช้ซิงก์ข้อมูล) ผ่าน POST
+     ใช้ mode:'no-cors' + Content-Type: text/plain เพื่อเลี่ยงปัญหา CORS
+     preflight ที่ Apps Script ไม่รองรับ (เป็นวิธีมาตรฐานสำหรับส่งข้อมูลเข้า
+     Apps Script จากเว็บไซต์ภายนอกแบบไม่มีเซิร์ฟเวอร์ของตัวเอง) */
+  let selectedRating = 0;
+  const starEls = Array.from(ratingStars.querySelectorAll('span'));
+
+  function paintStars(upTo){
+    starEls.forEach(s=>{
+      const n = Number(s.getAttribute('data-star'));
+      s.classList.toggle('on', n <= upTo);
+    });
+  }
+  starEls.forEach(s=>{
+    const n = Number(s.getAttribute('data-star'));
+    s.addEventListener('mouseenter', ()=>{ ratingStars.classList.add('hover-preview'); paintStars(n); });
+    s.addEventListener('mouseleave', ()=>{ ratingStars.classList.remove('hover-preview'); paintStars(selectedRating); });
+    s.addEventListener('click', ()=>{
+      selectedRating = n;
+      starEls.forEach(el=> el.classList.toggle('selected', Number(el.getAttribute('data-star')) <= n));
+      paintStars(n);
+      ratingSubmitBtn.disabled = false;
+    });
+  });
+
+  ratingSubmitBtn.addEventListener('click', ()=>{
+    if(!selectedRating) return;
+    ratingSubmitBtn.disabled = true;
+    ratingSubmitBtn.textContent = 'กำลังส่ง…';
+
+    const payload = {
+      rating: selectedRating,
+      comment: ratingComment.value.trim().slice(0, 1000),
+      page: location.href
+    };
+
+    function showThanks(){
+      ratingStars.style.display = 'none';
+      ratingComment.style.display = 'none';
+      ratingSubmitBtn.style.display = 'none';
+      ratingThanks.style.display = 'block';
+      try{ sessionStorage.setItem('staffDirectoryRated', '1'); }catch(e){}
+    }
+
+    if(APPS_SCRIPT_URL){
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors', // Apps Script ไม่ส่ง CORS header กลับมา จึงอ่านผลลัพธ์ตรงๆ ไม่ได้ แต่คำขอจะถูกส่งและประมวลผลจริง
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // กัน CORS preflight
+        body: JSON.stringify(payload)
+      }).then(()=>{
+        showThanks();
+      }).catch(()=>{
+        // ส่งไม่สำเร็จจริงๆ (เช่นเน็ตหลุด) — ให้ลองใหม่ได้
+        ratingSubmitBtn.disabled = false;
+        ratingSubmitBtn.textContent = 'ลองส่งอีกครั้ง';
+      });
+    } else {
+      // ยังไม่ได้ตั้งค่า Apps Script — เก็บไว้ในเครื่องอย่างเดียวเป็นอย่างน้อย ไม่ให้ข้อมูลหาย
+      showThanks();
+    }
+  });
+
+  // ถ้าเคยให้คะแนนไปแล้วในเซสชันนี้ ไม่ต้องรบกวนซ้ำ
+  try{
+    if(sessionStorage.getItem('staffDirectoryRated') === '1'){
+      ratingStars.style.display = 'none';
+      ratingComment.style.display = 'none';
+      ratingSubmitBtn.style.display = 'none';
+      ratingThanks.style.display = 'block';
+    }
+  }catch(e){}
 
   /* ================= INIT ================= */
   // 1) ถ้ามีแคชจากการเปิดใช้งานครั้งก่อนในเครื่องนี้ ให้แสดงผลทันทีก่อนเลย
