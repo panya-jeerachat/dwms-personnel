@@ -1246,7 +1246,8 @@
     };
 
     const sep = APPS_SCRIPT_URL.indexOf('?') !== -1 ? '&' : '?';
-    const url = APPS_SCRIPT_URL + sep + 'callback=' + GAS_CALLBACK_NAME;
+    // เติม timestamp กันเบราว์เซอร์แคชคำตอบเก่า (เช่นคำตอบที่เคยล้มเหลว/หมดเวลาไปก่อนหน้านี้)
+    const url = APPS_SCRIPT_URL + sep + 'callback=' + GAS_CALLBACK_NAME + '&_ts=' + Date.now();
 
     const script = document.createElement('script');
     script.id = 'gas-jsonp-script';
@@ -1254,7 +1255,7 @@
     script.onerror = function(){ fail('โหลดสคริปต์ไม่สำเร็จ (ตรวจสอบว่า Deploy เป็น "Anyone" แล้ว)'); };
     document.body.appendChild(script);
     // ให้เวลานานกว่าปกติ เพราะต้องดึงรูปภาพหลายสิบ-หลายร้อยรูปในการเรียกครั้งเดียว
-    gasTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับจาก Apps Script'); }, 25000);
+    gasTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับจาก Apps Script (ปกติจะเร็ว ยกเว้นครั้งแรกหลังแคชหมดอายุอาจถึง 1 นาที)'); }, 50000);
   }
 
   syncBtn.addEventListener('click', syncFromAppsScript);
