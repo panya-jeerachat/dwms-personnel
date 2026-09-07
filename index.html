@@ -277,6 +277,8 @@
   .rating-submit:disabled{ opacity:.45; cursor:not-allowed; }
   .rating-submit:not(:disabled):hover{ filter:brightness(1.06); }
   .rating-thanks{ font-size:13px; color:var(--success); font-weight:600; margin-top:4px; }
+  .rating-diag{ font-size:11px; color:var(--text-faint); margin-top:10px; }
+  .rating-diag a{ color:var(--accent-strong); }
 
   .info-banner{
     background:var(--gold-50); border:1px solid var(--border-strong);
@@ -532,6 +534,7 @@
     <textarea class="rating-comment" id="ratingComment" rows="2" placeholder="ความคิดเห็นเพิ่มเติม (ถ้ามี ไม่บังคับ)"></textarea>
     <button class="rating-submit" id="ratingSubmitBtn" disabled>ส่งคะแนน</button>
     <div class="rating-thanks" id="ratingThanks" style="display:none;">🙏 ขอบคุณสำหรับคะแนนและความคิดเห็นครับ!</div>
+    <div class="rating-diag" id="ratingDiag"></div>
   </div>
 
   <footer class="foot">
@@ -591,6 +594,7 @@
   const ratingSubmitBtn = document.getElementById('ratingSubmitBtn');
   const ratingThanks = document.getElementById('ratingThanks');
   const ratingPanel = document.getElementById('ratingPanel');
+  const ratingDiag = document.getElementById('ratingDiag');
 
   let records = JSON.parse(document.getElementById('recordData').textContent || "[]");
   let ttsEnabled = true;
@@ -1521,7 +1525,9 @@
     ratingComment.style.display = 'none';
     ratingSubmitBtn.style.display = 'none';
     ratingThanks.style.display = 'block';
+    ratingThanks.style.color = 'var(--success)';
     ratingThanks.textContent = '🙏 ขอบคุณสำหรับคะแนนและความคิดเห็นครับ!';
+    ratingDiag.innerHTML = '';
     try{ sessionStorage.setItem('staffDirectoryRated', '1'); }catch(e){}
   }
 
@@ -1529,6 +1535,7 @@
     return new Promise((resolve)=>{
       if(!APPS_SCRIPT_URL){ resolve({ ok:false, error:'ยังไม่ได้ตั้งค่า Apps Script (APPS_SCRIPT_URL) ในไฟล์เว็บไซต์' }); return; }
       let settled = false;
+      let fetchErrorMsg = '';
       function onDone(payload){
         if(settled) return;
         settled = true;
@@ -1542,7 +1549,7 @@
       fetch(baseUrl + '&_ts=' + Date.now(), { method:'GET', cache:'no-store' })
         .then(r=> r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
         .then(onDone)
-        .catch(()=>{ /* เงียบไว้ก่อน รอวิธีที่ 2 */ });
+        .catch(err=>{ fetchErrorMsg = (err && err.message) || 'fetch ล้มเหลว'; /* รอวิธีที่ 2 ก่อนสรุปว่าพัง */ });
 
       // วิธีที่ 2: JSONP สำรอง (เผื่อโดนตัวบล็อกโฆษณา/ส่วนขยายสกัด fetch)
       setTimeout(()=>{
@@ -1551,7 +1558,9 @@
         window[cbName] = function(payload){ onDone(payload); try{ delete window[cbName]; }catch(e){} };
         const script = document.createElement('script');
         script.src = baseUrl + '&callback=' + cbName + '&_ts=' + Date.now();
-        script.onerror = function(){ onDone({ ok:false, error:'โหลดสคริปต์ไม่สำเร็จ' }); };
+        script.onerror = function(){
+          onDone({ ok:false, error:'เชื่อมต่อ script.google.com ไม่ได้เลย (fetch: ' + (fetchErrorMsg||'ถูกบล็อก/ไม่ตอบสนอง') + ')' });
+        };
         document.body.appendChild(script);
       }, 3000);
 
@@ -1575,6 +1584,10 @@
         ratingThanks.style.display = 'block';
         ratingThanks.style.color = 'var(--danger)';
         ratingThanks.textContent = '⚠️ ส่งคะแนนไม่สำเร็จ (' + ((result && result.error) || 'ไม่ทราบสาเหตุ') + ') กรุณาลองใหม่อีกครั้ง';
+        if(APPS_SCRIPT_URL){
+          const testUrl = APPS_SCRIPT_URL + '?action=rate&rating=5&comment=' + encodeURIComponent('ทดสอบเชื่อมต่อ') + '&page=diagnostic';
+          ratingDiag.innerHTML = 'หากยังไม่สำเร็จ ลอง <a href="'+testUrl+'" target="_blank" rel="noopener">กดลิงก์นี้เพื่อทดสอบเชื่อมต่อโดยตรง</a> — ถ้าเปิดแล้วเห็นข้อความ <code>{"ok":true...}</code> แปลว่าระบบฝั่ง Google ใช้งานได้ปกติ (ปัญหาน่าจะอยู่ที่เบราว์เซอร์/เครือข่ายนี้เท่านั้น) แต่ถ้าเปิดไม่ขึ้นเลยหรือค้าง แปลว่าเครือข่ายนี้บล็อก script.google.com';
+        }
       }
     });
   });
