@@ -479,7 +479,7 @@
     <div class="sync-box">
       <a class="home-link" href="https://panya-jeerachat.github.io/dwms/">🏠 กลับหน้าหลัก</a>
       <span class="sync-status-inline"><span class="sync-dot" id="syncDot"></span><span id="syncText">กำลังเตรียมข้อมูล…</span></span>
-      <div><button class="sync-btn" id="syncBtn">🔄 ซิงก์ข้อมูลล่าสุด</button> <button class="sync-btn" id="retryPhotoBtn">🖼️ ลองซิงก์รูปภาพอีกครั้ง</button></div>
+      <div><button class="sync-btn" id="syncBtn">🔄 ซิงก์ข้อมูลล่าสุด</button> <button class="sync-btn" id="retryPhotoBtn" title="ดึงรูปภาพล่าสุดจริงๆ โดยข้ามแคชเดิม ใช้เมื่อเพิ่งเปลี่ยน/ลบรูปในชีตแล้วเว็บยังไม่อัปเดต">🖼️ ดึงรูปภาพล่าสุด (ข้ามแคช)</button></div>
       <div class="sync-note" id="syncNote"></div>
     </div>
   </header>
@@ -1328,7 +1328,9 @@
     photoRecords.forEach(r=>{ if(r.id) photoMap[r.id] = r.photo || ''; });
     let changed = false;
     records = records.map(r=>{
-      if(r.id && photoMap[r.id] && photoMap[r.id] !== r.photo){
+      // แก้บั๊ก: เดิมเช็ค "photoMap[r.id] &&" ทำให้ถ้าลบรูปออก (ค่าใหม่เป็นสตริงว่าง)
+      // จะไม่ถูกอัปเดตเลย เพราะสตริงว่างเป็นค่า falsy — ทำให้รูปเก่าค้างอยู่ตลอด
+      if(r.id && Object.prototype.hasOwnProperty.call(photoMap, r.id) && photoMap[r.id] !== (r.photo||'')){
         changed = true;
         return Object.assign({}, r, { photo: photoMap[r.id] });
       }
@@ -1422,7 +1424,7 @@
   const GAS_CALLBACK_NAME = "__gasStaffCallback";
   let gasOverallTimeoutId = null;
 
-  function syncPhotosFromAppsScript(){
+  function syncPhotosFromAppsScript(forceRefresh){
     if(!APPS_SCRIPT_URL) return;
     let settled = false;
 
@@ -1448,8 +1450,12 @@
       }
     }
 
+    // forceRefresh=true (เช่นตอนกด "ลองซิงก์รูปภาพอีกครั้ง") จะข้ามแคชฝั่ง Apps Script
+    // ไปเลย เพื่อดึงรูปล่าสุดจริงๆ (ใช้เวลานานกว่าปกติ แต่รับประกันว่าไม่ใช่รูปเก่าค้างแคช)
+    const refreshParam = forceRefresh ? '&refresh=1' : '';
+
     // วิธีที่ 1: fetch() ตรงๆ — เร็วกว่า และมักไม่โดนตัวบล็อกโฆษณาสกัดเท่า <script> tag
-    const fetchUrl = APPS_SCRIPT_URL + (APPS_SCRIPT_URL.indexOf('?')!==-1?'&':'?') + '_ts=' + Date.now();
+    const fetchUrl = APPS_SCRIPT_URL + (APPS_SCRIPT_URL.indexOf('?')!==-1?'&':'?') + '_ts=' + Date.now() + refreshParam;
     fetch(fetchUrl, { method:'GET', cache:'no-store' })
       .then(r=> r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
       .then(onSuccess)
@@ -1462,7 +1468,7 @@
       if(prevScript) prevScript.remove();
       window[GAS_CALLBACK_NAME] = onSuccess;
       const sep = APPS_SCRIPT_URL.indexOf('?') !== -1 ? '&' : '?';
-      const url = APPS_SCRIPT_URL + sep + 'callback=' + GAS_CALLBACK_NAME + '&_ts=' + Date.now();
+      const url = APPS_SCRIPT_URL + sep + 'callback=' + GAS_CALLBACK_NAME + '&_ts=' + Date.now() + refreshParam;
       const script = document.createElement('script');
       script.id = 'gas-jsonp-script';
       script.src = url;
@@ -1489,8 +1495,8 @@
   }
   syncBtn.addEventListener('click', syncAll);
   retryPhotoBtn.addEventListener('click', ()=>{
-    syncNote.textContent = 'กำลังลองซิงก์รูปภาพอีกครั้ง…';
-    syncPhotosFromAppsScript();
+    syncNote.textContent = 'กำลังดึงรูปภาพล่าสุดจริงๆ (ข้ามแคชเดิม อาจใช้เวลาถึง ~1 นาที)…';
+    syncPhotosFromAppsScript(true); // บังคับข้ามแคชฝั่ง Apps Script เพื่อให้ได้รูปล่าสุดแน่นอน
   });
 
   /* ================= ให้คะแนนความพึงพอใจ (1-5 ดาว) =================
