@@ -487,14 +487,17 @@
   <div class="stat-row" id="statRow"></div>
 
   <div class="filter-panel">
-    <div class="filter-panel-title">🏢 ค้นหาด่วนตามอาคาร / สาขาวิชา</div>
+    <div class="filter-panel-title">🏢 ค้นหาด่วนตามอาคาร / สาขาวิชา <span style="font-weight:500;opacity:.75;">(ผู้ที่สังกัดหลายสาขาจะปรากฏในทุกสาขาที่สังกัด)</span></div>
     <div class="chip-row" id="buildingChips"></div>
     <div class="chip-row" id="deptChipsRow" style="margin-top:8px;"></div>
   </div>
 
   <div class="info-banner">
     💡 ข้อมูลตัวอักษร (ชื่อ/ห้อง/ตำแหน่ง) ค้นหาได้ทันที — ส่วน<b>รูปภาพ</b>อาจใช้เวลาโหลดเพิ่มเติมสูงสุดประมาณ 2 นาทีหลังเปิดหน้าเว็บ กรุณารอหากต้องการดูรูปเปรียบเทียบยืนยันตัวบุคคล<br>
-    🔊 หากต้องการให้ระบบ<b>ตอบด้วยเสียง</b> กรุณาพิมพ์หรือกดค้นหาอย่างน้อย 1 ครั้งก่อน (ข้อจำกัดของเบราว์เซอร์ที่ต้องมีการโต้ตอบจากผู้ใช้ก่อนจึงจะเล่นเสียงได้)
+    🔊 หากต้องการให้ระบบ<b>ตอบด้วยเสียง</b> กรุณาพิมพ์หรือกดค้นหาอย่างน้อย 1 ครั้งก่อน (ข้อจำกัดของเบราว์เซอร์ที่ต้องมีการโต้ตอบจากผู้ใช้ก่อนจึงจะเล่นเสียงได้)<br>
+    🔎 <b>ค้นหาแบบยืดหยุ่น:</b> พิมพ์สั้นๆ หรือใช้ตัวย่อก็ได้ (ไฟฟ้า, โยธา, EE, EV, สวล.) · สะกดเพี้ยนเล็กน้อยก็ยังเจอ (เมคคาทรอนิค) ·
+    ใส่หลายเงื่อนไขพร้อมกันได้ (เช่น "โยธา EN2 ชั้น 2") · <b>ผู้ที่สังกัดมากกว่า 1 สาขา จะค้นเจอได้จากทุกสาขาที่สังกัด</b> ·
+    ถ้าไม่พบผลลัพธ์ที่ตรงครบทุกเงื่อนไข ระบบจะผ่อนเงื่อนไขให้อัตโนมัติพร้อมแจ้งให้ทราบ
   </div>
 
   <div class="chat-card">
@@ -505,7 +508,7 @@
     <div class="chat-scroll" id="chatScroll"></div>
     <div class="chat-input-row">
       <button class="mic-btn" id="micBtn" type="button" title="พูดถาม (ไมโครโฟน)">🎤</button>
-      <textarea class="chat-input" id="chatInput" rows="1" placeholder="พิมพ์ชื่อ, ห้อง, อาคาร, หรือสาขาวิชา เช่น EN1-207 หรือ อาจารย์วิศวกรรมไฟฟ้า"></textarea>
+      <textarea class="chat-input" id="chatInput" rows="1" placeholder="พิมพ์ชื่อ, ห้อง, อาคาร, ตำแหน่ง หรือสาขา เช่น EN1-207, โยธา EN2, รองคณบดีฝ่ายวิชาการ"></textarea>
       <button class="mute-btn" id="muteBtn" type="button" title="ปิด/เปิดเสียงตอบ">🔊</button>
       <button class="send-btn" id="sendBtn">ถาม</button>
     </div>
@@ -520,7 +523,7 @@
       <button class="toggle-btn" id="dirToggleBtn">ซ่อนทำเนียบ</button>
     </div>
     <div id="dirBody">
-      <input class="browse-search" id="browseSearch" type="text" placeholder="พิมพ์เพื่อกรองทำเนียบด้านล่าง (ชื่อ, ตำแหน่ง, สาขา, ห้อง)…">
+      <input class="browse-search" id="browseSearch" type="text" placeholder="พิมพ์เพื่อกรองทำเนียบ เช่น ไฟฟ้า, โยธา EN2, 207A, สมชาย (พิมพ์ผิดนิดหน่อยก็ยังเจอ)…">
       <div class="person-grid" id="directoryGrid"></div>
     </div>
   </div>
@@ -641,11 +644,146 @@
     return [r.acadTitle, r.name].filter(Boolean).join(" ").replace(/\s+/g," ").trim();
   }
 
-  /* ================= DERIVED LISTS ================= */
+  /* ================= ตัวช่วยข้อความ + รองรับ "หลายค่าในช่องเดียว" =================
+     บุคลากรบางท่านสังกัดมากกว่า 1 สาขา/หน่วยงาน ซึ่งในชีทมักพิมพ์รวมไว้ช่องเดียว เช่น
+     "วิศวกรรมโยธา / วิศวกรรมสิ่งแวดล้อม" หรือคั่นด้วย ,  ;  |  ・ หรือขึ้นบรรทัดใหม่
+     ระบบจะแยกออกเป็นรายสาขา เพื่อให้ค้นเจอได้ "ทุกสาขา" ที่ท่านนั้นสังกัด */
+  const MULTI_SPLIT_RE = /\s*(?:[\/|,;\n\r·•]+|\sและ\s|\s&\s|\sกับ\s)\s*/;
+  function splitMulti(s){
+    return (s||"").toString().split(MULTI_SPLIT_RE).map(x=>x.trim()).filter(Boolean);
+  }
+  /* canon() = ตัดช่องว่าง/เครื่องหมาย/ตัวพิมพ์เล็กใหญ่ออกให้หมด เพื่อเทียบข้อความแบบยืดหยุ่น
+     ("EN 1 - 207 A" กับ "en1207a" จะถือว่าเหมือนกัน) */
+  function canon(s){
+    return (s||"").toString().toLowerCase()
+      .replace(/[\u200b\u00a0]/g, "")
+      .replace(/[\s\-_.()\[\]{}"'`’“”:：ๆฯ\/\\]/g, "")
+      .trim();
+  }
+
+  /* ================= DERIVED LISTS (รองรับหลายสาขาต่อคน) ================= */
   function uniqueSorted(arr){ return Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>a.localeCompare(b,'th')); }
+  function primaryDepts(r){ return splitMulti(r && r.dept); }
   function getBuildings(){ return uniqueSorted(records.map(r=>r.building)); }
-  function getDepts(){ return uniqueSorted(records.map(r=>r.dept)); }
-  function deptKeyword(dept){ return dept.replace(/^วิศวกรรม/,"").trim() || dept; }
+  function getDepts(){
+    const out = [];
+    records.forEach(r => primaryDepts(r).forEach(d => out.push(d)));
+    return uniqueSorted(out);
+  }
+  function deptKeyword(dept){
+    return (dept||"").replace(/^สาขาวิชา|^สาขา|^ภาควิชา|^หน่วยงาน/,"").replace(/^วิศวกรรมศาสตร์|^วิศวกรรม/,"").trim() || dept;
+  }
+
+  /* ---------- พจนานุกรมคำเรียกอื่น/ตัวย่อของสาขา (ช่วยให้พิมพ์สั้นๆ ก็เจอ) ----------
+     คีย์ = ข้อความที่ปรากฏในชื่อสาขาจริงในชีท (เทียบแบบ "มีคำนี้อยู่ข้างใน") */
+  const DEPT_ALIASES = {
+    "ยานยนต์ไฟฟ้า":      ["ev","electricvehicle","ยานยนต์ไฟฟ้า","รถไฟฟ้า","รถยนต์ไฟฟ้า"],
+    "รถไฟความเร็วสูง":   ["hsr","highspeedrail","รถไฟความเร็วสูง","รถไฟ","ความเร็วสูง","ระบบราง"],
+    "ไฟฟ้า":             ["ee","electrical","electric","ไฟฟ้า","อิเล็ก","อิเล็กทรอนิกส์"],
+    "โยธา":              ["ce","civil","โยธา","ก่อสร้าง"],
+    "เครื่องกล":          ["me","mechanical","เครื่องกล"],
+    "การผลิต":           ["ie","manufacturing","production","industrial","การผลิต","ผลิต","อุตสาหการ"],
+    "สิ่งแวดล้อม":        ["env","environmental","environment","สิ่งแวดล้อม","สวล"],
+    "เมคาทรอนิกส์":      ["mte","mechatronics","เมคาทรอนิกส์","เมคคาทรอนิกส์","เมคคาทรอนิก","เมคาทรอนิก","แมคคาทรอนิกส์"],
+    "ชีวภาพ":            ["bio","bioengineering","biomedical","ชีวภาพ","ไบโอ","ชีวการแพทย์"],
+    "คอมพิวเตอร์":        ["cpe","computer","คอมพิวเตอร์","คอม","ซอฟต์แวร์"],
+    "เคมี":              ["che","chemical","เคมี"],
+    "ปฏิบัติ":            ["วิศวกรรมปฏิบัติ","ปฏิบัติการวิศวกรรม"],
+    "สำนักงานเลขานุการ": ["สำนักงาน","สนง","office","ธุรการคณะ","สายสนับสนุน","บุคลากรสายสนับสนุน",
+                          "เจ้าหน้าที่","เลขานุการคณบดี","สำนักงานคณบดี"]
+  };
+
+  const DEPT_PREFIX_RE = /^(?:สาขาวิชา|สาขา|ภาควิชา|ภาค|หน่วยงาน|กลุ่มงาน|ฝ่าย)+/;
+
+  function deptAliasesFor(dept){
+    const c = canon(dept);
+    let out = [];
+    Object.keys(DEPT_ALIASES).forEach(key=>{
+      if(c.indexOf(canon(key)) !== -1) out = out.concat(DEPT_ALIASES[key]);
+    });
+    return out;
+  }
+  /* สร้าง "คำค้นที่ยอมรับได้" ของแต่ละสาขา เช่น วิศวกรรมไฟฟ้า → ไฟฟ้า, วิศวะไฟฟ้า, ภาคไฟฟ้า, ee … */
+  function deptVariants(dept){
+    const set = new Set();
+    const add = v => { const c = canon(v); if(c.length >= 2) set.add(c); };
+    const base = (dept||"").trim();
+    add(base);
+    add(base.replace(DEPT_PREFIX_RE, ""));
+    const short = deptKeyword(base);
+    if(short && short !== base){
+      add(short);
+      ["วิศวกรรม","วิศวะ","วศ","ภาค","ภาควิชา","สาขา","สาขาวิชา"].forEach(p => add(p + short));
+    }
+    deptAliasesFor(base).forEach(add);
+    return Array.from(set);
+  }
+
+  /* ================= ดัชนีค้นหา (สร้างใหม่ทุกครั้งที่ข้อมูลเปลี่ยน) ================= */
+  let DEPT_KEYS = [];   // [{dept, kw}] เรียงจากคำยาวไปสั้น (คำยาวชนะเสมอ)
+  let REC_INDEX = {};   // { recKey: {primary:[], related:[], name, nameTokens, all} }
+
+  function recKey(r){ return (r && (r.id || ('#' + (r.name||"")))) || ""; }
+
+  function buildSearchIndex(){
+    const depts = getDepts();
+    const keys = [];
+    depts.forEach(d => deptVariants(d).forEach(kw => keys.push({ dept:d, kw:kw })));
+    keys.sort((a,b)=> b.kw.length - a.kw.length);
+    DEPT_KEYS = keys;
+
+    /* คำที่ "กว้างเกินไป" (ไปโผล่ในตำแหน่งของคนจำนวนมาก เช่น "ปฏิบัติ" ใน "นักวิทยาศาสตร์ปฏิบัติการ")
+       จะไม่ถูกใช้อนุมานสาขาที่เกี่ยวข้อง เพื่อกันผลลัพธ์เพี้ยน — คำนวณอัตโนมัติจากข้อมูลจริง */
+    const limit = Math.max(5, Math.round(records.length * 0.10));
+    const freq = {};
+    records.forEach(r=>{
+      const txt = canon([r.position, r.note].join(" "));
+      keys.forEach(k=>{
+        if(k.kw.length < 4) return;
+        if(txt.indexOf(k.kw) !== -1) freq[k.kw] = (freq[k.kw]||0) + 1;
+      });
+    });
+
+    TERM_CACHE = {};
+    REC_INDEX = {};
+    records.forEach(r=>{
+      const primary = primaryDepts(r);
+      const pCanon = primary.map(canon);
+      const txt = canon([r.position, r.note].join(" "));
+      const related = [];
+      keys.forEach(k=>{
+        if(k.kw.length < 4) return;
+        if((freq[k.kw]||0) > limit) return;
+        if(pCanon.indexOf(canon(k.dept)) !== -1) return;
+        if(related.indexOf(k.dept) !== -1) return;
+        if(txt.indexOf(k.kw) !== -1) related.push(k.dept);
+      });
+      REC_INDEX[recKey(r)] = {
+        primary: primary,
+        related: related,
+        name: canon(r.name),
+        nameTokens: (r.name||"").trim().split(/\s+/).map(canon).filter(x=>x.length>=2),
+        all: canon([r.id, r.acadTitle, r.name, r.position, primary.join(" "), related.join(" "),
+                    r.building, "ชั้น" + (r.floor||""), r.room, r.status, r.email, r.note].join(" "))
+      };
+    });
+  }
+
+  function idxOf(r){
+    return REC_INDEX[recKey(r)] || { primary: primaryDepts(r), related: [], name: canon(r.name), nameTokens: [], all: canon([r.name, r.position, r.dept].join(" ")) };
+  }
+  function deptsOf(r){ const e = idxOf(r); return e.primary.concat(e.related); }
+  function deptTextOf(r){ return idxOf(r).primary.join(" / ") || (r.dept||""); }
+  /* ค้นหาแบบ "อยู่สาขานี้ไหม" — นับทั้งสาขาหลัก (หลายสาขาได้) และสาขาที่เกี่ยวข้อง */
+  function hasDept(r, dept){
+    const c = canon(dept);
+    return deptsOf(r).some(d => canon(d) === c);
+  }
+  function hasPrimaryDept(r, dept){
+    const c = canon(dept);
+    return idxOf(r).primary.some(d => canon(d) === c);
+  }
+  function countInDept(dept){ return records.filter(r=>hasDept(r,dept)).length; }
 
   /* ================= PERSON CARD RENDER ================= */
   function personAvatarHtml(r, sizeClass){
@@ -677,7 +815,8 @@
           (r.status ? '<span class="person-status '+statusClass+'">'+escapeHtml(r.status)+'</span>' : '') +
         '</div>' +
       '</div>' +
-      (r.dept ? '<div class="person-dept">🏷️ สาขา/หน่วยงาน: '+escapeHtml(r.dept)+'</div>' : '') +
+      (idxOf(r).primary.length ? '<div class="person-dept">🏷️ สาขา/หน่วยงาน: '+escapeHtml(idxOf(r).primary.join(" · "))+(idxOf(r).primary.length>1?' <span style="color:var(--accent);font-weight:700;">('+idxOf(r).primary.length+' สังกัด)</span>':'')+'</div>' : '') +
+      (idxOf(r).related.length ? '<div class="person-dept" style="opacity:.85;">🔗 เกี่ยวข้องกับสาขา: '+escapeHtml(idxOf(r).related.join(" · "))+'</div>' : '') +
       '<div class="person-loc"><span class="locpin">📍</span> '+escapeHtml(locationText(r))+'</div>' +
       (r.email ? '<div class="person-contact">✉️ <a href="mailto:'+escapeHtml(r.email)+'" onclick="event.stopPropagation()">'+escapeHtml(r.email)+'</a></div>' : '<div class="person-contact" style="color:var(--text-faint);">✉️ ไม่มีข้อมูลอีเมล</div>') +
       (r.note ? '<div class="person-note">หมายเหตุ: '+escapeHtml(r.note)+'</div>' : '') +
@@ -696,7 +835,8 @@
       (r.status ? '<span class="person-status '+statusClass+'" style="margin-top:8px;">'+escapeHtml(r.status)+'</span>' : '') +
     '</div>' +
     (r.position ? '<div class="modal-field"><span class="f-icon">💼</span><div><span class="f-label">ตำแหน่ง</span><span class="f-value">'+escapeHtml(r.position)+'</span></div></div>' : '') +
-    (r.dept ? '<div class="modal-field"><span class="f-icon">🏷️</span><div><span class="f-label">สาขา/หน่วยงาน</span><span class="f-value">'+escapeHtml(r.dept)+'</span></div></div>' : '') +
+    (idxOf(r).primary.length ? '<div class="modal-field"><span class="f-icon">🏷️</span><div><span class="f-label">สาขา/หน่วยงาน'+(idxOf(r).primary.length>1?' ('+idxOf(r).primary.length+' สังกัด)':'')+'</span><span class="f-value">'+escapeHtml(idxOf(r).primary.join(" · "))+'</span></div></div>' : '') +
+    (idxOf(r).related.length ? '<div class="modal-field"><span class="f-icon">🔗</span><div><span class="f-label">สาขาที่เกี่ยวข้อง (จากตำแหน่ง/หมายเหตุ)</span><span class="f-value">'+escapeHtml(idxOf(r).related.join(" · "))+'</span></div></div>' : '') +
     '<div class="modal-field"><span class="f-icon">📍</span><div><span class="f-label">ห้องพัก</span><span class="f-value">'+escapeHtml(locationText(r))+'</span></div></div>' +
     (r.email ? '<div class="modal-field"><span class="f-icon">✉️</span><div><span class="f-label">อีเมล</span><span class="f-value"><a href="mailto:'+escapeHtml(r.email)+'">'+escapeHtml(r.email)+'</a></span></div></div>' : '') +
     (r.note ? '<div class="modal-field"><span class="f-icon">📝</span><div><span class="f-label">หมายเหตุ</span><span class="f-value">'+escapeHtml(r.note)+'</span></div></div>' : '');
@@ -745,7 +885,7 @@
 
     const depts = getDepts();
     elDeptChipsRow.innerHTML =
-      depts.map(d=>'<button class="chip" data-dept="'+escapeHtml(d)+'">🎓 '+escapeHtml(deptKeyword(d))+'</button>').join('');
+      depts.map(d=>'<button class="chip" data-dept="'+escapeHtml(d)+'">🎓 '+escapeHtml(deptKeyword(d))+' <span style="opacity:.7;">('+countInDept(d)+')</span></button>').join('');
 
     elBuildingChips.querySelectorAll('[data-building]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -770,10 +910,14 @@
     speak('พบบุคลากรในอาคาร ' + building + ' ทั้งหมด ' + list.length + ' ท่าน');
   }
   function askDeptList(dept){
-    const list = records.filter(r=>r.dept===dept)
-      .sort((a,b)=> a.name.localeCompare(b.name,'th'));
+    // นับทั้งคนที่สังกัดสาขานี้เป็นสาขาหลัก (แม้จะสังกัดหลายสาขา) และคนที่เกี่ยวข้องกับสาขานี้
+    const list = records.filter(r=>hasDept(r,dept))
+      .sort((a,b)=> (hasPrimaryDept(b,dept)?1:0) - (hasPrimaryDept(a,dept)?1:0) || a.name.localeCompare(b.name,'th'));
+    const relatedCount = list.filter(r=>!hasPrimaryDept(r,dept)).length;
     addMessage('user', escapeHtml('บุคลากรทั้งหมดในสาขา/หน่วยงาน ' + dept));
-    const html = '<div class="ans-title">พบบุคลากรในสาขา/หน่วยงาน '+escapeHtml(dept)+' จำนวน '+list.length+' ท่าน</div>' + personGridHtml(list);
+    const html = '<div class="ans-title">พบบุคลากรในสาขา/หน่วยงาน '+escapeHtml(dept)+' จำนวน '+list.length+' ท่าน</div>' +
+      (relatedCount ? '<div class="ans-note">รวมผู้ที่เกี่ยวข้องกับสาขานี้จากตำแหน่ง/หลักสูตรอีก '+relatedCount+' ท่าน</div>' : '') +
+      personGridHtml(list);
     const msgEl = addMessage('assistant', html);
     lastPersonMsgEl = msgEl; lastPersonIds = list.map(r=>r.id);
     speak('พบบุคลากรในสาขา ' + dept + ' ทั้งหมด ' + list.length + ' ท่าน');
@@ -781,13 +925,17 @@
 
   /* ================= DIRECTORY GRID (browse mode) ================= */
   function renderDirectory(){
-    const q = norm(elBrowseSearch.value);
+    const raw = (elBrowseSearch.value||"").trim();
     let list = records.slice().sort((a,b)=> (a.building+a.floor+a.room).localeCompare(b.building+b.floor+b.room,'th') || a.name.localeCompare(b.name,'th'));
-    if(q){
-      list = list.filter(r=>{
-        const combined = norm([r.name,r.acadTitle,r.position,r.dept,r.building,r.floor,r.room,r.email].join(" "));
-        return combined.indexOf(q) !== -1;
-      });
+    if(raw){
+      if(canon(raw).length <= 1){
+        const q = canon(raw);
+        list = list.filter(r => idxOf(r).all.indexOf(q) !== -1);
+      }else{
+        // ใช้เครื่องมือค้นหาอัจฉริยะตัวเดียวกับช่องแชท (รองรับหลายสาขา/พิมพ์ผิด/หลายเงื่อนไข)
+        const res = classify(raw);
+        list = res.results && res.results.length ? res.results : [];
+      }
     }
     elDirCount.textContent = "(" + list.length + " ท่าน)";
     elDirectoryGrid.innerHTML = list.length ? list.map(personCardHtml).join('') : '<div class="empty-note">ไม่พบข้อมูลบุคลากรที่ตรงกับคำค้นหา</div>';
@@ -849,17 +997,54 @@
     while((m = re.exec(qStripped))){ out.push(m[0]); }
     return out;
   }
-  function detectDept(q){
-    const depts = getDepts();
+  /* ---------- ตรวจจับสาขา/หน่วยงานจากคำถาม (รองรับหลายสาขาในคำถามเดียว) ----------
+     คืนค่า { depts:[...], kws:[...] } โดย "คำยาวชนะคำสั้น" เสมอ
+     เช่น "ยานยนต์ไฟฟ้า" จะไม่ถูกจับเป็น "ไฟฟ้า" และ "รถไฟฟ้า" จะไม่ถูกจับเป็น "รถไฟ" */
+  function detectDeptInfo(raw){
+    const q = canon(raw);
+    if(!q) return { depts: [], kws: [], fuzzy: false };
+    const occ = [];
+    DEPT_KEYS.forEach(k=>{
+      let i = q.indexOf(k.kw);
+      while(i !== -1){ occ.push({ dept:k.dept, kw:k.kw, s:i, e:i + k.kw.length }); i = q.indexOf(k.kw, i + 1); }
+    });
+    const kept = occ.filter(o => !occ.some(p => (p.e - p.s) > (o.e - o.s) && p.s <= o.s && p.e >= o.e));
+    /* คำเดียวกันอาจไปโดนหลายสาขา (เช่น "ไฟฟ้า" อยู่ในทั้ง วิศวกรรมไฟฟ้า และ วิศวกรรมยานยนต์ไฟฟ้า)
+       → เลือกสาขาที่คำนั้น "อธิบายได้ครบที่สุด" เป็นหลัก */
+    const byKw = {};
+    kept.forEach(o=>{ (byKw[o.kw] = byKw[o.kw] || []).push(o); });
+    const depts = [], kws = [];
+    Object.keys(byKw).forEach(kw=>{
+      const group = byKw[kw];
+      let maxCov = 0;
+      group.forEach(o=>{
+        const short = canon(deptKeyword(o.dept)) || canon(o.dept);
+        o.cov = short.length ? Math.min(1, kw.length / short.length) : 0;
+        if(o.cov > maxCov) maxCov = o.cov;
+      });
+      group.forEach(o=>{
+        if(o.cov < maxCov * 0.9) return;
+        if(depts.indexOf(o.dept) === -1) depts.push(o.dept);
+        if(kws.indexOf(o.kw) === -1) kws.push(o.kw);
+      });
+    });
+    if(depts.length) return { depts, kws, fuzzy:false };
+
+    // ไม่เจอแบบตรงตัว → ลองเทียบแบบใกล้เคียง (พิมพ์ผิด/เสียงพูดเพี้ยน เช่น "เมคคาทรอนิค")
     let best = null;
-    for(const d of depts){
-      const kw = deptKeyword(d);
-      if(kw && q.indexOf(norm(kw)) !== -1){
-        if(!best || kw.length > best.kwLen) best = {dept:d, kwLen:kw.length};
-      }
-    }
-    return best ? best.dept : null;
+    DEPT_KEYS.forEach(k=>{
+      if(k.kw.length < 4) return;
+      const sim = bestWindowSimilarity(q, k.kw);
+      if(sim >= 0.78 && (!best || sim > best.sim)) best = { dept:k.dept, kw:k.kw, sim:sim };
+    });
+    if(!best) return { depts: [], kws: [], fuzzy:false };
+    // ตัด "ช่วงข้อความที่สะกดเพี้ยน" ออกจากคำถามด้วย จะได้ไม่เหลือเศษคำไปกวนการค้นหา
+    const win = bestWindowText(q, best.kw);
+    const fkws = [best.kw];
+    if(win && fkws.indexOf(win) === -1) fkws.push(win);
+    return { depts:[best.dept], kws:fkws, fuzzy:true };
   }
+  function detectDepts(raw){ return detectDeptInfo(raw).depts; }
 
   // ตรวจตำแหน่งบริหารแบบมีลำดับชั้น (คณบดี > รองคณบดี > ผู้ช่วยคณบดี)
   // เพื่อไม่ให้คำว่า "คณบดี" เพียงคำเดียวไปจับปนกับ "รองคณบดี"/"ผู้ช่วยคณบดี"
@@ -905,6 +1090,54 @@
   }
   const FUZZY_THRESHOLD = 0.72;
 
+  /* เทียบ "คำ" กับ "ช่วงใดช่วงหนึ่งในประโยค" แบบยืดหยุ่น — ใช้กับภาษาไทยที่ไม่มีการเว้นวรรค */
+  function bestWindowSimilarity(hay, needle){
+    hay = hay || ""; needle = needle || "";
+    if(!hay || !needle) return 0;
+    if(hay.indexOf(needle) !== -1) return 1;
+    const n = needle.length;
+    let best = similarity(hay, needle);
+    const lo = Math.max(2, n - 2), hi = n + 2;
+    for(let w = lo; w <= hi; w++){
+      for(let i = 0; i + w <= hay.length; i++){
+        const sc = similarity(hay.substr(i, w), needle);
+        if(sc > best) best = sc;
+      }
+    }
+    return best;
+  }
+  /* คืน "ช่วงข้อความ" ในประโยคที่ใกล้เคียงคำที่ต้องการมากที่สุด (ใช้ตัดคำที่สะกดเพี้ยนออก) */
+  function bestWindowText(hay, needle){
+    hay = hay || ""; needle = needle || "";
+    if(!hay || !needle) return "";
+    if(hay.indexOf(needle) !== -1) return needle;
+    const n = needle.length;
+    let best = "", bestSc = 0;
+    for(let w = Math.max(2, n - 2); w <= n + 2; w++){
+      for(let i = 0; i + w <= hay.length; i++){
+        const sc = similarity(hay.substr(i, w), needle);
+        if(sc > bestSc){ bestSc = sc; best = hay.substr(i, w); }
+      }
+    }
+    return bestSc >= 0.6 ? best : "";
+  }
+  /* เลือกตำแหน่งทางวิชาการที่ "ยาวที่สุด" ที่พบในคำถาม
+     (กันบั๊กเดิมที่ "รองศาสตราจารย์" ถูกจับเป็น "ศาสตราจารย์") */
+  function detectAcad(rawNorm){
+    let best = null;
+    ACAD_KEYWORDS.forEach(k=>{
+      if(rawNorm.indexOf(norm(k)) !== -1 && (!best || k.length > best.length)) best = k;
+    });
+    return best;
+  }
+  function acadMatches(r, acad){
+    const t = r.acadTitle || "";
+    if(acad === 'ศาสตราจารย์') return t.indexOf('ศาสตราจารย์') !== -1 && t.indexOf('รอง') === -1 && t.indexOf('ผู้ช่วย') === -1;
+    if(acad === 'ดร.') return t.indexOf('ดร') !== -1;
+    if(acad === 'อาจารย์') return t.indexOf('อาจารย์') !== -1 || (r.position || "").indexOf('อาจารย์') !== -1;
+    return t.indexOf(acad) !== -1;
+  }
+
   function findByNameExact(rawStripped){
     const q = rawStripped.toLowerCase();
     return records.filter(r => stripSpaces(r.name).toLowerCase().indexOf(q) !== -1);
@@ -934,7 +1167,182 @@
     return candidates.map(c=>c.r);
   }
 
-  /* ---------- ตัวจำแนกหมวดหมู่คำถาม (cascade) ---------- */
+  /* ================= ตัวจำแนกคำถามแบบหลายเงื่อนไข (multi-facet) =================
+     แนวคิดใหม่: แยกคำถามออกเป็น "เงื่อนไขย่อย" (สาขา / อาคาร / ชั้น / ห้อง / ตำแหน่ง /
+     ตำแหน่งวิชาการ / ฝ่ายงาน / คำอิสระ เช่น ชื่อคน) แล้วกรองแบบ AND ทั้งหมด
+     ถ้ากรองครบทุกเงื่อนไขแล้วไม่เจอ จะค่อยๆ "ผ่อนเงื่อนไข" ที่สำคัญน้อยที่สุดออกทีละข้อ
+     แทนที่จะตอบว่า "ไม่พบ" ทันที — และจะบอกผู้ใช้ด้วยว่าผ่อนเงื่อนไขอะไรไปบ้าง */
+
+  // คำถาม/คำฟุ่มเฟือยที่ตัดทิ้งได้ (ตัดเฉพาะวลียาวๆ ที่ไม่ไปชนกับชื่อคน)
+  const STOP_PHRASES = [
+    "อยู่ห้องไหน","อยู่ห้องอะไร","ห้องทำงานอยู่ไหน","ห้องพักอยู่ไหน","อยู่ที่ไหน","อยู่ตรงไหน","อยู่ไหน",
+    "ห้องไหน","ห้องอะไร","ที่ไหน","คือใคร","เป็นใคร","ชื่ออะไร","มีใครบ้าง","ใครบ้าง","มีใคร","ใคร",
+    "ขอทราบ","อยากทราบ","อยากรู้","ช่วยหา","ช่วยค้นหา","ค้นหา","ขอดู","ขอข้อมูล","ข้อมูลของ","รายชื่อ",
+    "หน่อยครับ","หน่อยค่ะ","หน่อย","ครับผม","ครับ","ค่ะ","คะ","จ้า","ด้วยครับ","ด้วยค่ะ",
+    "ติดต่อ","เบอร์โทร","เบอร์","โทรศัพท์","อีเมล","email","ทำงานอยู่","ประจำอยู่","สังกัดอยู่","สังกัด",
+    "ห้องพัก","ห้องทำงาน","อาจารย์ท่านใด","ท่านใด","ตอนนี้","ปัจจุบัน","บ้าง","ไหม","มั้ย","หรือไม่",
+    "อยู่ตึกไหน","ตึกไหน","ตึกอะไร","อยู่อาคารไหน","อาคารไหน","อาคารอะไร","อยู่ชั้นไหน","ชั้นไหน","ชั้นอะไร",
+    "สาขาอะไร","สาขาไหน","หน่วยงานไหน","หน่วยงานอะไร","ตำแหน่งอะไร","ทำหน้าที่อะไร","ทำอะไร",
+    "รับผิดชอบ","เกี่ยวกับ","อย่างไร","ยังไง","นะ","อะไร","ที่ตั้ง","แผนที่","ตึก"
+  ].map(canon).sort((a,b)=> b.length - a.length);
+
+  function stripStopPhrases(qc){
+    let out = qc;
+    STOP_PHRASES.forEach(p=>{
+      if(p.length < 2) return;
+      while(out.indexOf(p) !== -1){ out = out.replace(p, "|"); }
+    });
+    return out;
+  }
+
+  /* ---------- แยกคำถามออกเป็นเงื่อนไขย่อย ---------- */
+  function extractFacets(raw){
+    const rawNorm = norm(raw);
+    const rawStripped = stripSpaces(raw);
+    const f = { building:null, floor:null, rooms:[], depts:[], deptKws:[], deptFuzzy:false,
+                tier:null, acad:null, funcs:[], terms:[] };
+
+    f.building = detectBuilding(rawStripped);
+    f.floor = detectFloor(raw);
+    f.rooms = detectRoomTokens(rawStripped);
+    if(f.building){
+      const bn = (f.building.match(/[0-9]+/) || [])[0];
+      if(bn) f.rooms = f.rooms.filter(t => t !== bn);
+    }
+    if(f.floor) f.rooms = f.rooms.filter(t => t !== f.floor);
+
+    const di = detectDeptInfo(raw);
+    f.depts = di.depts; f.deptKws = di.kws; f.deptFuzzy = di.fuzzy;
+
+    f.tier = findHierarchyTier(rawNorm);
+    f.acad = detectAcad(rawNorm);
+    f.funcs = FUNCTION_KEYWORDS.filter(k => rawNorm.indexOf(norm(k)) !== -1);
+    // ถ้าจับสาขาได้แล้ว ไม่ต้องเอาคำฝ่ายงานที่ซ้ำซ้อนมาแคบผลลัพธ์อีก (เช่น "คอมพิวเตอร์")
+    if(f.depts.length) f.funcs = f.funcs.filter(k => !f.deptKws.some(kw => kw.indexOf(canon(k)) !== -1 || canon(k).indexOf(kw) !== -1));
+
+    /* ---- หา "คำอิสระ" ที่เหลือ (มักเป็นชื่อคน) โดยตัดคำที่ใช้เป็นเงื่อนไขไปแล้วออก ---- */
+    let left = canon(raw);
+    const cut = [];
+    if(f.building){ cut.push(canon(f.building)); const bn=(f.building.match(/[0-9]+/)||[])[0]; if(bn) cut.push(canon("อาคาร"+bn)); }
+    if(f.floor) cut.push(canon("ชั้น" + f.floor));
+    f.rooms.forEach(t=>cut.push(canon(t)));
+    f.deptKws.forEach(k=>cut.push(k));
+    if(f.tier) cut.push(canon(f.tier));
+    if(f.acad) cut.push(canon(f.acad));
+    f.funcs.forEach(k=>cut.push(canon(k)));
+    ["อาคาร","ชั้น","ห้อง","สาขาวิชา","สาขา","ภาควิชา","หน่วยงาน","ฝ่าย","คณะวิศวกรรมศาสตร์","คณะ","วิศวกรรมศาสตร์","มมส"].forEach(k=>cut.push(canon(k)));
+    cut.sort((a,b)=> b.length - a.length);
+    cut.forEach(c=>{ if(c && c.length >= 2){ while(left.indexOf(c) !== -1) left = left.replace(c, "|"); } });
+    left = stripStopPhrases(left);
+    f.terms = left.split("|").map(x=>x.trim()).filter(x=> x.length >= 2);
+    return f;
+  }
+
+  function facetActive(f){
+    return { terms:f.terms.length>0, depts:f.depts.length>0, building:!!f.building, floor:!!f.floor,
+             rooms:f.rooms.length>0, tier:!!f.tier, acad:!!f.acad, funcs:f.funcs.length>0 };
+  }
+  // ลำดับการ "ผ่อนเงื่อนไข" เมื่อค้นไม่เจอ (ผ่อนข้อที่สำคัญน้อยสุดก่อน) — คำอิสระ/ชื่อคนไม่ถูกผ่อน
+  const FACET_RELAX_ORDER = ['acad','funcs','floor','building','rooms','depts','tier'];
+  const FACET_RELAX_NAME = { acad:'ตำแหน่งทางวิชาการ', funcs:'ฝ่ายงาน', floor:'ชั้น', building:'อาคาร',
+                             rooms:'เลขห้อง', depts:'สาขา/หน่วยงาน', tier:'ตำแหน่งบริหาร' };
+
+  function nameScore(r, term){
+    const h = idxOf(r);
+    if(h.name.indexOf(term) !== -1) return 1;
+    if(h.nameTokens.some(nt => nt.indexOf(term) !== -1 || term.indexOf(nt) !== -1)) return 0.9;
+    let best = 0;
+    h.nameTokens.forEach(nt=>{ const sc = similarity(term, nt); if(sc > best) best = sc; });
+    return best >= FUZZY_THRESHOLD ? best * 0.8 : 0;
+  }
+  let TERM_CACHE = {};
+  function termScore(r, term){
+    const key = recKey(r) + "\u0001" + term;
+    if(TERM_CACHE.hasOwnProperty(key)) return TERM_CACHE[key];
+    const v = termScoreRaw(r, term);
+    TERM_CACHE[key] = v;
+    return v;
+  }
+  function termScoreRaw(r, term){
+    const byName = nameScore(r, term);
+    if(byName > 0) return byName;
+    const h = idxOf(r);
+    if(h.all.indexOf(term) !== -1) return 0.6;                   // เจอที่ตำแหน่ง/สาขา/ห้อง/อีเมล ฯลฯ
+    if(term.length >= 4 && bestWindowSimilarity(h.all, term) >= 0.85) return 0.4; // สะกดเพี้ยนเล็กน้อย
+    return 0;
+  }
+
+  function applyFacets(list, f, use){
+    let out = list;
+    if(use.terms)    out = out.filter(r => f.terms.every(t => termScore(r, t) > 0));
+    if(use.depts)    out = out.filter(r => f.depts.some(d => hasDept(r, d)));
+    if(use.building) out = out.filter(r => (r.building||"").toUpperCase() === f.building.toUpperCase());
+    if(use.floor)    out = out.filter(r => String(r.floor) === String(f.floor));
+    if(use.rooms)    out = out.filter(r => r.room && f.rooms.some(t => canon(r.room).indexOf(canon(t)) !== -1));
+    if(use.tier)     out = out.filter(r => positionMatchesTier(r.position, f.tier));
+    if(use.acad)     out = out.filter(r => acadMatches(r, f.acad));
+    if(use.funcs)    out = out.filter(r => r.position && f.funcs.some(k => r.position.indexOf(k) !== -1));
+    return out;
+  }
+
+  function sortResults(list, f){
+    return list.slice().sort((a,b)=>{
+      if(f.terms.length){
+        const sa = Math.max.apply(null, f.terms.map(t=>termScore(a,t)));
+        const sb = Math.max.apply(null, f.terms.map(t=>termScore(b,t)));
+        if(sb !== sa) return sb - sa;
+      }
+      if(f.depts.length){
+        const pa = f.depts.some(d=>hasPrimaryDept(a,d)) ? 1 : 0;
+        const pb = f.depts.some(d=>hasPrimaryDept(b,d)) ? 1 : 0;
+        if(pb !== pa) return pb - pa;
+      }
+      return (a.building+a.floor+a.room).localeCompare(b.building+b.floor+b.room,'th') ||
+             (a.name||"").localeCompare(b.name||"",'th');
+    });
+  }
+
+  function facetLabel(f, use){
+    const parts = [];
+    if(use.depts)    parts.push('สาขา/หน่วยงาน ' + f.depts.join(' + '));
+    if(use.tier)     parts.push(f.tier);
+    if(use.funcs)    parts.push('ฝ่าย' + f.funcs.join(' + '));
+    if(use.acad)     parts.push(f.acad);
+    if(use.building) parts.push('อาคาร ' + f.building);
+    if(use.floor)    parts.push('ชั้น ' + f.floor);
+    if(use.rooms)    parts.push('ห้อง ' + f.rooms.join('/'));
+    if(use.terms)    parts.push('คำค้น "' + f.terms.join(' ') + '"');
+    return parts.join(' · ');
+  }
+
+  /* ---------- ค้นแบบอิสระทั่วทั้งฐานข้อมูล (ให้คะแนน ไม่ตัดทิ้งง่ายๆ) ---------- */
+  function freeTextSearch(raw){
+    const qc = canon(raw);
+    const core = stripStopPhrases(qc).split("|").map(x=>x.trim()).filter(x=>x.length>=2);
+    const terms = core.length ? core : (qc.length >= 2 ? [qc] : []);
+    if(!terms.length) return [];
+    const scored = [];
+    records.forEach(r=>{
+      const h = idxOf(r);
+      let sc = 0;
+      if(qc.length >= 2 && h.all.indexOf(qc) !== -1) sc += 3;
+      terms.forEach(t=>{ sc += termScore(r, t); });
+      if(sc > 0) scored.push({ r:r, sc:sc });
+    });
+    scored.sort((a,b)=> b.sc - a.sc || (a.r.name||"").localeCompare(b.r.name||"",'th'));
+    return scored.filter(x=>x.sc >= 0.4).map(x=>x.r);
+  }
+
+  /* ---------- รายชื่อ "ใกล้เคียง" ไว้แนะนำเมื่อไม่พบจริงๆ ---------- */
+  function suggestClosest(raw, n){
+    const qc = stripStopPhrases(canon(raw)).replace(/\|/g,"");
+    if(qc.length < 2) return [];
+    const scored = records.map(r=>({ r:r, sc: bestWindowSimilarity(idxOf(r).all, qc) }));
+    scored.sort((a,b)=> b.sc - a.sc);
+    return scored.filter(x=>x.sc >= 0.55).slice(0, n||3).map(x=>x.r);
+  }
+
+  /* ---------- ตัวจำแนกหมวดหมู่คำถามหลัก ---------- */
   function classify(raw){
     const rawNorm = norm(raw);
     const rawStripped = stripSpaces(raw);
@@ -942,90 +1350,64 @@
 
     // 1) รหัสประจำตัว (T001 / S036 ฯลฯ)
     const idMatch = records.find(r => r.id && rawStripped.length>=3 && rawStripped.toUpperCase() === r.id.toUpperCase());
-    if(idMatch) return { mode:'id', results:[idMatch] };
+    if(idMatch) return { mode:'id', results:[idMatch], label:'รหัส ' + idMatch.id };
 
     // 2) อีเมล
     if(rawNorm.indexOf('@') !== -1){
-      const list = records.filter(r => r.email && rawNorm.indexOf(norm(r.email)) !== -1);
-      if(list.length) return { mode:'email', results:list };
+      const list = records.filter(r => r.email && (rawNorm.indexOf(norm(r.email)) !== -1 || norm(r.email).indexOf(rawNorm) !== -1));
+      if(list.length) return { mode:'email', results:list, label:'อีเมล' };
     }
 
-    // 3) ชื่อ-นามสกุล (ตรงตัวก่อน แล้วค่อย token แล้วค่อย fuzzy)
+    // 3) ชื่อ-นามสกุลแบบตรงตัว (ชนะทุกเงื่อนไข เพราะเจาะจงที่สุด)
     if(rawStripped.length >= 2){
-      let list = findByNameExact(rawStripped);
-      if(list.length) return { mode:'name', results:list };
-      list = findByNameToken(tokensStripped);
-      if(list.length) return { mode:'name', results:list };
-      list = findByNameFuzzy(tokensStripped);
-      if(list.length) return { mode:'name-fuzzy', results:list };
+      const exact = findByNameExact(rawStripped);
+      if(exact.length) return { mode:'name', results:exact, label:'ชื่อ-นามสกุล' };
     }
 
-    // 4) ตำแหน่งบริหารแบบมีลำดับชั้น (คณบดี / รองคณบดี / ผู้ช่วยคณบดี)
-    const tier = findHierarchyTier(rawNorm);
-    if(tier){
-      let list = records.filter(r => positionMatchesTier(r.position, tier));
+    // 4) กรองด้วยเงื่อนไขย่อยทั้งหมดพร้อมกัน แล้วผ่อนเงื่อนไขทีละข้อถ้าไม่เจอ
+    const f = extractFacets(raw);
+    // ตัด "คำที่ไม่มีอยู่ในฐานข้อมูลเลย" ทิ้ง (มักเป็นคำถาม/คำฟุ่มเฟือย) แทนที่จะตอบว่าไม่พบ
+    if(f.terms.length){
+      const kept = f.terms.filter(t => records.some(r => termScore(r, t) > 0));
+      if(kept.length !== f.terms.length) f.terms = kept;
+    }
+    const active = facetActive(f);
+    const anyActive = Object.keys(active).some(k=>active[k]);
+    if(anyActive){
+      const use = Object.assign({}, active);
+      const dropped = [];
+      let list = applyFacets(records, f, use);
+      for(let i=0;i<FACET_RELAX_ORDER.length && !list.length;i++){
+        const key = FACET_RELAX_ORDER[i];
+        if(!use[key]) continue;
+        use[key] = false; dropped.push(FACET_RELAX_NAME[key]);
+        list = applyFacets(records, f, use);
+      }
       if(list.length){
-        const hint = PORTFOLIO_HINTS.find(h => rawNorm.indexOf(norm(h)) !== -1 && list.some(r=> r.position && r.position.indexOf(h)!==-1));
-        if(hint){
-          const narrowed = list.filter(r => r.position && r.position.indexOf(hint) !== -1);
-          if(narrowed.length) list = narrowed;
-        }
-        return { mode:'position', results:list, tier };
+        let note = "";
+        if(dropped.length) note = 'ไม่พบผลลัพธ์ที่ตรงครบทุกเงื่อนไข จึงผ่อนเงื่อนไข ' + dropped.join(', ') + ' ออกให้ครับ';
+        else if(f.deptFuzzy && use.depts) note = 'ตีความชื่อสาขาจากคำที่ใกล้เคียงที่สุดให้ครับ';
+        return { mode:'facet', results: sortResults(list, f), label: facetLabel(f, use), note: note, facets: f, use: use };
       }
     }
 
-    // 5) ห้องพัก (ตัวเลข 2-4 หลัก + ตัวอักษรทางเลือก) — ต้องเจาะจงพอ ไม่ปนกับปีหรือคำอื่น
-    const roomTokens = detectRoomTokens(rawStripped);
-    if(roomTokens.length){
-      let list = records.filter(r => r.room && roomTokens.some(t => stripSpaces(r.room).toUpperCase().indexOf(t.toUpperCase()) !== -1));
-      const building0 = detectBuilding(rawStripped);
-      if(building0) list = list.filter(r => r.building && r.building.toUpperCase() === building0.toUpperCase());
-      if(list.length) return { mode:'room', results:list };
+    // 5) ชื่อแบบแยกคำ / ใกล้เคียง (พิมพ์ผิด เสียงพูดเพี้ยน)
+    if(rawStripped.length >= 2){
+      let list = findByNameToken(tokensStripped);
+      if(list.length) return { mode:'name', results:list, label:'ชื่อ-นามสกุล' };
+      list = findByNameFuzzy(tokensStripped);
+      if(list.length) return { mode:'name-fuzzy', results:list, label:'ชื่อใกล้เคียง',
+        note:'ผลลัพธ์นี้ใกล้เคียงที่สุดกับคำที่พูด/พิมพ์มา ลองตรวจสอบชื่ออีกครั้งหากไม่ตรงกับที่ต้องการ' };
     }
 
-    // 6) สาขา/หน่วยงาน — กรองเฉพาะ dept ตรงตัวเท่านั้น (hard filter)
-    const dept = detectDept(rawNorm);
-    if(dept){
-      let list = records.filter(r => r.dept === dept);
-      const building1 = detectBuilding(rawStripped);
-      if(building1) list = list.filter(r => r.building && r.building.toUpperCase() === building1.toUpperCase());
-      if(list.length) return { mode:'dept', results:list, dept };
-    }
+    // 6) ค้นอิสระทั่วทั้งฐานข้อมูล (ชื่อ ตำแหน่ง สาขา อาคาร ห้อง อีเมล หมายเหตุ)
+    const free = freeTextSearch(raw);
+    if(free.length) return { mode:'free', results:free, label:'ค้นทั่วทั้งฐานข้อมูล' };
 
-    // 7) ฝ่ายงาน/หน้าที่เฉพาะ (พัสดุ, การเงิน, ธุรการ ฯลฯ) จับคู่กับคอลัมน์ตำแหน่งตรงๆ
-    const funcKw = FUNCTION_KEYWORDS.find(k => rawNorm.indexOf(norm(k)) !== -1);
-    if(funcKw){
-      const list = records.filter(r => r.position && r.position.indexOf(funcKw) !== -1);
-      if(list.length) return { mode:'function', results:list, keyword:funcKw };
-    }
-
-    // 8) อาคาร (+ ชั้น ถ้ามี)
-    const building2 = detectBuilding(rawStripped);
-    if(building2){
-      let list = records.filter(r => r.building && r.building.toUpperCase() === building2.toUpperCase());
-      const floor = detectFloor(raw);
-      if(floor){
-        const narrowed = list.filter(r => String(r.floor) === String(floor));
-        if(narrowed.length) list = narrowed;
-      }
-      if(list.length) return { mode:'building', results:list, building:building2, floor:detectFloor(raw) };
-    }
-
-    // 9) ตำแหน่งทางวิชาการ (ศาสตราจารย์ / รองศาสตราจารย์ ฯลฯ)
-    const acad = ACAD_KEYWORDS.find(k => rawNorm.indexOf(norm(k)) !== -1);
-    if(acad){
-      const list = records.filter(r => r.acadTitle && r.acadTitle.indexOf(acad) !== -1);
-      if(list.length) return { mode:'acad', results:list, keyword:acad };
-    }
-
-    // 10) fallback: ค้นหาทั่วไปแบบให้คะแนนเบาๆ (กันไม่ให้ตอบ "ไม่พบ" ง่ายเกินไป)
-    if(rawNorm.length >= 2){
-      const scored = records
-        .map(r => ({ r, hit: norm([r.name,r.position,r.dept,r.acadTitle,r.note].join(' ')).indexOf(rawNorm) !== -1 }))
-        .filter(x => x.hit)
-        .map(x => x.r);
-      if(scored.length) return { mode:'fallback', results:scored };
-    }
+    // 7) ไม่พบจริงๆ → เสนอรายชื่อที่ใกล้เคียงที่สุดแทนการตอบว่าไม่พบเฉยๆ
+    const near = suggestClosest(raw, 3);
+    if(near.length) return { mode:'near', results:near, label:'ผลลัพธ์ที่ใกล้เคียงที่สุด',
+      note:'ไม่พบข้อมูลที่ตรงกับคำค้นพอดี นี่คือรายชื่อที่ใกล้เคียงที่สุดครับ' };
 
     return { mode:'none', results:[] };
   }
@@ -1034,7 +1416,7 @@
     return /^(สวัสดี|หวัดดี|hello|hi|เฮลโล)/i.test(q.trim());
   }
   function isListAllRequest(q){
-    return /(ทั้งหมด|รายชื่อทั้งหมด|บุคลากรทั้งหมด|มีใครบ้าง)$/.test(q.trim()) && !detectBuilding(stripSpaces(q)) && !detectDept(norm(q));
+    return /(ทั้งหมด|รายชื่อทั้งหมด|บุคลากรทั้งหมด|มีใครบ้าง)$/.test(q.trim()) && !detectBuilding(stripSpaces(q)) && !detectDepts(q).length;
   }
 
   /* ================= RESPONSE BUILDER ================= */
@@ -1042,6 +1424,10 @@
     const q = raw.trim();
     if(!q){
       return { html: '<div class="ans-title">พิมพ์หรือพูดคำถามได้เลยครับ</div>', speak: "กรุณาพิมพ์หรือพูดคำถามเกี่ยวกับบุคลากรที่ต้องการค้นหา" };
+    }
+    if(/^(ขอบคุณ|ขอบใจ|thank|thx)/i.test(q)){
+      return { html: '<div class="ans-title">ยินดีครับ 🙏</div><div style="font-size:12.5px;color:var(--text-soft);">หากต้องการค้นหาบุคลากรท่านอื่น พิมพ์ชื่อ ห้อง อาคาร หรือสาขาได้เลยครับ</div>',
+               speak: "ยินดีครับ หากต้องการค้นหาบุคลากรท่านอื่น แจ้งได้เลยครับ" };
     }
     if(isGreeting(q)){
       const html = '<div class="ans-title">สวัสดีครับ 👋</div>' +
@@ -1056,19 +1442,24 @@
       return { html, speak: "คณะวิศวกรรมศาสตร์มีบุคลากรทั้งหมด " + records.length + " ท่าน กรุณาเลื่อนไปดูที่ทำเนียบบุคลากรด้านล่าง หรือระบุอาคารและสาขาวิชาเพื่อจำกัดผลการค้นหาครับ" };
     }
 
-    const { mode, results, dept, tier, keyword, building, floor } = classify(q);
+    const cls = classify(q);
+    const mode = cls.mode, results = cls.results, label = cls.label || "", note = cls.note || "";
 
     if(!results.length){
+      const depts = getDepts();
       const html = '<div class="ans-title">ไม่พบข้อมูลที่ตรงกับคำค้นหา</div>' +
-        '<div class="ans-note">ลองค้นด้วยชื่อ-นามสกุล, รหัสห้อง (เช่น 207A), อาคาร (เช่น EN1), หรือชื่อสาขาวิชา (เช่น วิศวกรรมไฟฟ้า) ดูนะครับ</div>';
+        '<div class="ans-note">ลองค้นด้วยชื่อ-นามสกุล, รหัสห้อง (เช่น 207A), อาคาร (เช่น EN1), ตำแหน่ง (เช่น พัสดุ) หรือชื่อสาขา (เช่น ไฟฟ้า, โยธา) ดูนะครับ</div>' +
+        (depts.length ? '<div class="ans-note">สาขา/หน่วยงานที่มีในระบบ: ' + escapeHtml(depts.map(deptKeyword).join(" · ")) + '</div>' : '');
       return { html, speak: "ขออภัยครับ ไม่พบข้อมูลบุคลากรที่ตรงกับคำค้นหานี้ ลองระบุชื่อ อาคาร หรือสาขาวิชาให้ชัดเจนขึ้นได้ครับ" };
     }
 
+    const noteHtml = note ? '<div class="ans-note">' + escapeHtml(note) + '</div>' : '';
+
     if(results.length === 1){
       const r = results[0];
-      const badge = mode === 'name-fuzzy' ? '<div class="ans-note">ผลลัพธ์นี้ใกล้เคียงที่สุดกับคำที่พูด/พิมพ์มา ลองตรวจสอบชื่ออีกครั้งหากไม่ตรงกับที่ต้องการ</div>' : '';
-      const html = '<div class="ans-title">พบข้อมูล 1 ท่าน</div>' + personCardHtml(r) + badge;
-      const speak = fullName(r) + " ตำแหน่ง " + (r.position||"-") + " สังกัด " + (r.dept||"-") +
+      const html = '<div class="ans-title">พบข้อมูล 1 ท่าน' + (label ? ' — ' + escapeHtml(label) : '') + '</div>' +
+        personCardHtml(r) + noteHtml;
+      const speak = fullName(r) + " ตำแหน่ง " + (r.position||"-") + " สังกัด " + (deptTextOf(r)||"-") +
         " ประจำอยู่ที่ " + locationText(r).replace(/·/g,",");
       return { html, speak, ids: [r.id] };
     }
@@ -1076,15 +1467,10 @@
     // หลายรายการ
     const cap = 24;
     const shown = results.slice(0, cap);
-    let headTitle = "พบบุคลากร " + results.length + " ท่าน";
-    if(mode === 'dept') headTitle += " ในสาขา/หน่วยงาน " + dept;
-    else if(mode === 'building') headTitle += " ในอาคาร " + building + (floor ? (" ชั้น "+floor) : "");
-    else if(mode === 'position') headTitle += " ตำแหน่ง " + tier;
-    else if(mode === 'function') headTitle += " (" + keyword + ")";
-    else if(mode === 'acad') headTitle += " (" + keyword + ")";
-    const html = '<div class="ans-title">'+escapeHtml(headTitle)+'</div>' +
+    const headTitle = "พบบุคลากร " + results.length + " ท่าน" + (label ? " — " + label : "");
+    const html = '<div class="ans-title">'+escapeHtml(headTitle)+'</div>' + noteHtml +
       personGridHtml(shown) +
-      (results.length > cap ? '<div class="more-note">แสดง '+cap+' จากทั้งหมด '+results.length+' ท่าน ลองระบุชื่อให้เจาะจงขึ้นเพื่อผลลัพธ์ที่แคบลงครับ</div>' : '');
+      (results.length > cap ? '<div class="more-note">แสดง '+cap+' จากทั้งหมด '+results.length+' ท่าน ลองเพิ่มเงื่อนไข เช่น อาคาร ชั้น หรือชื่อ เพื่อให้ผลลัพธ์แคบลงครับ</div>' : '');
     const speakNames = shown.slice(0,5).map(r=>r.name).join(", ");
     const speak = "พบบุคลากรทั้งหมด " + results.length + " ท่าน เช่น " + speakNames;
     return { html, speak, ids: shown.map(r=>r.id) };
@@ -1214,7 +1600,10 @@
     "EN1 ชั้น 2 มีใครอยู่บ้าง",
     "ห้อง 207A คือใคร",
     "ติดต่อฝ่ายงานพัสดุ",
-    "รองคณบดีฝ่ายวิชาการคือใคร"
+    "รองคณบดีฝ่ายวิชาการคือใคร",
+    "โยธา EN2 มีใครบ้าง",
+    "เมคคาทรอนิค อยู่ตึกไหน",
+    "รศ. สาขาไฟฟ้า"
   ];
   elExamples.innerHTML = EXAMPLE_QUESTIONS.map((q,i)=>'<button class="example-chip" data-i="'+i+'">'+escapeHtml(q)+'</button>').join('');
   elExamples.querySelectorAll('.example-chip').forEach((btn,i)=>{
@@ -1227,7 +1616,8 @@
     acadTitle: ["ตำแหน่งทางวิชาการ"],
     name:      ["ชื่อ - นามสกุล","ชื่อ-นามสกุล","ชื่อ – นามสกุล"],
     position:  ["ตำแหน่ง"],
-    dept:      ["หน่วยงาน/สาขา"],
+    // รองรับหลายคอลัมน์สาขา เช่น "หน่วยงาน/สาขา", "สาขา 2", "หน่วยงานที่ 2" — ระบบจะรวมให้เอง
+    dept:      ["หน่วยงาน/สาขา","หน่วยงาน","สาขา"],
     building:  ["อาคาร"],
     floor:     ["ชั้น"],
     room:      ["ห้อง"],
@@ -1261,8 +1651,20 @@
     const raw = (cell.f !== undefined && cell.f !== null) ? cell.f : cell.v;
     return raw === null || raw === undefined ? "" : String(raw).trim();
   }
+  /* หาทุกคอลัมน์ที่เป็น "สาขา/หน่วยงาน" (บางชีทแยกเป็นหลายคอลัมน์สำหรับคนที่อยู่หลายสาขา) */
+  function findDeptColumns(cols){
+    const labels = (cols||[]).map(c => ((c && (c.label || c.id)) || "").trim());
+    const out = [];
+    labels.forEach((lb, i)=>{
+      const c = canon(lb);
+      if(!c) return;
+      if(c.indexOf("หน่วยงาน") !== -1 || c.indexOf("สาขา") !== -1 || c.indexOf("ภาควิชา") !== -1) out.push(i);
+    });
+    return out;
+  }
   function gvizToRecords(table){
     const idx = buildHeaderIndex(table.cols || [], HEADER_MAP);
+    const deptCols = findDeptColumns(table.cols || []);
     const out = [];
     (table.rows || []).forEach(row=>{
       if(!row.c) return;
@@ -1273,7 +1675,7 @@
         acadTitle: cellText(row, idx.acadTitle),
         name: name,
         position: cellText(row, idx.position),
-        dept: cellText(row, idx.dept),
+        dept: (deptCols.length ? deptCols.map(i=>cellText(row, i)).filter(Boolean).join(" / ") : cellText(row, idx.dept)),
         building: cellText(row, idx.building),
         floor: cellText(row, idx.floor),
         room: cellText(row, idx.room),
@@ -1295,6 +1697,7 @@
   let syncTimeoutId = null;
 
   function refreshAll(){
+    buildSearchIndex();   // สร้างดัชนีค้นหาใหม่ทุกครั้งที่ข้อมูลเปลี่ยน (รองรับหลายสาขาต่อคน)
     renderStats();
     renderChips();
     renderDirectory();
