@@ -638,7 +638,7 @@
       <span class="lg-ico lock" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2" stroke="#fff" stroke-width="2"/><path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5" stroke="#fff" stroke-width="2"/></svg></span>
       <h2 id="lgTitle">เลือกวิธีเข้าสู่ระบบ</h2>
     </div>
-    <div class="lg-warn" id="lgWarn" hidden>หลังบ้านของระบบยังเป็นโค้ดเวอร์ชันเดิม จึงยังเข้าหน้าผู้ดูแลไม่ได้ (จะเห็นเป็นข้อความรายชื่อแทน) ผู้ดูแลระบบต้องวาง Code.gs ใหม่ แล้วกด <b>ทำให้ใช้งานได้ → จัดการการทำให้ใช้งานได้ → ✏️ → เวอร์ชันใหม่</b> ในรายการเดิม</div>
+    <div class="lg-warn" id="lgWarn" hidden>หลังบ้านของระบบยังทำงานด้วยโค้ดเวอร์ชันเดิม จึงยังเข้าหน้าผู้ดูแลไม่ได้ (จะเห็นเป็นข้อความรายชื่อแทน) สาเหตุที่พบบ่อย: <b>ไฟล์ Code.gs เดิมยังค้างอยู่ในโปรเจกต์และทับโค้ดใหม่</b> หรือ <b>ยังไม่ได้ Deploy "เวอร์ชันใหม่"</b> ในรายการเดิม — ผู้ดูแลรันฟังก์ชัน <b>diagnose</b> ในหน้า Apps Script ระบบจะบอกจุดที่ต้องแก้</div>
     <p class="lg-lede">เลือกวิธีที่ใช้ได้กับเครื่องนี้ ระบบจะจำไว้ให้ ครั้งต่อไปกดปุ่มเดียวเข้าได้เลย<br>ใช้ได้ทั้งบุคลากรที่ต้องการแก้ไขข้อมูลของตนเอง เจ้าหน้าที่งานบุคคล และผู้ดูแลระบบ</p>
     <a class="lg-opt" id="lgMsu" data-via="msu" href="#" target="_blank" rel="noopener">
       <span class="lg-ico msu" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 20h16M6 20V10l6-4 6 4v10" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M10 20v-5h4v5" stroke="#fff" stroke-width="2"/></svg></span>
@@ -1844,7 +1844,7 @@
       warmPhotos(records);
       setSyncState('live', 'ข้อมูล ณ ' + fmtServerTime(res.updatedAt) + ' น.');
       syncNote.textContent = BACKEND_VERSION ? '' :
-        'ระบบหลังบ้านยังเป็นเวอร์ชันเดิม — ผู้ดูแลต้องวาง Code.gs ใหม่แล้ว Deploy "เวอร์ชันใหม่" ในรายการเดิม (ปุ่มเข้าสู่ระบบจะยังใช้ไม่ได้)';
+        'ระบบหลังบ้านยังทำงานด้วยโค้ดเวอร์ชันเดิม (ปุ่มเข้าสู่ระบบจะยังใช้ไม่ได้) — ผู้ดูแล: รันฟังก์ชัน diagnose ในหน้า Apps Script เพื่อดูจุดที่ต้องแก้';
     }).catch(err=>{
       setSyncState('err', 'ซิงก์ไม่สำเร็จ — แสดงข้อมูลที่บันทึกไว้');
       syncNote.textContent = (err && err.message ? err.message : 'เชื่อมต่อไม่ได้') + ' — ลองกดซิงก์อีกครั้ง หรือตรวจสอบส่วนขยาย/ตัวบล็อกโฆษณา (ค้นหาข้อมูลได้ตามปกติ)';
