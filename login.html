@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<title>ระบบฐานข้อมูลบุคลากร | คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</title>
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --forest:#123D29; --forest-2:#1A4D35; --leaf:#1F9550; --leaf-d:#177A41; --mint:#E6F5EA; --mint-2:#F2FAF4;
+  --paper:#F5F8F5; --surface:#FFFFFF; --line:#DDE8DF; --line-2:#C8DCCD;
+  --ink:#1B2A20; --soft:#5B7262; --faint:#94A99A;
+  --warn:#9A6D12; --warn-bg:#FBF1DE; --danger:#B83A34; --danger-bg:#FBEAE8; --info-bg:#EAF2FB; --info:#2A5C8F;
+  --r:12px; --r-sm:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'IBM Plex Sans Thai',Tahoma,system-ui,sans-serif;background:var(--paper);color:var(--ink);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--leaf-d)}
+:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* ---------- ปุ่ม / ฟอร์ม ---------- */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--surface);border-radius:var(--r-sm);padding:8px 14px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--mint-2);border-color:var(--leaf)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.primary{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.btn.primary:hover{background:var(--leaf-d)}
+.btn.danger{color:var(--danger);border-color:#E9C4C1}
+.btn.danger:hover{background:var(--danger-bg)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{padding:5px 10px;font-size:13px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:13px;font-weight:600;color:var(--soft)}
+.field .hint{font-size:12px;color:var(--faint)}
+.input,select.input,textarea.input{width:100%;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:9px 11px;background:#fff}
+.input:focus{border-color:var(--leaf);outline:none;box-shadow:0 0 0 3px rgba(31,149,80,.15)}
+.input:disabled{background:var(--paper);color:var(--soft)}
+textarea.input{min-height:70px;resize:vertical}
+.check{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--leaf)}
+
+/* ---------- หน้าเข้าสู่ระบบ ---------- */
+.auth{min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.auth-side{background:var(--forest);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.auth-side h1{font-size:34px;line-height:1.25;margin:0 0 12px;font-weight:700;max-width:12em}
+.auth-side p{margin:0;opacity:.8;max-width:30em}
+.auth-side .org{font-weight:600;opacity:.9}
+.auth-grid{position:absolute;right:-60px;bottom:-60px;display:grid;grid-template-columns:repeat(6,46px);gap:10px;opacity:.18}
+.auth-grid span{width:46px;height:46px;border-radius:50%;background:#fff}
+.auth-grid span:nth-child(3n){background:transparent;border:2px solid #fff}
+.auth-main{display:flex;align-items:center;justify-content:center;padding:32px 20px}
+.auth-card{width:100%;max-width:380px}
+.auth-card h2{font-size:22px;margin:0 0 4px}
+.auth-card .sub{color:var(--soft);margin:0 0 22px;font-size:13.5px}
+.auth-card form{display:flex;flex-direction:column;gap:14px}
+.auth-card .btn.primary{justify-content:center;padding:11px}
+.linkbtn{background:none;border:0;color:var(--leaf-d);cursor:pointer;padding:0;font-weight:500}
+.msg{border-radius:var(--r-sm);padding:10px 12px;font-size:13.5px}
+.msg.err{background:var(--danger-bg);color:var(--danger)}
+.msg.ok{background:var(--mint);color:var(--leaf-d)}
+.msg.info{background:var(--info-bg);color:var(--info)}
+
+/* ---------- โครงหลัก ---------- */
+.shell{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100%}
+.side{background:var(--forest);color:#DCEBDF;padding:20px 14px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh}
+.brand{display:flex;gap:10px;align-items:center;padding:0 6px}
+.brand-mark{width:38px;height:38px;border-radius:10px;background:var(--leaf);display:grid;place-items:center;flex-shrink:0}
+.brand b{display:block;color:#fff;font-size:14.5px;line-height:1.3}
+.brand small{font-size:11.5px;opacity:.7}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;color:inherit;padding:9px 12px;border-radius:var(--r-sm);cursor:pointer;font-weight:500}
+.nav button:hover{background:var(--forest-2)}
+.nav button.on{background:#fff;color:var(--forest)}
+.nav svg{width:18px;height:18px;flex-shrink:0}
+.side-foot{margin-top:auto;font-size:12px;opacity:.65;padding:0 6px}
+.side-foot a{color:#fff}
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 28px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.topbar h1{font-size:18px;margin:0}
+.who{display:flex;align-items:center;gap:10px}
+.who .meta{text-align:right;line-height:1.3}
+.who .meta b{display:block;font-size:13.5px}
+.who .meta small{color:var(--soft);font-size:12px}
+.content{padding:24px 28px 48px;max-width:1240px;width:100%}
+.banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--warn-bg);color:var(--warn);border:1px solid #EFD9A8;border-radius:var(--r);padding:12px 16px;margin-bottom:18px}
+
+/* ---------- การ์ด / ส่วน ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:18px}
+.panel h3{margin:0 0 4px;font-size:16px}
+.panel .desc{margin:0 0 14px;color:var(--soft);font-size:13.5px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.stat b{font-size:26px;display:block;line-height:1.2}
+.stat span{font-size:13px;color:var(--soft)}
+.stat.alert b{color:var(--warn)}
+.two{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:18px}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:70px minmax(0,1fr) 36px;gap:10px;align-items:center;font-size:13px}
+.bar i{display:block;height:10px;border-radius:5px;background:var(--leaf)}
+.bar .track{background:var(--mint);border-radius:5px}
+.todo{display:flex;flex-direction:column}
+.todo button{display:flex;align-items:center;gap:10px;border:0;background:none;padding:8px 4px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left}
+.todo button:hover{background:var(--mint-2)}
+.todo .tags{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+
+/* ---------- แท็ก ---------- */
+.tag{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--mint);color:var(--leaf-d);white-space:nowrap}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+.tag.danger{background:var(--danger-bg);color:var(--danger)}
+.tag.grey{background:#EEF1EE;color:var(--soft)}
+.tag.info{background:var(--info-bg);color:var(--info)}
+
+/* ---------- avatar ---------- */
+.av{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;color:#fff;font-weight:600;overflow:hidden;background:var(--leaf);position:relative}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.av.lg{width:112px;height:112px;font-size:38px;border:4px solid #fff;box-shadow:0 2px 10px rgba(18,61,41,.18)}
+.av.sm{width:32px;height:32px;font-size:13px}
+
+/* ---------- ตารางบุคลากร ---------- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar .input{width:auto}
+.toolbar .search{flex:1 1 240px}
+.count{color:var(--soft);font-size:13px;margin-left:auto}
+.tbl-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:12.5px;font-weight:600;color:var(--soft);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--mint-2);white-space:nowrap;position:sticky;top:0}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13.5px}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--mint-2)}
+.pcell{display:flex;align-items:center;gap:10px;min-width:220px}
+.pcell b{display:block;font-weight:600;line-height:1.3}
+.pcell small{color:var(--soft);font-size:12px}
+.muted{color:var(--faint)}
+.empty{padding:40px 16px;text-align:center;color:var(--soft)}
+
+/* ---------- ลิ้นชักแก้ไข ---------- */
+.scrim{position:fixed;inset:0;background:rgba(18,40,28,.38);z-index:30}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--surface);z-index:31;display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(0,0,0,.15)}
+.dr-head{background:var(--forest);color:#fff;padding:18px 22px 54px;position:relative}
+.dr-head .x{position:absolute;z-index:3;top:12px;right:12px;background:rgba(255,255,255,.12);border:0;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px}
+.dr-id{position:relative;z-index:1;padding-right:44px;font-size:40px;font-weight:700;line-height:1;letter-spacing:.02em;opacity:.95}
+.dr-id small{display:block;font-size:12.5px;font-weight:500;opacity:.7;letter-spacing:0;margin-top:6px}
+.dr-photo{display:flex;align-items:flex-end;gap:14px;margin:-48px 22px 0;position:relative;z-index:1}
+.dr-photo .acts{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:6px}
+.dr-body{padding:18px 22px;overflow:auto;flex:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.grid2 .full{grid-column:1/-1}
+.dr-foot{display:flex;gap:8px;padding:14px 22px;border-top:1px solid var(--line);background:var(--mint-2)}
+.dr-foot .sp{flex:1}
+.stamp{font-size:12px;color:var(--faint);margin-top:14px}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:16px;background:rgba(18,40,28,.45)}
+.modal-box{background:#fff;border-radius:16px;width:min(420px,100%);padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.modal-box h3{margin:0 0 6px}
+.modal-box p{margin:0 0 16px;color:var(--soft)}
+.modal-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.crop-stage{position:relative;width:300px;height:300px;margin:6px auto 12px;border-radius:12px;overflow:hidden;background:#222;touch-action:none;cursor:grab}
+.crop-stage canvas{display:block;width:300px;height:300px}
+.crop-stage::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 400px rgba(0,0,0,.45);pointer-events:none}
+.zoom{display:flex;align-items:center;gap:10px}
+.zoom input{flex:1;accent-color:var(--leaf)}
+
+/* ---------- toast / busy ---------- */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--forest);color:#fff;padding:11px 18px;border-radius:10px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:90vw}
+.toast.err{background:var(--danger)}
+.busy{position:fixed;inset:0;z-index:55;background:rgba(255,255,255,.6);display:grid;place-items:center}
+.busy div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 20px;display:flex;gap:12px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.spin{width:20px;height:20px;border:3px solid var(--mint);border-top-color:var(--leaf);border-radius:50%;animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:var(--r-sm);overflow:hidden}
+.seg button{border:0;background:#fff;padding:6px 14px;cursor:pointer;font-weight:500;color:var(--soft)}
+.seg button+button{border-left:1px solid var(--line-2)}
+.seg button.on.m{background:#2F6FB0;color:#fff}
+.seg button.on.f{background:#B5487A;color:#fff}
+.seg button.on.u{background:#EEF1EE;color:var(--ink)}
+tr.dirty td{background:#FFFBEA}
+.sugg{font-size:11.5px;color:var(--info);margin-left:6px}
+.gtag{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;color:#fff;margin-left:6px;vertical-align:middle}
+.gtag.m{background:#2F6FB0}.gtag.f{background:#B5487A}
+.meter{display:grid;grid-template-columns:150px minmax(0,1fr) 54px;gap:10px;align-items:center;font-size:13px;margin:6px 0}
+.meter .track{height:10px;background:var(--mint);border-radius:5px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--leaf);border-radius:5px}
+.meter i.low{background:#D9A23A}
+.split{display:flex;height:12px;border-radius:6px;overflow:hidden;background:#EEF1EE;margin:8px 0 4px}
+.split i{display:block;height:100%}
+.progress{height:10px;background:var(--mint);border-radius:5px;overflow:hidden;margin:10px 0}
+.progress i{display:block;height:100%;background:var(--leaf);width:0;transition:width .3s}
+.loglist{max-height:320px;overflow:auto;font-size:13px;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;background:var(--mint-2)}
+.loglist div{padding:2px 0}
+.kv{display:grid;grid-template-columns:160px minmax(0,1fr) auto;gap:8px 12px;align-items:center;font-size:13.5px}
+.kv code{background:var(--mint-2);border:1px solid var(--line);border-radius:6px;padding:4px 8px;word-break:break-all;font-size:12.5px}
+.steps div{padding:4px 0}
+
+/* ---------- หน้าของฉัน ---------- */
+.profile{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.profile h2{margin:0;font-size:22px}
+.profile .pos{color:var(--soft)}
+.profile .loc{margin-top:6px;font-weight:500}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .side{position:static;height:auto;padding:12px;gap:10px}
+  .nav{flex-direction:row;overflow-x:auto;gap:4px}
+  .nav button{width:auto;white-space:nowrap}
+  .side-foot{display:none}
+  .topbar{padding:12px 16px;position:static}
+  .content{padding:16px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .two{grid-template-columns:1fr}
+  .auth{grid-template-columns:1fr}
+  .auth-side{padding:28px 22px}
+  .auth-side h1{font-size:24px}
+  .auth-grid{display:none}
+  .kv{grid-template-columns:1fr}
+  .who .meta{display:none}
+}
+@media (max-width:640px){
+  .grid2{grid-template-columns:1fr}
+  .hide-sm{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= เข้าสู่ระบบ ================= -->
+<div class="auth" id="authView">
+  <div class="auth-side">
+    <div>
+      <p class="org">คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</p>
+    </div>
+    <div>
+      <h1>ระบบฐานข้อมูลบุคลากร</h1>
+      <p>ข้อมูลบุคลากร ห้องทำงาน และช่องทางติดต่อ ที่บุคลากรแต่ละท่านดูแลและปรับปรุงได้ด้วยตนเอง</p>
+    </div>
+    <div class="auth-grid" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div class="auth-main">
+    <div class="auth-card" id="loginCard">
+      <h2>เข้าสู่ระบบ</h2>
+      <p class="sub">ใช้อีเมลมหาวิทยาลัยที่บันทึกไว้ในระบบ หรือชื่อผู้ใช้ admin</p>
+      <form id="loginForm" autocomplete="on">
+        <div class="field"><label for="lu">อีเมล หรือชื่อผู้ใช้</label>
+          <input class="input" id="lu" name="username" autocomplete="username" required></div>
+        <div class="field"><label for="lp">รหัสผ่าน</label>
+          <input class="input" id="lp" name="password" type="password" autocomplete="current-password" required></div>
+        <label class="check"><input type="checkbox" id="lr" checked> จดจำการเข้าระบบในเครื่องนี้</label>
+        <div id="loginMsg"></div>
+        <button class="btn primary" type="submit" id="loginBtn">เข้าสู่ระบบ</button>
+        <button type="button" class="linkbtn" id="toForgot">ลืมรหัสผ่าน</button>
+      </form>
+    </div>
+    <div class="auth-card" id="forgotCard" hidden>
+      <h2>ขอรหัสผ่านใหม่</h2>
+      <p class="sub">ระบบจะส่งรหัสผ่านชั่วคราวไปที่อีเมลของบัญชี รหัสเดิมยังใช้ได้ตามปกติจนกว่าคุณจะใช้รหัสใหม่</p>
+      <form id="forgotForm">
+        <div class="field"><label for="fu">อีเมลที่ใช้เข้าระบบ</label>
+          <input class="input" id="fu" autocomplete="username" required></div>
+        <div id="forgotMsg"></div>
+        <button class="btn primary" type="submit" id="forgotBtn">ส่งรหัสผ่านทางอีเมล</button>
+        <button type="button" class="linkbtn" id="toLogin">กลับไปหน้าเข้าสู่ระบบ</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ระบบหลัก ================= -->
+<div class="shell" id="appView" hidden>
+  <aside class="side">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24" width="22" height="22" fill="none"><circle cx="9" cy="8" r="3.2" fill="#fff"/><path d="M3 19c.6-3.3 3-5 6-5s5.4 1.7 6 5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><path d="M16 6.5h5M16 10h5M18 13.5h3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+      <div><b>ฐานข้อมูลบุคลากร</b><small>คณะวิศวกรรมศาสตร์ มมส.</small></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot" id="sideFoot"></div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <h1 id="viewTitle">ภาพรวม</h1>
+      <div class="who">
+        <div class="meta"><b id="whoName"></b><small id="whoRole"></small></div>
+        <div id="whoAv"></div>
+        <button class="btn sm" id="logoutBtn">ออกจากระบบ</button>
+      </div>
+    </header>
+    <div class="content">
+      <div class="banner" id="pwBanner" hidden>
+        <span>คุณยังใช้รหัสผ่านเริ่มต้นหรือรหัสชั่วคราวอยู่ ควรเปลี่ยนเป็นรหัสของคุณเองเพื่อความปลอดภัย</span>
+        <button class="btn sm" data-go="password">เปลี่ยนรหัสผ่าน</button>
+      </div>
+      <section id="view"></section>
+    </div>
+  </div>
+</div>
+
+<!-- ลิ้นชักแก้ไขข้อมูล -->
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog"></aside>
+
+<!-- ตัดรูป -->
+<div class="modal" id="cropModal" hidden>
+  <div class="modal-box">
+    <h3>จัดตำแหน่งรูป</h3>
+    <p>ลากรูปให้ใบหน้าอยู่กลางวงกลม แล้วปรับขนาดด้วยแถบด้านล่าง</p>
+    <div class="crop-stage" id="cropStage"><canvas id="cropCanvas" width="600" height="600"></canvas></div>
+    <div class="zoom"><span aria-hidden="true">−</span><input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" aria-label="ขยายรูป"><span aria-hidden="true">+</span></div>
+    <div class="modal-acts">
+      <button class="btn" id="cropCancel">ยกเลิก</button>
+      <button class="btn primary" id="cropOk">ใช้รูปนี้</button>
+    </div>
+  </div>
+</div>
+
+<!-- ยืนยัน -->
+<div class="modal" id="confirmModal" hidden>
+  <div class="modal-box">
+    <h3 id="cfTitle"></h3>
+    <p id="cfText"></p>
+    <div class="modal-acts"><button class="btn" id="cfNo">ยกเลิก</button><button class="btn primary" id="cfYes">ยืนยัน</button></div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
+<div class="busy" id="busy" hidden><div><span class="spin"></span><span id="busyText">กำลังทำงาน…</span></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= สถานะ ================= */
+/* =====================================================================
+   login.html — หน้าผู้ดูแลแบบ "ไม่ผูกบัญชี Google"
+   วางที่ https://eng.msu.ac.th/assistantpersonnel/login.html
+   ★ APP_URL ต้องเป็น URL Web App เดียวกับ APPS_SCRIPT_URL ในหน้าเว็บสาธารณะ (ลงท้าย /exec)
+   ===================================================================== */
+var APP_URL = "https://script.google.com/macros/s/AKfycbxicXfhScB1MLNf1XRudMEDzwOT9FdL9OdmnRska9KeseqMO0o-i9MX9fb3uEr9wiEI/exec";
+/* โหมดทำงาน: อยู่ในระบบ Google (google.script.run) หรือวางบนเซิร์ฟเวอร์คณะ (เรียก API ด้วย POST ไม่ผูกบัญชี Google) */
+var IN_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+var TOKEN = null, ME = null, CFG = {}, OPT = {}, PERSONS = [], VIEW = 'dash';
+var FILTER = { q:'', dept:'', building:'', photo:'', type:'' };
+var $ = function(id){ return document.getElementById(id); };
+
+var FORM = [
+  { k:'acadTitle', l:'ตำแหน่งทางวิชาการ / ระดับ', list:'acadTitle' },
+  { k:'name', l:'ชื่อ - นามสกุล', req:true },
+  { k:'position', l:'ตำแหน่ง / หน้าที่', list:'position', full:true },
+  { k:'dept', l:'หน่วยงาน / สาขา', list:'dept', full:true, hint:'สังกัดหลายสาขา คั่นด้วย / เช่น วิศวกรรมโยธา / วิศวกรรมสิ่งแวดล้อม' },
+  { k:'building', l:'อาคาร', list:'building' },
+  { k:'floor', l:'ชั้น' },
+  { k:'room', l:'ห้อง' },
+  { k:'status', l:'สถานะ', list:'status' },
+  { k:'gender', l:'เพศ', opts:[['','ไม่ระบุ'],['ชาย','ชาย'],['หญิง','หญิง']] },
+  { k:'employmentType', l:'ประเภทการจ้าง', list:'employmentType' },
+  { k:'startDate', l:'วันที่เริ่มปฏิบัติงาน', type:'date', hint:'ใช้คำนวณสถิติอายุงานและแนวโน้มรายปี' },
+  { k:'email', l:'อีเมล', type:'email', full:true, hint:'ใช้เป็นชื่อผู้ใช้เข้าระบบของบุคลากรท่านนี้' },
+  { k:'phone', l:'โทรศัพท์', full:true },
+  { k:'note', l:'หมายเหตุ', area:true, full:true },
+  { k:'visible', l:'แสดงบนหน้าเว็บสาธารณะ', check:true, full:true }
+];
+
+var EMP_DEFAULTS = ['ข้าราชการ','พนักงานมหาวิทยาลัย','พนักงานมหาวิทยาลัย (เงินรายได้)','ลูกจ้างประจำ','ลูกจ้างชั่วคราว','พนักงานราชการ'];
+var ICONS = {
+  gender:'<circle cx="9" cy="10" r="4.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12.3 6.8L17 2m0 0h-3.6M17 2v3.6M9 14.5V22m-3-3h6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+  dash:'<path d="M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 4v4h6V4z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/>',
+  people:'<circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M3.5 19c.5-3 2.8-4.6 5.5-4.6s5 1.6 5.5 4.6M16 5.5a3 3 0 010 5.6M17.5 14.6c1.7.5 2.8 2 3 4.4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+  me:'<circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+  password:'<rect x="5" y="10.5" width="14" height="9.5" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5" stroke="currentColor" stroke-width="1.8" fill="none"/>',
+  users:'<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+  migrate:'<rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8 14l2.5-3 2.5 3 2-2 3 4M7 9h.01" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+  logs:'<path d="M6 4h9l4 4v12H6z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M9 12h7M9 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  system:'<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'
+};
+var VIEWS = {
+  dash:    { t:'ภาพรวม', role:'editor' },
+  people:  { t:'บุคลากร', role:'editor' },
+  gender:  { t:'เติมข้อมูลเพศ', role:'editor' },
+  me:      { t:'ข้อมูลของฉัน', role:'user' },
+  password:{ t:'เปลี่ยนรหัสผ่าน', role:'user' },
+  users:   { t:'บัญชีผู้ใช้', role:'admin' },
+  migrate: { t:'ย้ายรูปภาพ', role:'admin' },
+  logs:    { t:'บันทึกการใช้งาน', role:'admin' },
+  system:  { t:'ตั้งค่าระบบ', role:'admin' }
+};
+var RANK = { user:1, editor:2, admin:3 };
+function can(role){ return ME && RANK[ME.role] >= RANK[role]; }
+
+/* ================= เครื่องมือ ================= */
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function store(k, v){ try{ if(v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function toast(t, err){ var el = $('toast'); el.textContent = t; el.className = 'toast' + (err ? ' err' : ''); el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function(){ el.hidden = true; }, err ? 6000 : 3200); }
+function busy(t){ $('busyText').textContent = t || 'กำลังทำงาน…'; $('busy').hidden = !t; }
+function fullName(p){ return [p.acadTitle, p.name].filter(Boolean).join(' ').replace(/\s+/g,' '); }
+function loc(p){ var a = []; if(p.building) a.push(p.building); if(p.floor) a.push('ชั้น ' + p.floor); if(p.room) a.push('ห้อง ' + p.room); return a.join(' ') || ''; }
+var PALETTE = ['#1F9550','#177A41','#3C7D5A','#2E8B6A','#4F7F45','#286B4B'];
+function avColor(n){ var h = 0; n = n || ''; for(var i=0;i<n.length;i++) h = (h*31 + n.charCodeAt(i)) >>> 0; return PALETTE[h % PALETTE.length]; }
+function avatar(p, size){
+  var ch = (p.name || '?').trim().charAt(0), init = /^[\u0E00-\u0E7FA-Za-z0-9]$/.test(ch) ? ch : '?';
+  var cls = 'av' + (size ? ' ' + size : '');
+  if(p.photo) return '<div class="' + cls + '" style="background:' + avColor(p.name) + '"><img src="' + esc(p.photo) + '" alt="" loading="lazy" onerror="this.parentNode.textContent=\'' + init + '\'"></div>';
+  return '<div class="' + cls + '" style="background:' + avColor(p.name) + '">' + init + '</div>';
+}
+function genderTag(g){ return g === 'ชาย' ? '<span class="gtag m" title="ชาย">ช</span>' : g === 'หญิง' ? '<span class="gtag f" title="หญิง">ญ</span>' : ''; }
+function pct(a, b){ return b ? Math.round(a / b * 100) : 0; }
+function photoTag(p){
+  if(p.photoType === 'server') return '';
+  if(p.photoType === 'sheet') return '<span class="tag warn">รูปยังอยู่ในชีต</span>';
+  if(p.photoType === 'external') return '<span class="tag warn">รูปลิงก์ภายนอก</span>';
+  return '<span class="tag grey">ไม่มีรูป</span>';
+}
+function askConfirm(title, text, yesLabel, danger){
+  return new Promise(function(res){
+    $('cfTitle').textContent = title; $('cfText').textContent = text;
+    var y = $('cfYes'); y.textContent = yesLabel || 'ยืนยัน'; y.className = 'btn ' + (danger ? 'danger' : 'primary');
+    $('confirmModal').hidden = false; y.focus();
+    function done(v){ $('confirmModal').hidden = true; y.onclick = null; $('cfNo').onclick = null; res(v); }
+    y.onclick = function(){ done(true); }; $('cfNo').onclick = function(){ done(false); };
+  });
+}
+
+/* เรียกฝั่งเซิร์ฟเวอร์ */
+function run(fn, args){
+  if(!IN_GAS) return runRemote(fn, args);
+  return new Promise(function(res, rej){
+    var r = google.script.run.withSuccessHandler(res).withFailureHandler(function(e){ rej(new Error((e && e.message) || 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ')); });
+    r[fn].apply(r, args);
+  });
+}
+/** เรียก Apps Script ผ่าน POST แบบไม่ส่งคุกกี้ Google → ไม่เกิดปัญหาเลือกบัญชี (/u/1/) */
+function runRemote(fn, args){
+  if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(APP_URL) && !/^http:\/\/127\.0\.0\.1/.test(APP_URL)){
+    return Promise.reject(new Error('ยังไม่ได้ตั้งค่า APP_URL ในไฟล์ login.html'));
+  }
+  var ctrl = window.AbortController ? new AbortController() : null;
+  var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 90000);
+  return fetch(APP_URL, {
+    method:'POST', credentials:'omit', redirect:'follow', cache:'no-store',
+    headers:{ 'Content-Type':'text/plain;charset=utf-8' },   // เป็นคำขอแบบง่าย ไม่ต้องขออนุญาต CORS ล่วงหน้า
+    body: JSON.stringify({ rpc:fn, args:args }),
+    signal: ctrl ? ctrl.signal : undefined
+  }).then(function(r){ return r.text().then(function(t){
+    try { return JSON.parse(t); }
+    catch(e){ throw new Error('ระบบตอบกลับผิดรูปแบบ (HTTP ' + r.status + ') — ตรวจว่า Deploy เวอร์ชันล่าสุดแล้ว'); }
+  }); }, function(e){
+    throw new Error(e && e.name === 'AbortError' ? 'ระบบตอบช้าเกินไป กรุณาลองใหม่' : 'เชื่อมต่อระบบไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่');
+  }).finally(function(){ clearTimeout(timer); });
+}
+function call(action, payload){
+  return run('api', [TOKEN, action, payload || {}]).then(function(r){
+    if(r && r.ok) return r.data;
+    if(r && r.code === 'AUTH'){ signOut(true); }
+    throw new Error((r && r.error) || 'เกิดข้อผิดพลาด');
+  });
+}
+
+/* ================= เข้าสู่ระบบ ================= */
+$('toForgot').onclick = function(){ $('loginCard').hidden = true; $('forgotCard').hidden = false; $('fu').value = $('lu').value; $('fu').focus(); };
+$('toLogin').onclick = function(){ $('forgotCard').hidden = true; $('loginCard').hidden = false; };
+
+$('loginForm').onsubmit = function(e){
+  e.preventDefault();
+  var b = $('loginBtn'); b.disabled = true; b.textContent = 'กำลังตรวจสอบ…'; $('loginMsg').innerHTML = '';
+  run('apiLogin', [$('lu').value, $('lp').value]).then(function(r){
+    if(!r.ok) throw new Error(r.error);
+    TOKEN = r.data.token;
+    if($('lr').checked) store('dwms_token', TOKEN);
+    $('lp').value = '';
+    return start();
+  }).catch(function(err){
+    $('loginMsg').innerHTML = '<div class="msg err">' + esc(err.message) + '</div>';
+  }).then(function(){ b.disabled = false; b.textContent = 'เข้าสู่ระบบ'; });
+};
+
+$('forgotForm').onsubmit = function(e){
+  e.preventDefault();
+  var b = $('forgotBtn'); b.disabled = true; b.textContent = 'กำลังส่ง…';
+  run('apiForgot', [$('fu').value]).then(function(r){
+    $('forgotMsg').innerHTML = r.ok ? '<div class="msg ok">' + esc(r.data.message) + '</div>' : '<div class="msg err">' + esc(r.error) + '</div>';
+  }).catch(function(err){ $('forgotMsg').innerHTML = '<div class="msg err">' + esc(err.message) + '</div>'; })
+    .then(function(){ b.disabled = false; b.textContent = 'ส่งรหัสผ่านทางอีเมล'; });
+};
+
+function signOut(expired){
+  if(TOKEN && !expired) run('api', [TOKEN, 'logout', {}]).catch(function(){});
+  TOKEN = null; ME = null; store('dwms_token', null);
+  closeDrawer();
+  $('appView').hidden = true; $('authView').hidden = false;
+  $('loginMsg').innerHTML = expired ? '<div class="msg info">เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง</div>' : '';
+}
+$('logoutBtn').onclick = function(){ signOut(false); };
+
+/* ================= เริ่มระบบ ================= */
+function start(){
+  busy('กำลังโหลดข้อมูล…');
+  return call('bootstrap').then(function(d){
+    ME = d.me; CFG = d.config; OPT = d.options; PERSONS = d.persons;
+    $('authView').hidden = true; $('appView').hidden = false;
+    renderShell();
+    go(can('editor') ? 'dash' : 'me');
+  }).finally(function(){ busy(''); });
+}
+
+function renderShell(){
+  $('whoName').textContent = ME.name;
+  $('whoRole').textContent = ME.roleLabel + ' · ' + ME.username;
+  $('whoAv').innerHTML = avatar({ name: ME.name, photo: myPerson() ? myPerson().photo : '' }, 'sm');
+  $('pwBanner').hidden = !ME.mustChange;
+  var html = '';
+  Object.keys(VIEWS).forEach(function(k){
+    if(!can(VIEWS[k].role)) return;
+    if(k === 'me' && !ME.personId) return;
+    html += '<button data-go="' + k + '"><svg viewBox="0 0 24 24">' + ICONS[k] + '</svg>' + VIEWS[k].t + '</button>';
+  });
+  $('nav').innerHTML = html;
+  $('sideFoot').innerHTML = CFG.publicSite ? '<a href="' + esc(CFG.publicSite) + '" target="_blank" rel="noopener">เปิดหน้าเว็บสาธารณะ</a>' : '';
+}
+document.addEventListener('click', function(e){
+  var t = e.target.closest('[data-go]');
+  if(t){ go(t.getAttribute('data-go')); }
+});
+
+function go(v){
+  if(!VIEWS[v] || !can(VIEWS[v].role)) v = can('editor') ? 'dash' : 'me';
+  if(v === 'me' && !ME.personId) v = 'password';
+  VIEW = v;
+  $('viewTitle').textContent = VIEWS[v].t;
+  Array.prototype.forEach.call($('nav').children, function(b){ b.classList.toggle('on', b.getAttribute('data-go') === v); });
+  var fn = { dash:viewDash, people:viewPeople, gender:viewGender, me:viewMe, password:viewPassword, users:viewUsers, migrate:viewMigrate, logs:viewLogs, system:viewSystem }[v];
+  fn($('view'));
+  window.scrollTo(0, 0);
+}
+function myPerson(){ return ME && ME.personId ? PERSONS.filter(function(p){ return p.id === ME.personId; })[0] : null; }
+function upsertPerson(p){
+  var i = PERSONS.findIndex(function(x){ return x.id === p.id; });
+  if(i === -1) PERSONS.push(p); else PERSONS[i] = p;
+  ['acadTitle','position','dept','building','status','employmentType'].forEach(function(k){
+    if(p[k] && OPT[k] && OPT[k].indexOf(p[k]) === -1) OPT[k].push(p[k]);
+  });
+}
+
+/* ================= ภาพรวม ================= */
+function viewDash(el){
+  var P = PERSONS, n = P.length;
+  var cT = P.filter(function(p){ return /^T/i.test(p.id); }).length;
+  var cS = P.filter(function(p){ return /^S/i.test(p.id); }).length;
+  var onServer = P.filter(function(p){ return p.photoType === 'server'; }).length;
+  var pending = P.filter(function(p){ return p.photoType === 'sheet' || p.photoType === 'external'; }).length;
+  var noEmail = P.filter(function(p){ return !p.email; }).length;
+  var hidden = P.filter(function(p){ return p.visible === false; }).length;
+
+  var byB = {};
+  P.forEach(function(p){ var b = p.building || 'ไม่ระบุ'; byB[b] = (byB[b] || 0) + 1; });
+  var bKeys = Object.keys(byB).sort(function(a,b){ return byB[b] - byB[a]; });
+  var max = Math.max.apply(null, bKeys.map(function(k){ return byB[k]; }).concat([1]));
+
+  var todo = P.filter(function(p){ return !p.photo || !p.email || !p.room || p.photoType !== 'server' || !p.gender; }).slice(0, 14);
+  var gm = P.filter(function(p){ return p.gender === 'ชาย'; }).length, gf = P.filter(function(p){ return p.gender === 'หญิง'; }).length, gu = n - gm - gf;
+  var meters = [
+    ['เพศ', n - gu], ['รูปบนเซิร์ฟเวอร์', onServer], ['อีเมล', n - noEmail],
+    ['ห้องทำงาน', P.filter(function(p){ return p.room; }).length],
+    ['ประเภทการจ้าง', P.filter(function(p){ return p.employmentType; }).length],
+    ['วันที่เริ่มปฏิบัติงาน', P.filter(function(p){ return p.startDate; }).length]
+  ];
+
+  el.innerHTML =
+    (pending && can('admin') ? '<div class="banner" style="background:var(--info-bg);color:var(--info);border-color:#C9DCF0"><span>มีรูป ' + pending + ' รายการที่ยังเก็บในชีต/ลิงก์ภายนอก ซึ่งทำให้หน้าเว็บโหลดช้า ย้ายไปเซิร์ฟเวอร์คณะได้ในคลิกเดียว</span><button class="btn sm" data-go="migrate">ย้ายรูปภาพ</button></div>' : '') +
+    '<div class="stats">' +
+      '<div class="stat"><b>' + n + '</b><span>บุคลากรทั้งหมด</span></div>' +
+      '<div class="stat"><b>' + cT + ' / ' + cS + '</b><span>สายวิชาการ / สายสนับสนุน</span></div>' +
+      '<div class="stat"><b>' + gm + ' / ' + gf + '</b><span>ชาย / หญิง' + (gu ? ' · ยังไม่ระบุ ' + gu : '') + '</span>' +
+        '<div class="split" title="ชาย ' + gm + ' หญิง ' + gf + ' ไม่ระบุ ' + gu + '"><i style="width:' + pct(gm,n) + '%;background:#2F6FB0"></i><i style="width:' + pct(gf,n) + '%;background:#B5487A"></i></div></div>' +
+      '<div class="stat' + (noEmail ? ' alert' : '') + '"><b>' + noEmail + '</b><span>ไม่มีอีเมล (เข้าระบบไม่ได้)</span></div>' +
+    '</div>' +
+    '<div class="two">' +
+      '<div class="panel"><h3>ข้อมูลที่ควรเติมให้ครบ</h3><p class="desc">คลิกชื่อเพื่อแก้ไขทันที' + (hidden ? ' · ซ่อนจากหน้าเว็บ ' + hidden + ' ท่าน' : '') + '</p><div class="todo">' +
+        (todo.length ? todo.map(function(p){
+          var tags = [];
+          if(p.photoType !== 'server') tags.push(photoTag(p));
+          if(!p.email) tags.push('<span class="tag danger">ไม่มีอีเมล</span>');
+          if(!p.room) tags.push('<span class="tag grey">ไม่ระบุห้อง</span>');
+          if(!p.gender) tags.push('<span class="tag info">ไม่ระบุเพศ</span>');
+          return '<button data-edit="' + esc(p.id) + '">' + avatar(p, 'sm') + '<span>' + esc(fullName(p)) + '</span><span class="tags">' + tags.join('') + '</span></button>';
+        }).join('') : '<div class="empty">ข้อมูลครบถ้วนทุกท่าน</div>') +
+      '</div></div>' +
+      '<div><div class="panel"><h3>ความครบถ้วนของข้อมูล HR</h3><p class="desc">ยิ่งครบ กราฟสถิติบนหน้าเว็บยิ่งแม่นยำ</p>' +
+        meters.map(function(m){ var v = pct(m[1], n); return '<div class="meter"><span>' + m[0] + '</span><div class="track"><i class="' + (v < 60 ? 'low' : '') + '" style="width:' + v + '%"></i></div><b>' + v + '%</b></div>'; }).join('') +
+        (gu ? '<div style="margin-top:10px"><button class="btn sm" data-go="gender">เติมข้อมูลเพศ ' + gu + ' ท่าน</button></div>' : '') +
+      '</div>' +
+      '<div class="panel"><h3>จำนวนบุคลากรตามอาคาร</h3><p class="desc">นับจากอาคารที่ตั้งห้องทำงาน</p><div class="bars">' +
+        bKeys.map(function(k){ return '<div class="bar"><span>' + esc(k) + '</span><div class="track"><i style="width:' + Math.round(byB[k] / max * 100) + '%"></i></div><b>' + byB[k] + '</b></div>'; }).join('') +
+      '</div></div></div>' +
+    '</div>';
+}
+
+/* ================= รายชื่อบุคลากร ================= */
+function viewPeople(el){
+  var opt = function(arr, cur){ return arr.map(function(v){ return '<option' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join(''); };
+  el.innerHTML =
+    '<div class="toolbar">' +
+      '<input class="input search" id="fq" placeholder="ค้นหาชื่อ อีเมล ห้อง หรือรหัส" value="' + esc(FILTER.q) + '">' +
+      '<select class="input" id="fd"><option value="">ทุกสาขา/หน่วยงาน</option>' + opt(OPT.dept || [], FILTER.dept) + '</select>' +
+      '<select class="input" id="fb"><option value="">ทุกอาคาร</option>' + opt(OPT.building || [], FILTER.building) + '</select>' +
+      '<select class="input" id="ft"><option value="">ทุกสายงาน</option><option value="T"' + (FILTER.type === 'T' ? ' selected' : '') + '>สายวิชาการ</option><option value="S"' + (FILTER.type === 'S' ? ' selected' : '') + '>สายสนับสนุน</option></select>' +
+      '<select class="input" id="fg"><option value="">ทุกเพศ</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option><option value="-">ยังไม่ระบุเพศ</option></select>' +
+      '<select class="input" id="fp"><option value="">รูปทั้งหมด</option><option value="has">มีรูปแล้ว</option><option value="none">ไม่มีรูป</option><option value="pending">รูปยังไม่ย้าย</option></select>' +
+      '<button class="btn primary" id="addBtn">+ เพิ่มบุคลากร</button>' +
+    '</div>' +
+    '<div class="tbl-wrap"><table><thead><tr><th>บุคลากร</th><th class="hide-sm">สาขา/หน่วยงาน</th><th class="hide-sm">ห้องทำงาน</th><th class="hide-sm">อีเมล</th><th>สถานะ</th></tr></thead><tbody id="ptb"></tbody></table></div>' +
+    '<p class="count" id="pcount" style="margin-top:8px"></p>';
+  $('fp').value = FILTER.photo; $('fg').value = FILTER.gender || '';
+  var upd = function(){ FILTER = { q:$('fq').value, dept:$('fd').value, building:$('fb').value, type:$('ft').value, photo:$('fp').value, gender:$('fg').value }; drawPeople(); };
+  $('fq').oninput = upd; ['fd','fb','ft','fp','fg'].forEach(function(id){ $(id).onchange = upd; });
+  $('addBtn').onclick = function(){ openDrawer(null); };
+  drawPeople();
+}
+function drawPeople(){
+  var q = FILTER.q.trim().toLowerCase().replace(/\s+/g, '');
+  var list = PERSONS.filter(function(p){
+    if(FILTER.dept && (p.dept || '').indexOf(FILTER.dept) === -1) return false;
+    if(FILTER.building && p.building !== FILTER.building) return false;
+    if(FILTER.type && String(p.id).charAt(0).toUpperCase() !== FILTER.type) return false;
+    if(FILTER.gender === '-' && p.gender) return false;
+    if(FILTER.gender && FILTER.gender !== '-' && p.gender !== FILTER.gender) return false;
+    if(FILTER.photo === 'has' && !p.photo) return false;
+    if(FILTER.photo === 'none' && (p.photo || p.photoType)) return false;
+    if(FILTER.photo === 'pending' && !(p.photoType === 'sheet' || p.photoType === 'external')) return false;
+    if(q){
+      var hay = [p.id, p.acadTitle, p.name, p.email, p.room, p.building, p.dept, p.position].join(' ').toLowerCase().replace(/\s+/g, '');
+      if(hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  $('ptb').innerHTML = list.length ? list.map(function(p){
+    return '<tr class="click" data-edit="' + esc(p.id) + '" tabindex="0">' +
+      '<td><div class="pcell">' + avatar(p) + '<div><b>' + esc(fullName(p)) + genderTag(p.gender) + '</b><small>' + esc(p.id) + (p.position ? ' · ' + esc(p.position) : '') + '</small></div></div></td>' +
+      '<td class="hide-sm">' + (esc(p.dept) || '<span class="muted">—</span>') + '</td>' +
+      '<td class="hide-sm">' + (esc(loc(p)) || '<span class="muted">—</span>') + '</td>' +
+      '<td class="hide-sm">' + (esc(p.email) || '<span class="tag danger">ไม่มีอีเมล</span>') + '</td>' +
+      '<td>' + (p.status ? '<span class="tag' + (p.status.indexOf('ปกติ') === -1 ? ' warn' : '') + '">' + esc(p.status) + '</span> ' : '') +
+        (p.visible === false ? '<span class="tag grey">ซ่อน</span> ' : '') + photoTag(p) + '</td></tr>';
+  }).join('') : '<tr><td colspan="5"><div class="empty">ไม่พบบุคลากรที่ตรงกับเงื่อนไข ลองล้างคำค้นหรือตัวกรอง</div></td></tr>';
+  $('pcount').textContent = 'แสดง ' + list.length + ' จาก ' + PERSONS.length + ' ท่าน';
+}
+document.addEventListener('click', function(e){
+  var t = e.target.closest('[data-edit]');
+  if(t) openDrawer(t.getAttribute('data-edit'));
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && e.target.matches && e.target.matches('tr[data-edit]')) openDrawer(e.target.getAttribute('data-edit'));
+  if(e.key === 'Escape' && !$('drawer').hidden && $('cropModal').hidden && $('confirmModal').hidden) closeDrawer();
+});
+
+/* ================= ลิ้นชักแก้ไข ================= */
+var EDIT_ID = null;
+function editable(k){ return can('editor') || (CFG.userEditable || []).indexOf(k) !== -1; }
+
+function openDrawer(id){
+  var p = id ? PERSONS.filter(function(x){ return x.id === id; })[0] : null;
+  if(id && !p) return;
+  EDIT_ID = id;
+  var isNew = !p; p = p || { visible:true, status:'ปกติ' };
+  var fields = FORM.map(function(f){
+    var dis = editable(f.k) ? '' : ' disabled';
+    var v = p[f.k] == null ? '' : p[f.k];
+    var inner;
+    if(f.check) return '<label class="check full"><input type="checkbox" name="' + f.k + '"' + (v !== false ? ' checked' : '') + dis + '> ' + f.l + '</label>';
+    if(f.area) inner = '<textarea class="input" name="' + f.k + '"' + dis + '>' + esc(v) + '</textarea>';
+    else if(f.opts) inner = '<select class="input" name="' + f.k + '"' + dis + '>' + f.opts.map(function(o){ return '<option value="' + esc(o[0]) + '"' + (o[0] === v ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>';
+    else inner = '<input class="input" name="' + f.k + '" value="' + esc(v) + '"' + (f.type ? ' type="' + f.type + '"' : '') + (f.list ? ' list="dl-' + f.list + '"' : '') + (f.req ? ' required' : '') + dis + '>';
+    return '<div class="field' + (f.full ? ' full' : '') + '"><label>' + f.l + (f.req ? ' *' : '') + '</label>' + inner + (f.hint && !dis ? '<span class="hint">' + f.hint + '</span>' : '') + '</div>';
+  }).join('');
+  var lists = ['acadTitle','position','dept','building','status','employmentType'].map(function(k){
+    var vals = (OPT[k] || []).slice();
+    if(k === 'employmentType') EMP_DEFAULTS.forEach(function(x){ if(vals.indexOf(x) === -1) vals.push(x); });
+    return '<datalist id="dl-' + k + '">' + vals.map(function(v){ return '<option value="' + esc(v) + '">'; }).join('') + '</datalist>';
+  }).join('');
+
+  $('drawer').innerHTML =
+    '<div class="dr-head"><button class="x" id="drX" aria-label="ปิด">×</button>' +
+      '<div class="dr-id">' + (isNew ? 'บุคลากรใหม่' : esc(p.id)) + '<small>' + (isNew ? 'รหัสจะถูกสร้างอัตโนมัติเมื่อบันทึก' : esc(p.dept || 'ไม่ระบุสาขา')) + '</small></div></div>' +
+    '<div class="dr-photo">' + avatar(p, 'lg') +
+      '<div class="acts">' + (isNew ? '<span class="tag grey">บันทึกข้อมูลก่อน จึงเพิ่มรูปได้</span>' :
+        '<button class="btn sm" id="phBtn">' + (p.photo ? 'เปลี่ยนรูป' : 'เพิ่มรูป') + '</button>' +
+        (p.photo || p.photoType ? '<button class="btn sm danger" id="phDel">ลบรูป</button>' : '') + photoTag(p)) + '</div></div>' +
+    '<form class="dr-body" id="drForm"><div class="grid2">' +
+      (isNew ? '<div class="field full"><label>สายงาน</label><select class="input" name="idPrefix"><option value="T">สายวิชาการ (รหัส T…)</option><option value="S">สายสนับสนุน (รหัส S…)</option></select></div>' : '') +
+      fields + '</div>' + lists +
+      (!can('editor') ? '<p class="stamp">ช่องที่เป็นสีเทา แก้ไขได้โดยเจ้าหน้าที่งานบุคคล หากข้อมูลไม่ถูกต้องกรุณาแจ้งผู้ดูแลระบบ</p>' : '') +
+      (p.updatedAt ? '<p class="stamp">แก้ไขล่าสุด ' + esc(p.updatedAt) + (p.updatedBy ? ' โดย ' + esc(p.updatedBy) : '') + '</p>' : '') +
+    '</form>' +
+    '<div class="dr-foot">' + (!isNew && can('editor') ? '<button class="btn danger" id="drDel">ลบบุคลากร</button>' : '') +
+      '<span class="sp"></span><button class="btn" id="drCancel">ยกเลิก</button><button class="btn primary" id="drSave">' + (isNew ? 'เพิ่มบุคลากร' : 'บันทึกการแก้ไข') + '</button></div>';
+
+  $('drawer').hidden = false; $('scrim').hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('drX').onclick = closeDrawer; $('drCancel').onclick = closeDrawer;
+  $('drSave').onclick = savePerson;
+  $('drForm').onsubmit = function(e){ e.preventDefault(); savePerson(); };
+  if($('drDel')) $('drDel').onclick = function(){ deletePerson(p); };
+  if($('phBtn')) $('phBtn').onclick = function(){ pickPhoto(p.id); };
+  if($('phDel')) $('phDel').onclick = function(){ removePhoto(p); };
+  var first = $('drawer').querySelector('input:not([disabled]),select');
+  if(first) first.focus();
+}
+function closeDrawer(){ $('drawer').hidden = true; $('scrim').hidden = true; document.body.style.overflow = ''; EDIT_ID = null; }
+$('scrim').onclick = closeDrawer;
+
+function savePerson(){
+  var f = $('drForm'), d = { id: EDIT_ID || '' };
+  if(!EDIT_ID) d.idPrefix = f.elements.idPrefix.value;
+  FORM.forEach(function(x){
+    if(!editable(x.k)) return;
+    var inp = f.elements[x.k];
+    d[x.k] = x.check ? inp.checked : inp.value.trim();
+  });
+  if(can('editor') && !d.name){ toast('กรุณากรอกชื่อ - นามสกุล', true); return; }
+  $('drSave').disabled = true;
+  busy('กำลังบันทึก…');
+  call('savePerson', d).then(function(r){
+    upsertPerson(r.person);
+    toast((EDIT_ID ? 'บันทึกการแก้ไขแล้ว' : 'เพิ่ม ' + r.person.id + ' แล้ว') + (r.account ? ' · ' + r.account : ''));
+    refreshAfterChange();
+    openDrawer(r.person.id);
+  }).catch(function(e){ toast(e.message, true); if($('drSave')) $('drSave').disabled = false; })
+    .finally(function(){ busy(''); });
+}
+function deletePerson(p){
+  askConfirm('ลบ ' + fullName(p) + '?', 'ข้อมูล รูปภาพบนเซิร์ฟเวอร์ และบัญชีเข้าระบบของท่านนี้จะถูกลบถาวร', 'ลบถาวร', true).then(function(yes){
+    if(!yes) return;
+    busy('กำลังลบ…');
+    call('deletePerson', { id:p.id }).then(function(){
+      PERSONS = PERSONS.filter(function(x){ return x.id !== p.id; });
+      closeDrawer(); refreshAfterChange(); toast('ลบ ' + p.id + ' แล้ว');
+    }).catch(function(e){ toast(e.message, true); }).finally(function(){ busy(''); });
+  });
+}
+function refreshAfterChange(){
+  if(myPerson()) renderShell();
+  if(VIEW === 'people') drawPeople(); else go(VIEW);
+}
+
+/* ================= รูปภาพ: เลือก → ตัด → อัปโหลด ================= */
+var PHOTO_FOR = null;
+function pickPhoto(id){ PHOTO_FOR = id; $('fileInput').value = ''; $('fileInput').click(); }
+$('fileInput').onchange = function(){
+  var f = this.files && this.files[0];
+  if(!f) return;
+  if(!/^image\//.test(f.type)){ toast('กรุณาเลือกไฟล์รูปภาพ', true); return; }
+  loadImage(f).then(openCropper).catch(function(){ toast('เปิดรูปนี้ไม่ได้ ลองใช้ไฟล์ JPG หรือ PNG', true); });
+};
+function loadImage(src){
+  return new Promise(function(res, rej){
+    var url = typeof src === 'string' ? src : URL.createObjectURL(src);
+    var img = new Image();
+    img.onload = function(){ res(img); };
+    img.onerror = rej;
+    img.src = url;
+  });
+}
+
+var CROP = { img:null, base:1, z:1, x:0, y:0 };
+var STAGE = 300, OUT = 600;
+function openCropper(img){
+  CROP.img = img; CROP.base = Math.max(STAGE / img.width, STAGE / img.height); CROP.z = 1;
+  var s = CROP.base;
+  CROP.x = (STAGE - img.width * s) / 2;
+  CROP.y = Math.min(0, (STAGE - img.height * s) * 0.18);   // รูปแนวตั้ง: เอนขึ้นด้านบน (ส่วนใบหน้า)
+  $('cropZoom').value = 1;
+  $('cropModal').hidden = false;
+  drawCrop();
+}
+function clampCrop(){
+  var s = CROP.base * CROP.z, w = CROP.img.width * s, h = CROP.img.height * s;
+  CROP.x = Math.min(0, Math.max(STAGE - w, CROP.x));
+  CROP.y = Math.min(0, Math.max(STAGE - h, CROP.y));
+}
+function drawCrop(){
+  clampCrop();
+  var c = $('cropCanvas'), ctx = c.getContext('2d'), k = c.width / STAGE, s = CROP.base * CROP.z;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(CROP.img, CROP.x * k, CROP.y * k, CROP.img.width * s * k, CROP.img.height * s * k);
+}
+(function(){
+  var st = $('cropStage'), drag = null;
+  st.addEventListener('pointerdown', function(e){ drag = { x:e.clientX, y:e.clientY }; st.setPointerCapture(e.pointerId); st.style.cursor = 'grabbing'; });
+  st.addEventListener('pointermove', function(e){ if(!drag) return; CROP.x += e.clientX - drag.x; CROP.y += e.clientY - drag.y; drag = { x:e.clientX, y:e.clientY }; drawCrop(); });
+  st.addEventListener('pointerup', function(){ drag = null; st.style.cursor = ''; });
+  st.addEventListener('wheel', function(e){ e.preventDefault(); setZoom(CROP.z * (e.deltaY < 0 ? 1.06 : 0.94)); }, { passive:false });
+  $('cropZoom').oninput = function(){ setZoom(Number(this.value)); };
+})();
+function setZoom(z){
+  z = Math.max(1, Math.min(4, z));
+  var s0 = CROP.base * CROP.z, s1 = CROP.base * z, c = STAGE / 2;
+  CROP.x = c - (c - CROP.x) * s1 / s0; CROP.y = c - (c - CROP.y) * s1 / s0;
+  CROP.z = z; $('cropZoom').value = z; drawCrop();
+}
+/** ตัดรูปเป็นสี่เหลี่ยมจัตุรัส 600×600 JPEG (~60–120 KB) */
+function exportSquare(img, sx, sy, size){
+  var c = document.createElement('canvas'); c.width = OUT; c.height = OUT;
+  var ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, OUT, OUT);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, sx, sy, size, size, 0, 0, OUT, OUT);
+  return c.toDataURL('image/jpeg', 0.86);
+}
+function autoSquare(img){
+  var size = Math.min(img.width, img.height);
+  var sx = (img.width - size) / 2, sy = Math.max(0, (img.height - size) * 0.18);
+  return exportSquare(img, sx, sy, size);
+}
+$('cropCancel').onclick = function(){ $('cropModal').hidden = true; };
+$('cropOk').onclick = function(){
+  var s = CROP.base * CROP.z;
+  var data = exportSquare(CROP.img, -CROP.x / s, -CROP.y / s, STAGE / s);
+  $('cropModal').hidden = true;
+  busy('กำลังอัปโหลดรูป…');
+  uploadPhoto(PHOTO_FOR, data).then(function(r){
+    var p = PERSONS.filter(function(x){ return x.id === PHOTO_FOR; })[0];
+    if(p){ p.photo = r.photo; p.photoType = 'server'; }
+    toast('อัปโหลดรูปแล้ว');
+    if(EDIT_ID === PHOTO_FOR) openDrawer(PHOTO_FOR);
+    refreshAfterChange();
+  }).catch(function(e){ toast('อัปโหลดไม่สำเร็จ: ' + e.message, true); }).finally(function(){ busy(''); });
+};
+
+/** อัปโหลด: ลองผ่านเซิร์ฟเวอร์ Google ก่อน ถ้าไม่ผ่าน (ไฟร์วอลล์) ส่งตรงจากเบราว์เซอร์ */
+function uploadPhoto(id, dataUrl){
+  var b64 = dataUrl.split(',')[1];
+  return call('uploadPhoto', { id:id, data:b64 }).then(function(r){
+    if(r.uploaded) return r;
+    console.warn('server-side upload failed, using browser path:', r.reason);
+    busy('กำลังอัปโหลดผ่านช่องทางสำรอง…');
+    return call('uploadTicket', { id:id }).then(function(t){
+      return browserUpload(t, b64).then(function(j){
+        return call('attachPhoto', { id:id, file:j.file, size:j.size, receipt:j.receipt });
+      });
+    }).catch(function(e){ throw new Error(e.message + ' (ช่องทางหลัก: ' + r.reason + ')'); });
+  });
+}
+var SEND_MODE = 'post', CHUNK = { post:60000, get:5000 };
+function browserUpload(t, b64){
+  var data = b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  var uid = Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(16)), function(x){ return ('0' + x.toString(16)).slice(-2); }).join('');
+  function send(mode, params){
+    var base = { ts:t.ts, nonce:t.nonce, sig:t.sig, tag:t.tag };
+    for(var k in params) base[k] = params[k];
+    var q = new URLSearchParams(base).toString();
+    var req = mode === 'post'
+      ? fetch(t.url, { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body:q })
+      : fetch(t.url + '?' + q, { method:'GET', cache:'no-store' });
+    return req.then(function(r){ return r.text().then(function(txt){
+      var j = null; try{ j = JSON.parse(txt); }catch(e){}
+      if(!j){ var er = new Error('ถูกบล็อก (HTTP ' + r.status + ')'); er.blocked = true; throw er; }
+      if(!j.ok) throw new Error(j.error || 'ส่งไม่สำเร็จ');
+      return j;
+    }); }, function(){ var er = new Error('เชื่อมต่อเซิร์ฟเวอร์รูปไม่ได้'); er.blocked = true; throw er; });
+  }
+  function all(mode){
+    var n = Math.ceil(data.length / CHUNK[mode]), i = 0;
+    function next(){
+      if(i >= n) return send(mode, { action:'finish', uid:uid, total:n });
+      return send(mode, { action:'chunk', uid:uid, idx:i, total:n, data:data.substr(i * CHUNK[mode], CHUNK[mode]) }).then(function(){ i++; return next(); });
+    }
+    return next();
+  }
+  return all(SEND_MODE).catch(function(e){
+    if(!e.blocked || SEND_MODE === 'get') throw e;
+    SEND_MODE = 'get';
+    return all('get');
+  });
+}
+
+function removePhoto(p){
+  askConfirm('ลบรูปของ ' + fullName(p) + '?', 'หน้าเว็บจะแสดงอักษรย่อแทนรูป', 'ลบรูป', true).then(function(yes){
+    if(!yes) return;
+    busy('กำลังลบรูป…');
+    call('removePhoto', { id:p.id }).then(function(){
+      p.photo = ''; p.photoType = '';
+      toast('ลบรูปแล้ว'); openDrawer(p.id); refreshAfterChange();
+    }).catch(function(e){ toast(e.message, true); }).finally(function(){ busy(''); });
+  });
+}
+
+/* ================= เติมข้อมูลเพศแบบกลุ่ม ================= */
+var GPEND = {};
+function guessGender(p){
+  var n = (p.name || '').trim();
+  if(/^(นางสาว|นาง|น\.ส\.|ms\.?|mrs\.?|miss)\s*/i.test(n)) return 'หญิง';
+  if(/^(นาย|mr\.?)\s*/i.test(n)) return 'ชาย';
+  return '';
+}
+function viewGender(el){
+  GPEND = {};
+  el.innerHTML = '<div class="panel"><h3>เติมข้อมูลเพศ</h3><p class="desc">กดเลือกทีละแถวแล้วบันทึกครั้งเดียว ใช้คำนวณสัดส่วนชาย–หญิงบนหน้าเว็บ (แสดงเฉพาะตัวเลขรวม ไม่แสดงรายบุคคล) และใช้จำกัดสิทธิ์ในระบบอื่นของคณะ บุคลากรแก้ไขเพศของตนเองได้ในเมนู "ข้อมูลของฉัน" เช่นกัน</p>' +
+    '<div class="toolbar" style="margin:0"><select class="input" id="gf"><option value="-">ยังไม่ระบุเพศ</option><option value="">ทั้งหมด</option></select>' +
+    '<input class="input search" id="gq" placeholder="ค้นหาชื่อหรือรหัส">' +
+    '<button class="btn" id="gSug">ใช้ค่าที่แนะนำจากคำนำหน้าชื่อ</button>' +
+    '<button class="btn primary" id="gSave" disabled>บันทึก</button></div></div>' +
+    '<div class="tbl-wrap"><table><thead><tr><th>บุคลากร</th><th class="hide-sm">สาขา/หน่วยงาน</th><th>เพศ</th></tr></thead><tbody id="gtb"></tbody></table></div>';
+  $('gf').onchange = drawGender; $('gq').oninput = drawGender;
+  $('gSug').onclick = function(){
+    var n = 0;
+    PERSONS.forEach(function(p){ var g = guessGender(p); if(g && !p.gender && !GPEND[p.id]){ GPEND[p.id] = g; n++; } });
+    toast(n ? 'เลือกให้ ' + n + ' รายการจากคำนำหน้าชื่อ ตรวจสอบแล้วกดบันทึก' : 'ไม่พบคำนำหน้าชื่อ (นาย/นาง/นางสาว) ในรายการที่ยังไม่ระบุ');
+    drawGender();
+  };
+  $('gSave').onclick = function(){
+    var items = Object.keys(GPEND).map(function(id){ return { id:id, gender:GPEND[id] }; });
+    busy('กำลังบันทึก ' + items.length + ' รายการ…');
+    call('setGenderBulk', { items:items }).then(function(r){
+      items.forEach(function(it){ var p = PERSONS.filter(function(x){ return x.id === it.id; })[0]; if(p) p.gender = it.gender; });
+      GPEND = {}; toast('บันทึกแล้ว ' + r.updated + ' รายการ'); drawGender();
+    }).catch(function(e){ toast(e.message, true); }).finally(function(){ busy(''); });
+  };
+  drawGender();
+}
+function drawGender(){
+  var only = $('gf').value === '-', q = ($('gq').value || '').toLowerCase().replace(/\s+/g, '');
+  var list = PERSONS.filter(function(p){
+    if(only && p.gender && !GPEND[p.id]) return false;
+    return !q || (p.id + p.name + p.acadTitle).toLowerCase().replace(/\s+/g, '').indexOf(q) !== -1;
+  });
+  $('gtb').innerHTML = list.map(function(p){
+    var cur = GPEND[p.id] !== undefined ? GPEND[p.id] : (p.gender || ''), sug = !p.gender && guessGender(p);
+    var b = function(v, cls, label){ return '<button type="button" class="' + cls + (cur === v ? ' on' : '') + '" data-g="' + v + '" data-id="' + esc(p.id) + '">' + label + '</button>'; };
+    return '<tr' + (GPEND[p.id] !== undefined ? ' class="dirty"' : '') + '><td><div class="pcell">' + avatar(p, 'sm') + '<div><b>' + esc(fullName(p)) + '</b><small>' + esc(p.id) + '</small></div></div></td>' +
+      '<td class="hide-sm">' + esc(p.dept) + '</td>' +
+      '<td style="white-space:nowrap"><div class="seg">' + b('ชาย','m','ชาย') + b('หญิง','f','หญิง') + b('','u','ไม่ระบุ') + '</div>' + (sug ? '<span class="sugg">แนะนำ: ' + sug + '</span>' : '') + '</td></tr>';
+  }).join('') || '<tr><td colspan="3"><div class="empty">ระบุเพศครบทุกท่านแล้ว</div></td></tr>';
+  var n = Object.keys(GPEND).length;
+  $('gSave').disabled = !n; $('gSave').textContent = n ? 'บันทึก ' + n + ' รายการ' : 'บันทึก';
+}
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-g]');
+  if(!b) return;
+  var id = b.getAttribute('data-id'), g = b.getAttribute('data-g');
+  var p = PERSONS.filter(function(x){ return x.id === id; })[0];
+  if(p && (p.gender || '') === g) delete GPEND[id]; else GPEND[id] = g;
+  drawGender();
+});
+
+/* ================= ข้อมูลของฉัน ================= */
+function viewMe(el){
+  var p = myPerson();
+  if(!p){ el.innerHTML = '<div class="panel"><div class="empty">บัญชีนี้ยังไม่ได้ผูกกับข้อมูลบุคลากร กรุณาแจ้งผู้ดูแลระบบ</div></div>'; return; }
+  el.innerHTML =
+    '<div class="panel"><div class="profile">' + avatar(p, 'lg') +
+      '<div><h2>' + esc(fullName(p)) + '</h2><div class="pos">' + esc(p.position || '') + (p.dept ? ' · ' + esc(p.dept) : '') + '</div>' +
+      '<div class="loc">' + (esc(loc(p)) || 'ยังไม่ระบุห้องทำงาน') + '</div>' +
+      '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-edit="' + esc(p.id) + '">แก้ไขข้อมูลของฉัน</button>' +
+      '<button class="btn" id="mePhoto">' + (p.photo ? 'เปลี่ยนรูป' : 'เพิ่มรูป') + '</button></div></div></div></div>' +
+    '<div class="panel"><h3>ข้อมูลที่แสดงบนหน้าเว็บ</h3><p class="desc">ผู้มาติดต่อจะเห็นข้อมูลชุดนี้เมื่อค้นหาชื่อของคุณ</p>' +
+      '<div class="kv"><span>อีเมล</span><span>' + (esc(p.email) || '—') + '</span><span></span>' +
+      '<span>โทรศัพท์</span><span>' + (esc(p.phone) || '—') + '</span><span></span>' +
+      '<span>สถานะ</span><span>' + (esc(p.status) || '—') + '</span><span></span>' +
+      '<span>เพศ</span><span>' + (esc(p.gender) || 'ยังไม่ระบุ') + ' <small class="muted">(ไม่แสดงรายบุคคลบนหน้าเว็บ)</small></span><span></span>' +
+      '<span>หมายเหตุ</span><span>' + (esc(p.note) || '—') + '</span><span></span></div></div>';
+  $('mePhoto').onclick = function(){ pickPhoto(p.id); };
+}
+
+/* ================= เปลี่ยนรหัสผ่าน ================= */
+function viewPassword(el){
+  el.innerHTML = '<div class="panel" style="max-width:460px"><h3>เปลี่ยนรหัสผ่าน</h3><p class="desc">รหัสผ่านใหม่อย่างน้อย ' + CFG.minPassword + ' ตัวอักษร ใช้ตัวอักษร ตัวเลข หรือสัญลักษณ์ใดก็ได้</p>' +
+    '<form id="pwForm" style="display:flex;flex-direction:column;gap:12px">' +
+    '<div class="field"><label>รหัสผ่านปัจจุบัน</label><input class="input" type="password" name="o" autocomplete="current-password" required></div>' +
+    '<div class="field"><label>รหัสผ่านใหม่</label><input class="input" type="password" name="n" autocomplete="new-password" minlength="' + CFG.minPassword + '" required></div>' +
+    '<div class="field"><label>ยืนยันรหัสผ่านใหม่</label><input class="input" type="password" name="c" autocomplete="new-password" required></div>' +
+    '<div id="pwMsg"></div><div><button class="btn primary">บันทึกรหัสผ่านใหม่</button></div></form></div>';
+  $('pwForm').onsubmit = function(e){
+    e.preventDefault();
+    var f = this, o = f.o.value, n = f.n.value, c = f.c.value;
+    if(n.length < CFG.minPassword){ $('pwMsg').innerHTML = '<div class="msg err">รหัสผ่านใหม่ต้องมีอย่างน้อย ' + CFG.minPassword + ' ตัวอักษร</div>'; return; }
+    if(n !== c){ $('pwMsg').innerHTML = '<div class="msg err">รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน</div>'; return; }
+    busy('กำลังบันทึก…');
+    call('changePassword', { oldPassword:o, newPassword:n }).then(function(r){
+      ME.mustChange = r.mustChange; $('pwBanner').hidden = !ME.mustChange; f.reset();
+      $('pwMsg').innerHTML = '<div class="msg ok">เปลี่ยนรหัสผ่านแล้ว ครั้งต่อไปใช้รหัสใหม่นี้เข้าระบบ</div>';
+    }).catch(function(e){ $('pwMsg').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; }).finally(function(){ busy(''); });
+  };
+}
+
+/* ================= บัญชีผู้ใช้ ================= */
+var USERS = [];
+function viewUsers(el){
+  el.innerHTML = '<div class="toolbar"><input class="input search" id="uq" placeholder="ค้นหาบัญชีหรือชื่อ">' +
+    '<select class="input" id="ur"><option value="">ทุกบทบาท</option>' + Object.keys(CFG.roles).map(function(k){ return '<option value="' + k + '">' + esc(CFG.roles[k]) + '</option>'; }).join('') + '</select>' +
+    '<button class="btn" id="uSync">สร้างบัญชีให้บุคลากรที่มีอีเมล</button><button class="btn primary" id="uAdd">+ เพิ่มบัญชี</button></div>' +
+    '<div class="tbl-wrap"><table><thead><tr><th>บัญชี</th><th>บทบาท</th><th class="hide-sm">เข้าระบบล่าสุด</th><th>สถานะ</th><th></th></tr></thead><tbody id="utb"><tr><td colspan="5"><div class="empty">กำลังโหลด…</div></td></tr></tbody></table></div>' +
+    '<p class="desc" style="margin-top:10px">บุคลากร = แก้ไขข้อมูลของตนเอง · เจ้าหน้าที่จัดการข้อมูล = แก้ไขข้อมูลบุคลากรทุกคน · ผู้ดูแลระบบ = ทุกอย่างรวมถึงจัดการบัญชี</p>';
+  $('uq').oninput = drawUsers; $('ur').onchange = drawUsers;
+  $('uSync').onclick = function(){
+    busy('กำลังสร้างบัญชี…');
+    call('syncAccounts').then(function(r){ toast('สร้างบัญชีใหม่ ' + r.created + ' บัญชี · ผูกเพิ่ม ' + r.linked); loadUsers(); })
+      .catch(function(e){ toast(e.message, true); }).finally(function(){ busy(''); });
+  };
+  $('uAdd').onclick = addUserDialog;
+  loadUsers();
+}
+function loadUsers(){
+  return call('listUsers').then(function(list){ USERS = list; drawUsers(); }).catch(function(e){ toast(e.message, true); });
+}
+function drawUsers(){
+  var q = ($('uq').value || '').toLowerCase(), role = $('ur').value;
+  var list = USERS.filter(function(u){
+    if(role && u.role !== role) return false;
+    return !q || (u.username + ' ' + u.personName).toLowerCase().indexOf(q) !== -1;
+  });
+  $('utb').innerHTML = list.map(function(u){
+    var roleSel = u.isMain ? '<span class="tag">ผู้ดูแลระบบหลัก</span>' :
+      '<select class="input" data-role="' + esc(u.username) + '" style="width:auto;padding:5px 8px">' + Object.keys(CFG.roles).map(function(k){ return '<option value="' + k + '"' + (u.role === k ? ' selected' : '') + '>' + esc(CFG.roles[k]) + '</option>'; }).join('') + '</select>';
+    var flags = (u.active ? '' : '<span class="tag grey">ปิดใช้งาน</span> ') + (u.locked ? '<span class="tag danger">ถูกล็อก</span> ' : '') + (u.mustChange ? '<span class="tag warn">รหัสเริ่มต้น</span>' : '<span class="tag">ตั้งรหัสแล้ว</span>');
+    return '<tr><td><b>' + esc(u.username) + '</b><br><small class="muted">' + (esc(u.personName) || (u.isMain ? 'บัญชีระบบ' : 'ไม่ได้ผูกกับบุคลากร')) + '</small></td>' +
+      '<td>' + roleSel + '</td><td class="hide-sm">' + (esc(u.lastLogin) || '<span class="muted">ยังไม่เคย</span>') + '</td><td>' + flags + '</td>' +
+      '<td style="white-space:nowrap;text-align:right">' +
+        (u.locked ? '<button class="btn sm" data-unlock="' + esc(u.username) + '">ปลดล็อก</button> ' : '') +
+        '<button class="btn sm" data-reset="' + esc(u.username) + '">คืนรหัสเริ่มต้น</button> ' +
+        (u.isMain || u.username === ME.username ? '' : '<button class="btn sm" data-active="' + esc(u.username) + '" data-v="' + (u.active ? '0' : '1') + '">' + (u.active ? 'ปิด' : 'เปิด') + '</button> <button class="btn sm danger" data-del="' + esc(u.username) + '">ลบ</button>') +
+      '</td></tr>';
+  }).join('') || '<tr><td colspan="5"><div class="empty">ไม่พบบัญชี</div></td></tr>';
+}
+document.addEventListener('change', function(e){
+  var u = e.target.getAttribute && e.target.getAttribute('data-role');
+  if(!u) return;
+  busy('กำลังบันทึก…');
+  call('saveUser', { username:u, role:e.target.value }).then(function(){ toast('เปลี่ยนบทบาทแล้ว'); return loadUsers(); })
+    .catch(function(err){ toast(err.message, true); loadUsers(); }).finally(function(){ busy(''); });
+});
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-reset],[data-active],[data-del],[data-unlock]');
+  if(!b) return;
+  var u, p;
+  if((u = b.getAttribute('data-unlock'))) p = Promise.resolve(true).then(function(){ return call('saveUser', { username:u, unlock:true }); }).then(function(){ toast('ปลดล็อกแล้ว'); });
+  else if((u = b.getAttribute('data-reset'))) p = askConfirm('คืนรหัสผ่านเริ่มต้น?', 'รหัสผ่านของ ' + u + ' จะกลับเป็นค่าเริ่มต้น และระบบจะเตือนให้เปลี่ยนเมื่อเข้าใช้งาน', 'คืนรหัสเริ่มต้น').then(function(y){
+      if(y) return call('resetUserPassword', { username:u }).then(function(r){ toast('รหัสผ่านของ ' + u + ' คือ ' + r.password); }); });
+  else if((u = b.getAttribute('data-active'))) p = call('saveUser', { username:u, active:b.getAttribute('data-v') === '1' }).then(function(){ toast('บันทึกแล้ว'); });
+  else if((u = b.getAttribute('data-del'))) p = askConfirm('ลบบัญชี ' + u + '?', 'ข้อมูลบุคลากรไม่ถูกลบ แต่ท่านนี้จะเข้าระบบไม่ได้จนกว่าจะสร้างบัญชีใหม่', 'ลบบัญชี', true).then(function(y){
+      if(y) return call('deleteUser', { username:u }).then(function(){ toast('ลบบัญชีแล้ว'); }); });
+  p.then(loadUsers).catch(function(err){ toast(err.message, true); });
+});
+function addUserDialog(){
+  var box = document.createElement('div'); box.className = 'modal';
+  box.innerHTML = '<div class="modal-box"><h3>เพิ่มบัญชี</h3><p>ใช้สำหรับบัญชีที่ไม่ได้มาจากรายชื่อบุคลากร เช่น เจ้าหน้าที่ดูแลระบบ รหัสผ่านเริ่มต้นคือรหัสมาตรฐานของระบบ</p>' +
+    '<div class="field"><label>อีเมล</label><input class="input" id="nuE" type="email"></div>' +
+    '<div class="field" style="margin-top:10px"><label>บทบาท</label><select class="input" id="nuR">' + Object.keys(CFG.roles).map(function(k){ return '<option value="' + k + '">' + esc(CFG.roles[k]) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="modal-acts"><button class="btn" id="nuC">ยกเลิก</button><button class="btn primary" id="nuS">เพิ่มบัญชี</button></div></div>';
+  document.body.appendChild(box); $('nuE').focus();
+  $('nuC').onclick = function(){ box.remove(); };
+  $('nuS').onclick = function(){
+    call('createUser', { username:$('nuE').value, role:$('nuR').value }).then(function(){ box.remove(); toast('เพิ่มบัญชีแล้ว'); loadUsers(); })
+      .catch(function(e){ toast(e.message, true); });
+  };
+}
+
+/* ================= ย้ายรูปภาพ ================= */
+var MIG_STOP = false;
+function viewMigrate(el){
+  el.innerHTML = '<div class="panel"><h3>ย้ายรูปจาก Google Sheet ไปเซิร์ฟเวอร์คณะ</h3>' +
+    '<p class="desc">รูปที่ฝังในเซลล์ทำให้หน้าเว็บโหลดช้า ระบบจะดึงรูปเดิมแต่ละท่าน ตัดเป็นสี่เหลี่ยม ย่อเหลือ 600×600 พิกเซล แล้วเก็บที่ eng.msu.ac.th พร้อมแทนที่ด้วยลิงก์ในชีต รูปที่ตัดอัตโนมัติไม่สวย สามารถเปลี่ยนรายคนได้ภายหลัง</p>' +
+    '<div id="migInfo" class="empty">กำลังตรวจสอบ…</div></div>';
+  call('migrateList').then(function(list){
+    if(!list.length){ $('migInfo').outerHTML = '<div class="msg ok">รูปทั้งหมดอยู่บนเซิร์ฟเวอร์คณะแล้ว ไม่มีรายการที่ต้องย้าย</div>'; return; }
+    $('migInfo').outerHTML =
+      '<p><b>' + list.length + '</b> รายการรอย้าย</p>' +
+      '<label class="check"><input type="checkbox" id="migBk" checked> สำรองสเปรดชีตทั้งไฟล์ก่อนเริ่ม (แนะนำสำหรับครั้งแรก)</label>' +
+      '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn primary" id="migGo">เริ่มย้าย ' + list.length + ' รูป</button><button class="btn" id="migStop" disabled>หยุด</button></div>' +
+      '<div class="progress"><i id="migBar"></i></div><div class="loglist" id="migLog"><div class="muted">ยังไม่เริ่ม</div></div>';
+    $('migGo').onclick = function(){ runMigration(list); };
+    $('migStop').onclick = function(){ MIG_STOP = true; this.disabled = true; };
+  }).catch(function(e){ $('migInfo').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; });
+}
+function migLog(t, cls){ var d = document.createElement('div'); if(cls) d.style.color = cls; d.textContent = t; $('migLog').appendChild(d); $('migLog').scrollTop = 1e9; }
+function runMigration(list){
+  MIG_STOP = false; $('migGo').disabled = true; $('migStop').disabled = false; $('migLog').innerHTML = '';
+  var done = 0, okN = 0, failN = 0;
+  var chain = $('migBk').checked
+    ? call('backupSheet').then(function(r){ migLog('สำรองไฟล์แล้ว: ' + r.name); })
+    : Promise.resolve();
+  list.forEach(function(it){
+    chain = chain.then(function(){
+      if(MIG_STOP) return;
+      return call('migrateFetch', { id:it.id })
+        .then(function(r){ return loadImage('data:' + r.mime + ';base64,' + r.b64); })
+        .then(function(img){ return uploadPhoto(it.id, autoSquare(img)); })
+        .then(function(r){
+          okN++; migLog('✓ ' + it.id + ' ' + it.name);
+          var p = PERSONS.filter(function(x){ return x.id === it.id; })[0];
+          if(p){ p.photo = r.photo; p.photoType = 'server'; }
+        })
+        .catch(function(e){ failN++; migLog('✕ ' + it.id + ' ' + it.name + ' — ' + e.message, 'var(--danger)'); })
+        .then(function(){ done++; $('migBar').style.width = Math.round(done / list.length * 100) + '%'; busy(''); });
+    });
+  });
+  chain.then(function(){
+    migLog((MIG_STOP ? 'หยุดแล้ว' : 'เสร็จสิ้น') + ' — สำเร็จ ' + okN + ' / ไม่สำเร็จ ' + failN, 'var(--leaf-d)');
+    $('migStop').disabled = true;
+    toast('ย้ายรูปสำเร็จ ' + okN + ' รายการ');
+  }).catch(function(e){ migLog(e.message, 'var(--danger)'); });
+}
+
+/* ================= บันทึกการใช้งาน ================= */
+var ACT_TH = { 'login':'เข้าสู่ระบบ', 'login-fail':'เข้าระบบไม่สำเร็จ', 'forgot':'ขอรหัสผ่านใหม่', 'person-add':'เพิ่มบุคลากร', 'person-edit':'แก้ไขข้อมูล',
+  'person-delete':'ลบบุคลากร', 'photo-set':'เปลี่ยนรูป', 'photo-remove':'ลบรูป', 'password-change':'เปลี่ยนรหัสผ่าน', 'user-edit':'แก้ไขบัญชี',
+  'user-add':'เพิ่มบัญชี', 'user-reset':'คืนรหัสเริ่มต้น', 'user-delete':'ลบบัญชี', 'user-sync':'สร้างบัญชีอัตโนมัติ', 'backup':'สำรองไฟล์',
+  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
+function viewLogs(el){
+  el.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>การกระทำ</th><th>เป้าหมาย</th><th class="hide-sm">รายละเอียด</th></tr></thead><tbody id="ltb"><tr><td colspan="5"><div class="empty">กำลังโหลด…</div></td></tr></tbody></table></div>';
+  call('logs').then(function(rows){
+    $('ltb').innerHTML = rows.map(function(r){
+      return '<tr><td style="white-space:nowrap">' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td><td>' + esc(ACT_TH[r[2]] || r[2]) + '</td><td>' + esc(r[3]) + '</td><td class="hide-sm" style="word-break:break-all"><small>' + esc(r[4]) + '</small></td></tr>';
+    }).join('') || '<tr><td colspan="5"><div class="empty">ยังไม่มีบันทึก</div></td></tr>';
+  }).catch(function(e){ toast(e.message, true); });
+}
+
+/* ================= ตั้งค่าระบบ ================= */
+function viewSystem(el){
+  el.innerHTML = '<div class="panel"><h3>เซิร์ฟเวอร์รูปภาพ</h3><p class="desc">ตรวจว่า Google ส่งรูปไปเก็บที่ eng.msu.ac.th ได้หรือไม่ ถ้าไม่ผ่าน ระบบยังอัปโหลดผ่านเบราว์เซอร์ของผู้ใช้ได้ (ช่องทางสำรอง)</p>' +
+      '<button class="btn primary" id="sTest">ทดสอบเซิร์ฟเวอร์รูปภาพ</button><div class="steps" id="sSteps" style="margin-top:10px"></div></div>' +
+    '<div class="panel"><h3>หน้าเว็บสาธารณะ</h3><p class="desc">ข้อมูลบนหน้าเว็บถูกเก็บในแคชเพื่อความเร็ว ระบบล้างแคชให้เองทุกครั้งที่แก้ไข ใช้ปุ่มนี้เมื่อแก้ไขในชีตโดยตรง</p>' +
+      '<button class="btn" id="sCache">รีเฟรชข้อมูลหน้าเว็บทันที</button></div>' +
+    '<div class="panel"><h3>ลิงก์ของระบบ</h3><div class="kv" id="sInfo"><span class="muted">กำลังโหลด…</span></div></div>';
+  $('sTest').onclick = function(){
+    var b = this; b.disabled = true; $('sSteps').innerHTML = '<span class="muted">กำลังทดสอบ…</span>';
+    call('testUpload').then(function(r){
+      $('sSteps').innerHTML = r.steps.map(function(s){ return '<div style="color:' + (s.ok ? 'var(--leaf-d)' : 'var(--danger)') + '">' + (s.ok ? '✓ ' : '✕ ') + esc(s.name) + ' — <small>' + esc(s.detail) + '</small></div>'; }).join('');
+    }).catch(function(e){ $('sSteps').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; }).then(function(){ b.disabled = false; });
+  };
+  $('sCache').onclick = function(){
+    busy('กำลังรีเฟรช…');
+    call('clearCache').then(function(r){ toast('รีเฟรชแล้ว ' + r.count + ' รายการ'); }).catch(function(e){ toast(e.message, true); }).finally(function(){ busy(''); });
+  };
+  call('systemInfo').then(function(i){
+    var row = function(k, v, note){ return '<span>' + k + '</span><code>' + esc(v) + '</code><button class="btn sm" data-copy="' + esc(v) + '">คัดลอก</button>' + (note ? '<span></span><small class="muted" style="grid-column:2/4;margin-top:-6px">' + note + '</small>' : ''); };
+    $('sInfo').innerHTML =
+      row('ผู้ดูแล (@msu.ac.th)', i.adminMsuUrl, 'ช่องทางที่ 1 บังคับใช้บัญชี Google ของมหาวิทยาลัย') +
+      row('ผู้ดูแล (ไม่ผูกบัญชี)', i.adminStandaloneUrl, 'ช่องทางที่ 2 ไฟล์ login.html บนเซิร์ฟเวอร์คณะ ใช้ได้ทุกเครื่อง') +
+      row('ผู้ดูแล (ลิงก์ปกติ)', i.adminUrl) +
+      row('API หน้าเว็บสาธารณะ', i.publicApi, 'ใส่ในตัวแปร APPS_SCRIPT_URL ของ DWMS-Personnels.html') +
+      row('API ข้อมูลเต็ม', i.exportApi, 'สำหรับระบบอื่นของคณะ มีข้อมูลภายใน ห้ามเผยแพร่ หากหลุดให้กดสร้างกุญแจใหม่') +
+      row('ตรวจสภาพ upload.php', i.checkUrl) +
+      row('Google Sheet', i.sheetUrl) +
+      '<span>โควตาอีเมลวันนี้</span><span>เหลือ ' + i.mailQuota + ' ฉบับ</span><span></span>' +
+      '<span></span><span><button class="btn sm danger" id="sKey">สร้างกุญแจ API ใหม่</button></span><span></span>';
+    $('sKey').onclick = function(){
+      askConfirm('สร้างกุญแจ API ใหม่?', 'ระบบอื่นที่ใช้กุญแจเดิมจะเรียกข้อมูลไม่ได้จนกว่าจะเปลี่ยนเป็นกุญแจใหม่', 'สร้างกุญแจใหม่', true).then(function(y){
+        if(y) call('newApiKey').then(function(){ toast('สร้างกุญแจใหม่แล้ว'); go('system'); }).catch(function(e){ toast(e.message, true); });
+      });
+    };
+  }).catch(function(e){ $('sInfo').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; });
+}
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-copy]');
+  if(!b) return;
+  var v = b.getAttribute('data-copy');
+  (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function(){ toast('คัดลอกแล้ว'); }, function(){
+    var t = document.createElement('textarea'); t.value = v; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); toast('คัดลอกแล้ว');
+  });
+});
+
+/* ================= เปิดหน้า ================= */
+var saved = load('dwms_token');
+if(saved){
+  TOKEN = saved;
+  start().catch(function(){ TOKEN = null; store('dwms_token', null); $('authView').hidden = false; $('appView').hidden = true; });
+} else {
+  $('lu').focus();
+}
+})();
+</script>
+</body>
+</html>
