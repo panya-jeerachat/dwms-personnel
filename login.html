@@ -192,6 +192,31 @@ tr.dirty td{background:#FFFBEA}
 .meter i.low{background:#D9A23A}
 .split{display:flex;height:12px;border-radius:6px;overflow:hidden;background:#EEF1EE;margin:8px 0 4px}
 .split i{display:block;height:100%}
+.grid-top{position:sticky;top:61px;z-index:4;background:var(--paper);padding:8px 0 10px;margin-top:-8px}
+.seg2{display:inline-flex;flex-wrap:wrap;gap:6px}
+.seg2 button{border:1px solid var(--line-2);background:#fff;border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:500;color:var(--soft)}
+.seg2 button.on{background:var(--forest);border-color:var(--forest);color:#fff}
+.bulkbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--info-bg);border:1px solid #C9DCF0;border-radius:var(--r);padding:10px 12px;margin:10px 0 0}
+.bulkbar b{color:var(--info)}
+.savebar{position:sticky;bottom:0;z-index:4;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--forest);color:#fff;border-radius:var(--r);padding:10px 14px;margin-top:12px;box-shadow:0 -6px 20px rgba(0,0,0,.12)}
+.savebar .btn{border-color:rgba(255,255,255,.35)}
+.gtable{border-collapse:separate;border-spacing:0}
+.gtable th,.gtable td{border-bottom:1px solid var(--line);padding:0;white-space:nowrap}
+.gtable th{padding:9px 10px}
+.gtable td.pc{padding:6px 10px;background:#fff}
+.gtable .stk1{position:sticky;left:0;z-index:2;background:#fff;width:40px;text-align:center}
+.gtable .stk2{position:sticky;left:40px;z-index:2;background:#fff;box-shadow:1px 0 0 var(--line)}
+.gtable th.stk1,.gtable th.stk2{z-index:3;background:var(--mint-2)}
+.gtable tr.sel td{background:#F1F7FE}
+.gi{width:100%;min-width:60px;border:1px solid transparent;background:transparent;padding:9px 10px;border-radius:0;font:inherit;color:inherit}
+.gi:hover{border-color:var(--line-2)}
+.gi:focus{outline:none;border-color:var(--leaf);background:#fff;box-shadow:inset 0 0 0 1px var(--leaf)}
+td.dirty{background:#FFF4CC !important}
+td.err{background:var(--danger-bg) !important;box-shadow:inset 3px 0 0 var(--danger)}
+td.cc{text-align:center}
+.gname{display:flex;align-items:center;gap:8px;min-width:230px;max-width:300px}
+.gname b{display:block;font-weight:600;white-space:normal;line-height:1.3}
+.gname small{color:var(--soft)}
 .progress{height:10px;background:var(--mint);border-radius:5px;overflow:hidden;margin:10px 0}
 .progress i{display:block;height:100%;background:var(--leaf);width:0;transition:width .3s}
 .loglist{max-height:320px;overflow:auto;font-size:13px;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;background:var(--mint-2)}
@@ -207,8 +232,10 @@ tr.dirty td{background:#FFFBEA}
 .profile .loc{margin-top:6px;font-weight:500}
 
 @media (max-width:900px){
-  .shell{grid-template-columns:1fr}
-  .side{position:static;height:auto;padding:12px;gap:10px}
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;padding:12px;gap:10px;min-width:0}
+  .nav{min-width:0;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .grid-top{top:0}
   .nav{flex-direction:row;overflow-x:auto;gap:4px}
   .nav button{width:auto;white-space:nowrap}
   .side-foot{display:none}
@@ -374,6 +401,7 @@ var FORM = [
 
 var EMP_DEFAULTS = ['ข้าราชการ','พนักงานมหาวิทยาลัย','พนักงานมหาวิทยาลัย (เงินรายได้)','ลูกจ้างประจำ','ลูกจ้างชั่วคราว','พนักงานราชการ'];
 var ICONS = {
+  grid:'<rect x="3.5" y="4" width="17" height="16" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M3.5 9.5h17M3.5 15h17M9.5 4v16" stroke="currentColor" stroke-width="1.8"/>',
   gender:'<circle cx="9" cy="10" r="4.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12.3 6.8L17 2m0 0h-3.6M17 2v3.6M9 14.5V22m-3-3h6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
   dash:'<path d="M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 4v4h6V4z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/>',
   people:'<circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M3.5 19c.5-3 2.8-4.6 5.5-4.6s5 1.6 5.5 4.6M16 5.5a3 3 0 010 5.6M17.5 14.6c1.7.5 2.8 2 3 4.4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
@@ -387,6 +415,7 @@ var ICONS = {
 var VIEWS = {
   dash:    { t:'ภาพรวม', role:'editor' },
   people:  { t:'บุคลากร', role:'editor' },
+  grid:    { t:'แก้ไขแบบตาราง', role:'editor' },
   gender:  { t:'เติมข้อมูลเพศ', role:'editor' },
   me:      { t:'ข้อมูลของฉัน', role:'user' },
   password:{ t:'เปลี่ยนรหัสผ่าน', role:'user' },
@@ -408,10 +437,23 @@ function fullName(p){ return [p.acadTitle, p.name].filter(Boolean).join(' ').rep
 function loc(p){ var a = []; if(p.building) a.push(p.building); if(p.floor) a.push('ชั้น ' + p.floor); if(p.room) a.push('ห้อง ' + p.room); return a.join(' ') || ''; }
 var PALETTE = ['#1F9550','#177A41','#3C7D5A','#2E8B6A','#4F7F45','#286B4B'];
 function avColor(n){ var h = 0; n = n || ''; for(var i=0;i<n.length;i++) h = (h*31 + n.charCodeAt(i)) >>> 0; return PALETTE[h % PALETTE.length]; }
+/** รูปขนาดเล็กพอดีวงกลม (รูปที่ยังอยู่ในชีตขอขนาดเล็กจาก Google ได้ → ตารางโหลดเร็ว) */
+function thumbOf(url, px){
+  return /googleusercontent\.com/.test(url) && /=s\d+/.test(url) ? url.replace(/=s\d+/, '=s' + px) : url;
+}
+/** โหลดรูปเล็กไม่ได้ → ลองรูปเต็ม → ไม่ได้อีก แสดงตัวอักษรย่อ */
+window.avErr = function(img){
+  var full = img.getAttribute('data-full');
+  if(full && !img.getAttribute('data-tried')){ img.setAttribute('data-tried', '1'); img.src = full; return; }
+  var box = img.parentNode; if(box) box.textContent = img.getAttribute('data-i') || '?';
+};
 function avatar(p, size){
   var ch = (p.name || '?').trim().charAt(0), init = /^[\u0E00-\u0E7FA-Za-z0-9]$/.test(ch) ? ch : '?';
-  var cls = 'av' + (size ? ' ' + size : '');
-  if(p.photo) return '<div class="' + cls + '" style="background:' + avColor(p.name) + '"><img src="' + esc(p.photo) + '" alt="" loading="lazy" onerror="this.parentNode.textContent=\'' + init + '\'"></div>';
+  var cls = 'av' + (size ? ' ' + size : ''), src = p.photo || p.photoPreview || '';
+  if(src){
+    var px = size === 'lg' ? 320 : 120;
+    return '<div class="' + cls + '" style="background:' + avColor(p.name) + '"><img src="' + esc(thumbOf(src, px)) + '" data-full="' + esc(src) + '" data-i="' + init + '" alt="" loading="lazy" decoding="async" onerror="avErr(this)"></div>';
+  }
   return '<div class="' + cls + '" style="background:' + avColor(p.name) + '">' + init + '</div>';
 }
 function genderTag(g){ return g === 'ชาย' ? '<span class="gtag m" title="ชาย">ช</span>' : g === 'หญิง' ? '<span class="gtag f" title="หญิง">ญ</span>' : ''; }
@@ -554,18 +596,24 @@ document.addEventListener('click', function(e){
 });
 
 function go(v){
+  if(VIEW === 'grid' && v !== 'grid' && gridPendingCount()){
+    askConfirm('ยังไม่ได้บันทึกการแก้ไข', 'มีช่องที่แก้ไขแล้ว ' + gridPendingCount() + ' ช่อง ถ้าออกจากหน้านี้การแก้ไขจะหายไป', 'ออกโดยไม่บันทึก', true)
+      .then(function(y){ if(y){ GRID.pend = {}; go(v); } });
+    return;
+  }
   if(!VIEWS[v] || !can(VIEWS[v].role)) v = can('editor') ? 'dash' : 'me';
   if(v === 'me' && !ME.personId) v = 'password';
   VIEW = v;
   $('viewTitle').textContent = VIEWS[v].t;
   Array.prototype.forEach.call($('nav').children, function(b){ b.classList.toggle('on', b.getAttribute('data-go') === v); });
-  var fn = { dash:viewDash, people:viewPeople, gender:viewGender, me:viewMe, password:viewPassword, users:viewUsers, migrate:viewMigrate, logs:viewLogs, system:viewSystem }[v];
+  var fn = { dash:viewDash, people:viewPeople, grid:viewGrid, gender:viewGender, me:viewMe, password:viewPassword, users:viewUsers, migrate:viewMigrate, logs:viewLogs, system:viewSystem }[v];
   fn($('view'));
   window.scrollTo(0, 0);
 }
 function myPerson(){ return ME && ME.personId ? PERSONS.filter(function(p){ return p.id === ME.personId; })[0] : null; }
 function upsertPerson(p){
   var i = PERSONS.findIndex(function(x){ return x.id === p.id; });
+  if(i !== -1 && !p.photo && p.photoType === 'sheet' && PERSONS[i].photoPreview) p.photoPreview = PERSONS[i].photoPreview;
   if(i === -1) PERSONS.push(p); else PERSONS[i] = p;
   ['acadTitle','position','dept','building','status','employmentType'].forEach(function(k){
     if(p[k] && OPT[k] && OPT[k].indexOf(p[k]) === -1) OPT[k].push(p[k]);
@@ -914,6 +962,169 @@ function removePhoto(p){
   });
 }
 
+/* ================= แก้ไขแบบตาราง (หลายคน หลายช่อง บันทึกครั้งเดียว) ================= */
+var GF = {
+  acadTitle:{ l:'ตำแหน่งทางวิชาการ', list:'acadTitle', w:170 },
+  name:{ l:'ชื่อ - นามสกุล', w:210 },
+  position:{ l:'ตำแหน่ง / หน้าที่', list:'position', w:230 },
+  dept:{ l:'หน่วยงาน / สาขา', list:'dept', w:230 },
+  building:{ l:'อาคาร', list:'building', w:90 },
+  floor:{ l:'ชั้น', w:70 },
+  room:{ l:'ห้อง', w:130 },
+  email:{ l:'อีเมล', w:220, type:'email' },
+  phone:{ l:'โทรศัพท์', w:130 },
+  gender:{ l:'เพศ', opts:[['','—'],['ชาย','ชาย'],['หญิง','หญิง']], w:100 },
+  status:{ l:'สถานะ', list:'status', w:130 },
+  employmentType:{ l:'ประเภทการจ้าง', list:'employmentType', w:200 },
+  startDate:{ l:'วันที่เริ่มปฏิบัติงาน', type:'date', w:160 },
+  visible:{ l:'แสดงบนเว็บ', check:true, w:90 },
+  note:{ l:'หมายเหตุ', w:260 }
+};
+var GGROUPS = [
+  { k:'loc', l:'ที่ตั้งห้องทำงาน', f:['building','floor','room'] },
+  { k:'pos', l:'ชื่อและตำแหน่ง', f:['acadTitle','name','position','dept'] },
+  { k:'contact', l:'ช่องทางติดต่อ', f:['email','phone'] },
+  { k:'hr', l:'ข้อมูล HR', f:['gender','employmentType','startDate','status'] },
+  { k:'pub', l:'การแสดงผล', f:['visible','note'] },
+  { k:'all', l:'ทุกช่อง', f:['acadTitle','name','position','dept','building','floor','room','email','phone','gender','status','employmentType','startDate','visible','note'] }
+];
+var GRID = { group:'loc', pend:{}, sel:{}, err:{}, q:'', dept:'', building:'', type:'', blank:'' };
+function gridPendingCount(){ var n = 0; Object.keys(GRID.pend).forEach(function(id){ n += Object.keys(GRID.pend[id]).length; }); return n; }
+function gGroup(){ return GGROUPS.filter(function(g){ return g.k === GRID.group; })[0]; }
+function gOrig(p, f){ return f === 'visible' ? p.visible !== false : (p[f] == null ? '' : String(p[f])); }
+function gVal(p, f){ var pe = GRID.pend[p.id]; return pe && pe.hasOwnProperty(f) ? pe[f] : gOrig(p, f); }
+function gSet(id, f, v){
+  var p = PERSONS.filter(function(x){ return x.id === id; })[0]; if(!p) return;
+  var pe = GRID.pend[id] || (GRID.pend[id] = {});
+  if((f === 'visible' ? v : String(v).trim()) === gOrig(p, f)) delete pe[f]; else pe[f] = f === 'visible' ? v : v;
+  if(!Object.keys(pe).length) delete GRID.pend[id];
+  if(GRID.err[id]) delete GRID.err[id][f];
+}
+function gList(){
+  var q = GRID.q.trim().toLowerCase().replace(/\s+/g, '');
+  return PERSONS.filter(function(p){
+    if(GRID.dept && (p.dept || '').indexOf(GRID.dept) === -1) return false;
+    if(GRID.building && p.building !== GRID.building) return false;
+    if(GRID.type && String(p.id).charAt(0).toUpperCase() !== GRID.type) return false;
+    if(GRID.blank && gOrig(p, GRID.blank) !== '') return false;
+    if(q){ var hay = [p.id, p.acadTitle, p.name, p.email, p.room, p.building, p.dept, p.position].join(' ').toLowerCase().replace(/\s+/g, ''); if(hay.indexOf(q) === -1) return false; }
+    return true;
+  });
+}
+function gInput(f, v, attrs){
+  var d = GF[f];
+  if(d.check) return '<input type="checkbox" ' + attrs + (v ? ' checked' : '') + ' style="width:18px;height:18px;accent-color:var(--leaf)">';
+  if(d.opts) return '<select class="gi" ' + attrs + '>' + d.opts.map(function(o){ return '<option value="' + esc(o[0]) + '"' + (o[0] === v ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>';
+  return '<input class="gi" ' + attrs + ' value="' + esc(v) + '"' + (d.type ? ' type="' + d.type + '"' : '') + (d.list ? ' list="gdl-' + d.list + '"' : '') + ' autocomplete="off">';
+}
+function viewGrid(el){
+  var opt = function(arr, cur){ return arr.map(function(v){ return '<option' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join(''); };
+  var lists = ['acadTitle','position','dept','building','status','employmentType'].map(function(k){
+    var vals = (OPT[k] || []).slice(); if(k === 'employmentType') EMP_DEFAULTS.forEach(function(x){ if(vals.indexOf(x) === -1) vals.push(x); });
+    return '<datalist id="gdl-' + k + '">' + vals.map(function(v){ return '<option value="' + esc(v) + '">'; }).join('') + '</datalist>';
+  }).join('');
+  el.innerHTML =
+    '<div class="panel" style="margin-bottom:10px"><h3>แก้ไขแบบตาราง</h3><p class="desc" style="margin-bottom:0">เลือกชุดข้อมูล แล้วพิมพ์แก้ในช่องได้ทันที (Enter = ลงแถวถัดไป, Esc = ยกเลิกช่องนั้น) หรือติ๊กเลือกหลายคนแล้วกำหนดค่าเดียวกันทีเดียว ช่องสีเหลืองคือที่แก้แล้วแต่ยังไม่บันทึก กด "บันทึก" ครั้งเดียวเมื่อเสร็จ</p></div>' +
+    '<div class="grid-top"><div class="seg2" id="gGroups">' + GGROUPS.map(function(g){ return '<button data-gg="' + g.k + '" class="' + (g.k === GRID.group ? 'on' : '') + '">' + g.l + '</button>'; }).join('') + '</div>' +
+    '<div class="toolbar" style="margin:10px 0 0">' +
+      '<input class="input search" id="gQ" placeholder="ค้นหาชื่อ รหัส ห้อง หรืออีเมล" value="' + esc(GRID.q) + '">' +
+      '<select class="input" id="gD"><option value="">ทุกสาขา/หน่วยงาน</option>' + opt(OPT.dept || [], GRID.dept) + '</select>' +
+      '<select class="input" id="gB"><option value="">ทุกอาคาร</option>' + opt(OPT.building || [], GRID.building) + '</select>' +
+      '<select class="input" id="gT"><option value="">ทุกสายงาน</option><option value="T"' + (GRID.type === 'T' ? ' selected' : '') + '>สายวิชาการ</option><option value="S"' + (GRID.type === 'S' ? ' selected' : '') + '>สายสนับสนุน</option></select>' +
+      '<select class="input" id="gE"><option value="">ทุกแถว</option>' + gGroup().f.filter(function(f){ return !GF[f].check; }).map(function(f){ return '<option value="' + f + '"' + (GRID.blank === f ? ' selected' : '') + '>ยังไม่มี' + GF[f].l + '</option>'; }).join('') + '</select>' +
+    '</div><div id="gBulk"></div></div>' +
+    '<div class="tbl-wrap"><table class="gtable" id="gTable"></table></div>' + lists +
+    '<div id="gSaveBar"></div>';
+  $('gGroups').onclick = function(e){ var b = e.target.closest('[data-gg]'); if(!b) return; GRID.group = b.getAttribute('data-gg'); if(gGroup().f.indexOf(GRID.blank) === -1) GRID.blank = ''; viewGrid(el); };
+  $('gQ').oninput = function(){ GRID.q = this.value; drawGrid(); };
+  [['gD','dept'],['gB','building'],['gT','type'],['gE','blank']].forEach(function(x){ $(x[0]).onchange = function(){ GRID[x[1]] = this.value; drawGrid(); }; });
+  drawGrid();
+}
+function drawGrid(){
+  var fields = gGroup().f, list = gList();
+  var allSel = list.length && list.every(function(p){ return GRID.sel[p.id]; });
+  var head = '<thead><tr><th class="stk1"><input type="checkbox" id="gAll"' + (allSel ? ' checked' : '') + ' title="เลือกทั้งหมดที่แสดงอยู่" style="width:17px;height:17px;accent-color:var(--leaf)"></th><th class="stk2">บุคลากร (' + list.length + ')</th>' +
+    fields.map(function(f){ return '<th style="min-width:' + GF[f].w + 'px">' + GF[f].l + '</th>'; }).join('') + '</tr></thead>';
+  var body = list.map(function(p){
+    var cells = fields.map(function(f){
+      var pe = GRID.pend[p.id], dirty = pe && pe.hasOwnProperty(f), er = GRID.err[p.id] && GRID.err[p.id][f];
+      return '<td class="' + (dirty ? 'dirty ' : '') + (er ? 'err ' : '') + (GF[f].check ? 'cc' : '') + '"' + (er ? ' title="' + esc(er) + '"' : '') + '>' +
+        gInput(f, gVal(p, f), 'data-id="' + esc(p.id) + '" data-f="' + f + '"') + '</td>';
+    }).join('');
+    return '<tr data-row="' + esc(p.id) + '" class="' + (GRID.sel[p.id] ? 'sel' : '') + '"><td class="stk1"><input type="checkbox" data-sel="' + esc(p.id) + '"' + (GRID.sel[p.id] ? ' checked' : '') + ' style="width:17px;height:17px;accent-color:var(--leaf)"></td>' +
+      '<td class="pc stk2"><div class="gname">' + avatar(p, 'sm') + '<div><b>' + esc(fullName(p)) + '</b><small>' + esc(p.id) + '</small></div></div></td>' + cells + '</tr>';
+  }).join('') || '<tr><td colspan="' + (fields.length + 2) + '"><div class="empty">ไม่พบบุคลากรตามเงื่อนไข</div></td></tr>';
+  $('gTable').innerHTML = head + '<tbody>' + body + '</tbody>';
+  drawBulk(); drawSaveBar();
+}
+function drawBulk(){
+  var ids = Object.keys(GRID.sel), fields = gGroup().f;
+  if(!ids.length){ $('gBulk').innerHTML = ''; return; }
+  var f0 = GRID.bulkF && fields.indexOf(GRID.bulkF) !== -1 ? GRID.bulkF : fields[0];
+  $('gBulk').innerHTML = '<div class="bulkbar"><b>เลือก ' + ids.length + ' คน</b><span>กำหนด</span>' +
+    '<select class="input" id="gbF" style="width:auto">' + fields.map(function(f){ return '<option value="' + f + '"' + (f === f0 ? ' selected' : '') + '>' + GF[f].l + '</option>'; }).join('') + '</select>' +
+    '<span>เป็น</span><span id="gbV" style="min-width:200px;background:#fff;border:1px solid var(--line-2);border-radius:var(--r-sm)">' + gInput(f0, f0 === 'visible' ? true : '', 'id="gbIn"') + '</span>' +
+    '<button class="btn primary sm" id="gbApply">ใช้กับ ' + ids.length + ' คนที่เลือก</button><button class="btn sm" id="gbClear">ล้างการเลือก</button></div>';
+  $('gbF').onchange = function(){ GRID.bulkF = this.value; drawBulk(); };
+  $('gbClear').onclick = function(){ GRID.sel = {}; drawGrid(); };
+  $('gbApply').onclick = function(){
+    var inp = $('gbIn'), v = GF[f0].check ? inp.checked : inp.value;
+    ids.forEach(function(id){ gSet(id, f0, v); });
+    toast('กำหนด "' + GF[f0].l + '" ให้ ' + ids.length + ' คนแล้ว ตรวจแล้วกดบันทึก');
+    drawGrid();
+  };
+}
+function drawSaveBar(){
+  var n = gridPendingCount(), people = Object.keys(GRID.pend).length, errs = Object.keys(GRID.err).filter(function(id){ return Object.keys(GRID.err[id]).length; }).length;
+  $('gSaveBar').innerHTML = n || errs ? '<div class="savebar"><span>' + (n ? 'แก้ไขแล้ว <b>' + n + '</b> ช่อง ใน ' + people + ' คน ยังไม่ได้บันทึก' : '') + (errs ? ' · <b>' + errs + '</b> แถวบันทึกไม่สำเร็จ (ช่องสีแดง ชี้เพื่อดูสาเหตุ)' : '') + '</span>' +
+    '<span style="display:flex;gap:8px">' + (n ? '<button class="btn sm" id="gUndo" style="background:transparent;color:#fff">ยกเลิกทั้งหมด</button><button class="btn sm" id="gSave" style="background:#fff;color:var(--forest);border-color:#fff">บันทึก ' + n + ' ช่อง</button>' : '') + '</span></div>' : '';
+  if($('gUndo')) $('gUndo').onclick = function(){ askConfirm('ยกเลิกการแก้ไขทั้งหมด?', 'ช่องที่แก้ไว้ ' + n + ' ช่องจะกลับเป็นค่าเดิม', 'ยกเลิกการแก้ไข', true).then(function(y){ if(y){ GRID.pend = {}; GRID.err = {}; drawGrid(); } }); };
+  if($('gSave')) $('gSave').onclick = saveGrid;
+}
+function saveGrid(){
+  var items = Object.keys(GRID.pend).map(function(id){ return { id:id, changes:GRID.pend[id] }; });
+  if(!items.length) return;
+  busy('กำลังบันทึก ' + gridPendingCount() + ' ช่อง…');
+  call('saveBulk', { items:items }).then(function(r){
+    (r.persons || []).forEach(function(p){ upsertPerson(p); delete GRID.pend[p.id]; });
+    GRID.err = {};
+    (r.errors || []).forEach(function(e){ (GRID.err[e.id] = GRID.err[e.id] || {})[e.field || Object.keys(GRID.pend[e.id] || {})[0] || 'name'] = e.error; });
+    var msg = 'บันทึกแล้ว ' + r.updated + ' คน (' + r.cells + ' ช่อง)';
+    if(r.errors && r.errors.length) msg += ' · ไม่สำเร็จ ' + r.errors.length + ' คน';
+    if(r.accounts && r.accounts.length) msg += ' · บัญชีผู้ใช้: ' + r.accounts.length + ' รายการปรับตามอีเมลใหม่';
+    toast(msg, r.errors && r.errors.length);
+    drawGrid();
+  }).catch(function(e){ toast(e.message, true); }).finally(function(){ busy(''); });
+}
+/* เหตุการณ์ในตาราง (ผูกครั้งเดียวที่ document) */
+document.addEventListener('input', function(e){
+  var t = e.target; if(!t.matches || !t.matches('#gTable [data-f]')) return;
+  var id = t.getAttribute('data-id'), f = t.getAttribute('data-f');
+  gSet(id, f, t.type === 'checkbox' ? t.checked : t.value);
+  var td = t.closest('td'), pe = GRID.pend[id];
+  td.classList.toggle('dirty', !!(pe && pe.hasOwnProperty(f))); td.classList.remove('err'); td.removeAttribute('title');
+  drawSaveBar();
+});
+document.addEventListener('change', function(e){
+  var t = e.target; if(!t.matches) return;
+  if(t.matches('#gTable [data-f]') && (t.tagName === 'SELECT' || t.type === 'checkbox' || t.type === 'date')) t.dispatchEvent(new Event('input', { bubbles:true }));
+  if(t.matches('#gTable [data-sel]')){ var id = t.getAttribute('data-sel'); if(t.checked) GRID.sel[id] = 1; else delete GRID.sel[id]; t.closest('tr').classList.toggle('sel', t.checked); drawBulk(); }
+  if(t.id === 'gAll'){ gList().forEach(function(p){ if(t.checked) GRID.sel[p.id] = 1; else delete GRID.sel[p.id]; }); drawGrid(); }
+});
+document.addEventListener('keydown', function(e){
+  var t = e.target; if(!t.matches || !t.matches('#gTable .gi')) return;
+  var f = t.getAttribute('data-f'), tr = t.closest('tr');
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    var next = e.shiftKey ? tr.previousElementSibling : tr.nextElementSibling;
+    var n = next && next.querySelector('[data-f="' + f + '"]'); if(n){ n.focus(); if(n.select) n.select(); }
+  } else if(e.key === 'Escape'){
+    var id = t.getAttribute('data-id'), p = PERSONS.filter(function(x){ return x.id === id; })[0];
+    if(p){ t.value = gOrig(p, f); t.dispatchEvent(new Event('input', { bubbles:true })); }
+  }
+});
+window.addEventListener('beforeunload', function(e){ if(gridPendingCount()){ e.preventDefault(); e.returnValue = ''; } });
+
 /* ================= เติมข้อมูลเพศแบบกลุ่ม ================= */
 var GPEND = {};
 function guessGender(p){
@@ -1042,7 +1253,8 @@ function drawUsers(){
     var roleSel = u.isMain ? '<span class="tag">ผู้ดูแลระบบหลัก</span>' :
       '<select class="input" data-role="' + esc(u.username) + '" style="width:auto;padding:5px 8px">' + Object.keys(CFG.roles).map(function(k){ return '<option value="' + k + '"' + (u.role === k ? ' selected' : '') + '>' + esc(CFG.roles[k]) + '</option>'; }).join('') + '</select>';
     var flags = (u.active ? '' : '<span class="tag grey">ปิดใช้งาน</span> ') + (u.locked ? '<span class="tag danger">ถูกล็อก</span> ' : '') + (u.mustChange ? '<span class="tag warn">รหัสเริ่มต้น</span>' : '<span class="tag">ตั้งรหัสแล้ว</span>');
-    return '<tr><td><b>' + esc(u.username) + '</b><br><small class="muted">' + (esc(u.personName) || (u.isMain ? 'บัญชีระบบ' : 'ไม่ได้ผูกกับบุคลากร')) + '</small></td>' +
+    var pp = u.personId ? PERSONS.filter(function(x){ return x.id === u.personId; })[0] : null;
+    return '<tr><td><div class="pcell">' + avatar(pp || { name: u.isMain ? 'A' : u.username }, 'sm') + '<div><b>' + esc(u.username) + '</b><small>' + (esc(u.personName) || (u.isMain ? 'บัญชีระบบ' : 'ไม่ได้ผูกกับบุคลากร')) + '</small></div></div></td>' +
       '<td>' + roleSel + '</td><td class="hide-sm">' + (esc(u.lastLogin) || '<span class="muted">ยังไม่เคย</span>') + '</td><td>' + flags + '</td>' +
       '<td style="white-space:nowrap;text-align:right">' +
         (u.locked ? '<button class="btn sm" data-unlock="' + esc(u.username) + '">ปลดล็อก</button> ' : '') +
@@ -1134,7 +1346,7 @@ function runMigration(list){
 var ACT_TH = { 'login':'เข้าสู่ระบบ', 'login-fail':'เข้าระบบไม่สำเร็จ', 'forgot':'ขอรหัสผ่านใหม่', 'person-add':'เพิ่มบุคลากร', 'person-edit':'แก้ไขข้อมูล',
   'person-delete':'ลบบุคลากร', 'photo-set':'เปลี่ยนรูป', 'photo-remove':'ลบรูป', 'password-change':'เปลี่ยนรหัสผ่าน', 'user-edit':'แก้ไขบัญชี',
   'user-add':'เพิ่มบัญชี', 'user-reset':'คืนรหัสเริ่มต้น', 'user-delete':'ลบบัญชี', 'user-sync':'สร้างบัญชีอัตโนมัติ', 'backup':'สำรองไฟล์',
-  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
+  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'person-bulk':'แก้ไขแบบตาราง', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
 function viewLogs(el){
   el.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>การกระทำ</th><th>เป้าหมาย</th><th class="hide-sm">รายละเอียด</th></tr></thead><tbody id="ltb"><tr><td colspan="5"><div class="empty">กำลังโหลด…</div></td></tr></tbody></table></div>';
   call('logs').then(function(rows){
