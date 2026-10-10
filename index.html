@@ -1729,6 +1729,9 @@
       - เก็บอ้างอิงประโยคไว้ (กัน Chrome ทิ้งประโยคกลางคันจนเงียบ)
       - แจ้งผู้ใช้เมื่อเครื่องไม่มีเสียงภาษาไทย แทนการเงียบเฉย ๆ */
   const TTS_OK = 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+  /* iPhone / iPad (ทุกเบราว์เซอร์บน iOS ใช้ WebKit เดียวกัน) — ใช้วิธีเดิมที่พิสูจน์แล้วว่าใช้ได้บน iPhone
+     เพราะ WebKit: (1) สั่งพูดหลังหยุดเสียงที่กำลังพูดอยู่ เสียงใหม่จะหาย (2) เสียงคุณภาพสูงที่ยังไม่ดาวน์โหลดจะเงียบ */
+  const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   let thaiVoice = null, voicesLoaded = false, ttsUnlocked = false, ttsQueue = [], noVoiceWarned = false, ttsTimer = null;
   const VOICE_RANK = [/premwadee|niwat|natural|online/i, /kanya|narisa|pattara|google/i];
   function pickThaiVoice(){
@@ -1737,6 +1740,7 @@
     try{ voices = speechSynthesis.getVoices() || []; }catch(e){}
     if(voices.length) voicesLoaded = true;
     const th = voices.filter(v=> /^th([-_]|$)/i.test(v.lang || '') || /thai|ไทย/i.test(v.name || ''));
+    if(IS_IOS){ thaiVoice = th[0] || null; return; }     // iOS: เสียงไทยตัวแรก (เหมือนเดิม)
     let best = null;
     for(const re of VOICE_RANK){ best = th.find(v=> re.test(v.name || '')); if(best) break; }
     thaiVoice = best || th[0] || null;
@@ -1748,12 +1752,12 @@
     setTimeout(pickThaiVoice, 4000);
   }
   function unlockTTS(){
-    if(ttsUnlocked || !TTS_OK) return;
+    if(ttsUnlocked || !TTS_OK || IS_IOS) return;      // iOS ไม่ใช้ เพราะทำให้เสียงคำตอบแรกหาย
     ttsUnlocked = true;
     try{ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; u.lang = 'th-TH'; speechSynthesis.speak(u); }catch(e){}
   }
   ['pointerdown','touchstart','keydown'].forEach(ev=> document.addEventListener(ev, unlockTTS, { capture:true, passive:true }));
-  document.addEventListener('visibilitychange', ()=>{ if(TTS_OK && document.visibilityState === 'visible'){ try{ speechSynthesis.resume(); }catch(e){} } });
+  document.addEventListener('visibilitychange', ()=>{ if(TTS_OK && !IS_IOS && document.visibilityState === 'visible'){ try{ speechSynthesis.resume(); }catch(e){} } });
 
   function splitForSpeech(text){
     const out = []; let rest = String(text).replace(/\s+/g, ' ').trim();
@@ -1766,12 +1770,28 @@
     return out;
   }
   function voiceNotice(msg){ elVoiceStatus.textContent = msg; clearTimeout(voiceNotice.t); voiceNotice.t = setTimeout(()=>{ if(elVoiceStatus.textContent === msg) elVoiceStatus.textContent = ''; }, 12000); }
+  /** iPhone/iPad: วิธีเดิมทุกบรรทัด (หยุดเสียงเก่า → พูดทันทีในจังหวะเดียวกัน · เสียงไทยตัวแรก · ไม่แบ่งข้อความ) */
+  function speakIOS(text){
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'th-TH';
+      if(thaiVoice) u.voice = thaiVoice;
+      u.rate = 1.0;
+      u.pitch = 1.0;
+      ttsQueue = [u];                                     // เก็บอ้างอิงไว้ไม่ให้ถูกเก็บกวาดกลางคัน
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
   function speak(text){
     if(!ttsEnabled || !text || !TTS_OK) return;
     if(!thaiVoice) pickThaiVoice();
+    if(IS_IOS) return speakIOS(text);
     if(voicesLoaded && !thaiVoice && !noVoiceWarned){
       noVoiceWarned = true;
-      voiceNotice('🔈 เครื่องนี้ยังไม่มีเสียงอ่านภาษาไทย จึงอาจไม่ได้ยินเสียงตอบ — เปิดด้วย Microsoft Edge (มีเสียงไทยในตัว) หรือเพิ่มเสียงภาษาไทยในการตั้งค่าเครื่อง (Windows: การตั้งค่า → เวลาและภาษา → คำพูด)');
+      voiceNotice(IS_IOS
+        ? '🔈 ไม่พบเสียงอ่านภาษาไทยในเครื่อง — ตั้งค่า → การช่วยการเข้าถึง → เนื้อหาที่พูด → เสียง → ไทย'
+        : '🔈 เครื่องนี้ยังไม่มีเสียงอ่านภาษาไทย จึงอาจไม่ได้ยินเสียงตอบ — เปิดด้วย Microsoft Edge (มีเสียงไทยในตัว) หรือเพิ่มเสียงภาษาไทยในการตั้งค่าเครื่อง (Windows: การตั้งค่า → เวลาและภาษา → คำพูด)');
     }
     try{
       clearTimeout(ttsTimer);
@@ -1796,7 +1816,7 @@
     elMuteBtn.textContent = ttsEnabled ? '🔊' : '🔇';
     elMuteBtn.classList.toggle('muted', !ttsEnabled);
     elMuteBtn.title = ttsEnabled ? 'ปิดเสียงตอบ' : 'เปิดเสียงตอบ';
-    if(!ttsEnabled && TTS_OK){ clearTimeout(ttsTimer); speechSynthesis.cancel(); }
+    if(!ttsEnabled && TTS_OK){ clearTimeout(ttsTimer); try{ speechSynthesis.cancel(); }catch(e){} }
     if(ttsEnabled) speak('เปิดเสียงตอบแล้วครับ');      // ได้ยินทันที = ทดสอบเสียงไปในตัว
   });
   if(!TTS_OK){ elMuteBtn.disabled = true; elMuteBtn.title = 'เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง'; }
