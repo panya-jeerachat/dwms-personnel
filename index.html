@@ -54,6 +54,10 @@
     --text-faint:hsl(var(--h) 8% 56%);
     --male:hsl(205 68% 44%);
     --female:hsl(338 62% 52%);
+    /* ชุดสีแยกประเภท (สีคงที่ ไม่เปลี่ยนตามธีม เพื่อให้จำประเภทได้) */
+    --c1:hsl(211 78% 48%); --c2:hsl(26 92% 52%); --c3:hsl(158 70% 34%); --c4:hsl(268 58% 54%);
+    --c5:hsl(342 72% 52%); --c6:hsl(188 80% 38%); --c7:hsl(42 92% 44%); --c8:hsl(110 45% 40%);
+    --c9:hsl(4 72% 52%); --c10:hsl(232 55% 56%); --c11:hsl(300 45% 48%); --c12:hsl(172 60% 36%);
     --unknown:hsl(var(--h) 8% 78%);
     --success:hsl(150 60% 32%); --success-soft:hsl(150 50% 92%);
     --warn:hsl(38 70% 36%);     --warn-soft:hsl(40 85% 92%);
@@ -64,6 +68,9 @@
     color-scheme:light;
   }
   html[data-mode="dark"]{
+    --c1:hsl(211 85% 66%); --c2:hsl(28 95% 62%); --c3:hsl(158 60% 52%); --c4:hsl(268 75% 72%);
+    --c5:hsl(342 80% 68%); --c6:hsl(188 75% 55%); --c7:hsl(44 92% 58%); --c8:hsl(110 45% 58%);
+    --c9:hsl(4 80% 66%); --c10:hsl(232 70% 72%); --c11:hsl(300 50% 68%); --c12:hsl(172 55% 52%);
     --accent:hsl(var(--h) var(--sat) 62%);
     --accent-strong:hsl(var(--h) var(--sat) 72%);
     --accent-soft:hsl(var(--h) 30% 20%);
@@ -239,7 +246,11 @@
   }
   .bldg .code{display:block; font-size:26px; font-weight:700; line-height:1.1;}
   .bldg .cnt{display:block; font-size:13px; color:var(--text-soft); margin:2px 0 10px;}
-  .bldg .fill{position:absolute; inset:auto 0 0 0; background:var(--accent-soft); z-index:0; transition:height .9s ease;}
+  .bldg{border-left:5px solid var(--bc, var(--accent));}
+  .bldg .code{color:var(--bc, var(--text));}
+  .bldg .fill{position:absolute; inset:auto 0 0 0; background:color-mix(in srgb, var(--bc, var(--accent)) 16%, transparent); z-index:0; transition:height .9s ease;}
+  .cdot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle;}
+  .tb-cell .v.col{color:var(--vc);}
   .bldg > *:not(.fill){position:relative; z-index:1;}
   .chip-row{display:flex; flex-wrap:wrap; gap:7px;}
   #deptChipsRow{margin-top:12px;}
@@ -663,7 +674,16 @@
   // ข้อมูลทั้งหมด (ข้อความ + ลิงก์รูปบนเซิร์ฟเวอร์คณะ) มาจาก Apps Script Web App ของ
   // "ระบบฐานข้อมูลบุคลากร" — ใส่ URL ที่ลงท้ายด้วย /exec (URL เดิมใช้ต่อได้ ถ้า Deploy เป็นเวอร์ชันใหม่)
   // ข้อมูลภายในบุคลากรถูกจัดการผ่านหน้า  APPS_SCRIPT_URL + "?page=admin"
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxicXfhScB1MLNf1XRudMEDzwOT9FdL9OdmnRska9KeseqMO0o-i9MX9fb3uEr9wiEI/exec";
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwauLNo6oc81H-7AHBbXsPC6wgwCXzz64oo-32SKX0ThWMC64VzmjLNvRc4QGdhUAsG/exec";
+  /* URL ที่ใช้ดึงข้อมูลจริง: รับ URL ได้ทุกรูปแบบที่ Google แสดง แล้วแปลงเป็นแบบที่ "ทุกคน" เปิดได้
+     (…/a/macros/msu.ac.th/s/ID/exec และ …/macros/u/1/s/ID/exec ต้องลงชื่อ Google ก่อน คนทั่วไปจะดึงข้อมูลไม่ได้) */
+  const API_URL = (function(u){
+    u = String(u || '').trim();
+    const m = /^https:\/\/script\.google\.com\/(?:a\/macros\/[^\/]+|a\/[^\/]+\/macros|macros(?:\/u\/\d+)?)\/s\/([A-Za-z0-9_-]+)\/exec/.exec(u);
+    return m ? 'https://script.google.com/macros/s/' + m[1] + '/exec' : u;
+  })(APPS_SCRIPT_URL);
+  const API_URL_ISSUE = /\/dev(\?|$)/.test(API_URL)
+    ? 'ตั้งค่า APPS_SCRIPT_URL ผิด: ใช้ลิงก์ที่ลงท้าย /dev ซึ่งเปิดได้เฉพาะเจ้าของสคริปต์ ต้องใช้ลิงก์ที่ลงท้าย /exec จาก "จัดการการทำให้ใช้งานได้"' : '';
   // ===== ช่องทางเข้าสู่ระบบ =====
   // ช่องทางที่ 1: บังคับให้ Google ใช้บัญชีโดเมนมหาวิทยาลัย (แก้ปัญหาเครื่องลงชื่อหลายบัญชี /u/1/)
   // ช่องทางที่ 2: หน้าเดียวกันที่วางบนเซิร์ฟเวอร์คณะ เรียกระบบโดยไม่ใช้บัญชี Google เลย
@@ -672,7 +692,7 @@
   (function(){
     const btn = document.getElementById('adminLink'), ov = document.getElementById('loginOverlay');
     if(!btn || !ov) return;
-    const m = /\/s\/([^\/]+)\/exec/.exec(APPS_SCRIPT_URL || '');
+    const m = /\/s\/([^\/]+)\/exec/.exec(API_URL || '');
     const msuUrl = m ? 'https://script.google.com/a/macros/' + WORKSPACE_DOMAIN + '/s/' + m[1] + '/exec?page=admin' : '';
     const optMsu = document.getElementById('lgMsu'), optWeb = document.getElementById('lgWeb');
     if(msuUrl) optMsu.href = msuUrl; else optMsu.remove();
@@ -1796,8 +1816,8 @@
     return new Promise((resolve, reject)=>{
       let settled = false;
       const done = (ok, v)=>{ if(settled) return; settled = true; ok ? resolve(v) : reject(v); };
-      const sep = APPS_SCRIPT_URL.indexOf('?') !== -1 ? '&' : '?';
-      const base = APPS_SCRIPT_URL + sep + '_ts=' + Date.now() + (force ? '&refresh=1' : '');
+      const sep = API_URL.indexOf('?') !== -1 ? '&' : '?';
+      const base = API_URL + sep + '_ts=' + Date.now() + (force ? '&refresh=1' : '');
 
       // วิธีที่ 1: fetch() ตรง
       fetch(base, { method:'GET', cache:'no-store' })
@@ -1821,7 +1841,7 @@
   }
 
   function syncAll(force){
-    if(!APPS_SCRIPT_URL || syncing) return;
+    if(!API_URL || syncing) return;
     syncing = true;
     syncBtn.disabled = true; retryPhotoBtn.disabled = true;
     setSyncState('loading', force ? 'กำลังดึงข้อมูลล่าสุดจากระบบ (ข้ามแคช)…' : 'กำลังซิงก์ข้อมูลล่าสุด…');
@@ -1847,7 +1867,8 @@
         'ระบบหลังบ้านยังทำงานด้วยโค้ดเวอร์ชันเดิม (ปุ่มเข้าสู่ระบบจะยังใช้ไม่ได้) — ผู้ดูแล: รันฟังก์ชัน diagnose ในหน้า Apps Script เพื่อดูจุดที่ต้องแก้';
     }).catch(err=>{
       setSyncState('err', 'ซิงก์ไม่สำเร็จ — แสดงข้อมูลที่บันทึกไว้');
-      syncNote.textContent = (err && err.message ? err.message : 'เชื่อมต่อไม่ได้') + ' — ลองกดซิงก์อีกครั้ง หรือตรวจสอบส่วนขยาย/ตัวบล็อกโฆษณา (ค้นหาข้อมูลได้ตามปกติ)';
+      syncNote.textContent = API_URL_ISSUE || ((err && err.message ? err.message : 'เชื่อมต่อไม่ได้') +
+        ' — ถ้าเพิ่งเปลี่ยน URL ระบบ: ต้องเป็นลิงก์ /exec และตั้ง "ผู้มีสิทธิ์เข้าถึง" เป็น "ทุกคน" (ค้นหาข้อมูลที่บันทึกไว้ได้ตามปกติ)');
     }).finally(()=>{
       syncing = false;
       syncBtn.disabled = false; retryPhotoBtn.disabled = false;
@@ -1896,7 +1917,7 @@
 
   function submitRating(rating, comment){
     return new Promise((resolve)=>{
-      if(!APPS_SCRIPT_URL){ resolve({ ok:false, error:'ยังไม่ได้ตั้งค่า Apps Script (APPS_SCRIPT_URL) ในไฟล์เว็บไซต์' }); return; }
+      if(!API_URL){ resolve({ ok:false, error:'ยังไม่ได้ตั้งค่า Apps Script (API_URL) ในไฟล์เว็บไซต์' }); return; }
       let settled = false;
       let fetchErrorMsg = '';
       function onDone(payload){
@@ -1905,8 +1926,8 @@
         resolve(payload);
       }
       const params = new URLSearchParams({ action:'rate', rating:String(rating), comment: comment||'', page: location.href });
-      const sep = APPS_SCRIPT_URL.indexOf('?') !== -1 ? '&' : '?';
-      const baseUrl = APPS_SCRIPT_URL + sep + params.toString();
+      const sep = API_URL.indexOf('?') !== -1 ? '&' : '?';
+      const baseUrl = API_URL + sep + params.toString();
 
       // วิธีที่ 1: fetch() ตรงๆ
       fetch(baseUrl + '&_ts=' + Date.now(), { method:'GET', cache:'no-store' })
@@ -1947,8 +1968,8 @@
         ratingThanks.style.display = 'block';
         ratingThanks.style.color = 'var(--danger)';
         ratingThanks.textContent = '⚠️ ส่งคะแนนไม่สำเร็จ (' + ((result && result.error) || 'ไม่ทราบสาเหตุ') + ') กรุณาลองใหม่อีกครั้ง';
-        if(APPS_SCRIPT_URL){
-          const testUrl = APPS_SCRIPT_URL + '?action=rate&rating=5&comment=' + encodeURIComponent('ทดสอบเชื่อมต่อ') + '&page=diagnostic';
+        if(API_URL){
+          const testUrl = API_URL + '?action=rate&rating=5&comment=' + encodeURIComponent('ทดสอบเชื่อมต่อ') + '&page=diagnostic';
           ratingDiag.innerHTML = 'หากยังไม่สำเร็จ ลอง <a href="'+testUrl+'" target="_blank" rel="noopener">กดลิงก์นี้เพื่อทดสอบเชื่อมต่อโดยตรง</a> — ถ้าเปิดแล้วเห็นข้อความ <code>{"ok":true...}</code> แปลว่าระบบฝั่ง Google ใช้งานได้ปกติ (ปัญหาน่าจะอยู่ที่เบราว์เซอร์/เครือข่ายนี้เท่านั้น) แต่ถ้าเปิดไม่ขึ้นเลยหรือค้าง แปลว่าเครือข่ายนี้บล็อก script.google.com';
         }
       }
@@ -2064,6 +2085,23 @@
   }
   function currentStats(){ return STATS && STATS.total ? STATS : localStats(records); }
 
+  /* ---------- ชุดสีแยกประเภท ---------- */
+  const PAL = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)','var(--c7)','var(--c8)','var(--c9)','var(--c10)','var(--c11)','var(--c12)'];
+  const TYPE_C = { academic:'var(--c1)', support:'var(--c2)', other:'var(--unknown)' };
+  const RANK_C = { 'ศ.':'var(--c7)', 'รศ.':'var(--c4)', 'ผศ.':'var(--c1)', 'อาจารย์':'var(--c6)', 'อื่น ๆ':'var(--unknown)' };
+  /** สีประจำสาขา: แจกสีตามลำดับรายชื่อสาขา (เรียงตามชื่อ) จึงไม่ซ้ำกันใน 12 สาขาแรก และตรงกันทุกจุดบนหน้า */
+  let DEPT_C = null, DEPT_KEY = '';
+  function colorOf(label){
+    const list = getDepts().map(canon).sort(), key = list.join('|');
+    if(key !== DEPT_KEY){ DEPT_KEY = key; DEPT_C = {}; list.forEach((d, i)=> DEPT_C[d] = PAL[i % PAL.length]); }
+    const c = canon(label || '');
+    if(DEPT_C[c]) return DEPT_C[c];
+    let h = 0; for(let i=0;i<c.length;i++) h = (h * 33 + c.charCodeAt(i)) >>> 0;
+    return PAL[h % PAL.length];
+  }
+  const BLDG_C = {};
+  function bldgColor(b){ if(!BLDG_C[b]){ const order = getBuildings(); const i = order.indexOf(b); BLDG_C[b] = PAL[[2,0,1,3,5,6,4,7][i % 8] ?? (i % PAL.length)]; } return BLDG_C[b]; }
+
   /* ---------- กรอบข้อมูลสรุป (title block) ---------- */
   let countedUp = false;
   function countUp(el, to){
@@ -2075,7 +2113,7 @@
   }
   function renderStats(){
     const st = currentStats(), g = st.gender, n = st.total || records.length, known = g.m + g.f;
-    const ac = st.type.academic, cell = (cls, k, v)=> '<div class="tb-cell ' + cls + '" style="order:3"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+    const ac = st.type.academic, cell = (cls, k, v, col)=> '<div class="tb-cell ' + cls + '" style="order:3"><span class="k">' + k + '</span><span class="v' + (col ? ' col" style="--vc:' + col : '') + '">' + v + '</span></div>';
     const legend = known
       ? '<span><i class="dot" style="background:var(--male)"></i>ชาย ' + fmtN(g.m) + ' (' + pctOf(g.m, known) + '%)</span>' +
         '<span><i class="dot" style="background:var(--female)"></i>หญิง ' + fmtN(g.f) + ' (' + pctOf(g.f, known) + '%)</span>' +
@@ -2084,15 +2122,15 @@
     const rating = ratingStats && ratingStats.count ? '★ ' + ratingStats.avg.toFixed(1) + '<small>(' + ratingStats.count + ')</small>' : '—';
     elStatRow.innerHTML =
       '<div class="tb-cell tb-total" style="order:1"><span class="k">บุคลากรทั้งหมด</span><span class="v"><span id="tbTotal">' + fmtN(n) + '</span><small>ท่าน</small></span></div>' +
-      cell('tb-c2', 'สายวิชาการ', fmtN(ac)) +
-      cell('tb-c2', 'สายสนับสนุน', fmtN(st.type.support)) +
-      cell('tb-c2 end', 'คุณวุฒิปริญญาเอก', fmtN(st.phd) + '<small>' + (ac ? pctOf(st.phd, ac) + '%' : '') + '</small>') +
+      cell('tb-c2', 'สายวิชาการ', fmtN(ac), TYPE_C.academic) +
+      cell('tb-c2', 'สายสนับสนุน', fmtN(st.type.support), TYPE_C.support) +
+      cell('tb-c2 end', 'คุณวุฒิปริญญาเอก', (ac ? pctOf(st.phd, ac) + '%' : '—') + '<small>' + fmtN(st.phd) + ' จาก ' + fmtN(ac) + ' ท่าน</small>', 'var(--c4)') +
       '<div class="tb-cell tb-wide" style="order:3"><span class="k">สัดส่วนชาย : หญิง</span>' +
         '<div class="ratio" role="img" aria-label="ชาย ' + g.m + ' หญิง ' + g.f + ' ไม่ระบุ ' + g.u + '"><i class="m" style="width:' + pctOf(g.m, n) + '%"></i><i class="f" style="width:' + pctOf(g.f, n) + '%"></i></div>' +
         '<div class="ratio-legend">' + legend + '</div></div>' +
-      cell('tb-c3 tb-last', 'อาคาร', fmtN(getBuildings().length)) +
-      cell('tb-c3 tb-last', 'สาขา / หน่วยงาน', fmtN(getDepts().length)) +
-      cell('tb-c3 tb-last end', 'ความพึงพอใจ', rating);
+      cell('tb-c3 tb-last', 'อาคาร', fmtN(getBuildings().length), 'var(--c3)') +
+      cell('tb-c3 tb-last', 'สาขา / หน่วยงาน', fmtN(getDepts().length), 'var(--c6)') +
+      cell('tb-c3 tb-last end', 'ความพึงพอใจ', rating, 'var(--c7)');
     countUp(document.getElementById('tbTotal'), n);
   }
 
@@ -2103,12 +2141,12 @@
     const max = Math.max(1, ...buildings.map(cnt));
     elBuildingChips.innerHTML = buildings.map(b=>{
       const c = cnt(b);
-      return '<button class="bldg" data-building="' + escapeHtml(b) + '" aria-label="อาคาร ' + escapeHtml(b) + ' ' + c + ' ท่าน">' +
+      return '<button class="bldg" style="--bc:' + bldgColor(b) + '" data-building="' + escapeHtml(b) + '" aria-label="อาคาร ' + escapeHtml(b) + ' ' + c + ' ท่าน">' +
         '<span class="fill" style="height:' + Math.round(c / max * 72) + '%"></span>' +
         '<span class="code">' + escapeHtml(b) + '</span><span class="cnt">' + c + ' ท่าน</span></button>';
     }).join('');
     elDeptChipsRow.innerHTML = getDepts().map(d=>
-      '<button class="chip" data-dept="' + escapeHtml(d) + '">' + escapeHtml(deptKeyword(d)) + '<span class="n">' + countInDept(d) + '</span></button>').join('');
+      '<button class="chip" data-dept="' + escapeHtml(d) + '"><i class="cdot" style="background:' + colorOf(d) + '"></i>' + escapeHtml(deptKeyword(d)) + '<span class="n">' + countInDept(d) + '</span></button>').join('');
   }
   elBuildingChips.addEventListener('click', e=>{ const b = e.target.closest('[data-building]'); if(b){ askBuildingList(b.getAttribute('data-building')); goAssistant(); } });
   elDeptChipsRow.addEventListener('click', e=>{ const b = e.target.closest('[data-dept]'); if(b){ askDeptList(b.getAttribute('data-dept')); goAssistant(); } });
@@ -2116,7 +2154,7 @@
   /* =====================================================================
      กราฟ SVG (เขียนเอง ไม่พึ่งไลบรารี) — วาดครั้งเดียวเมื่อเลื่อนมาถึง
      ===================================================================== */
-  const C = { m:'var(--male)', f:'var(--female)', u:'var(--unknown)', a:'var(--accent)', b:'var(--accent-2)', c:'hsl(calc(var(--h) + 180) 45% 52%)', d:'hsl(calc(var(--h) - 60) 50% 50%)' };
+  const C = { m:'var(--male)', f:'var(--female)', u:'var(--unknown)', a:'var(--c3)', b:'var(--c1)', c:'var(--c2)', d:'var(--c4)', e:'var(--c5)' };
   let INS_SCOPE = 'all';
   const elCharts = document.getElementById('charts');
   const SCOPE_TH = { all:'ทั้งหมด', academic:'สายวิชาการ', support:'สายสนับสนุน' };
@@ -2214,49 +2252,58 @@
     const n = gObj.m + gObj.f + gObj.u, known = gObj.m + gObj.f;
     const cards = [];
 
-    // 1) สัดส่วนเพศ
-    cards.push('<div class="card anim span-4"><h3>สัดส่วนเพศ</h3><p class="sub">' + SCOPE_TH[sc] + ' ' + fmtN(n) + ' ท่าน</p><div class="chart" style="max-width:230px;margin:0 auto">' +
-      svgDonut([{ v:gObj.m, c:C.m, label:'ชาย' }, { v:gObj.f, c:C.f, label:'หญิง' }, { v:gObj.u, c:C.u, label:'ยังไม่ระบุ' }],
-        known ? pctOf(gObj.f, known) + '%' : '—', known ? 'เป็นผู้หญิง' : 'รอข้อมูลเพศ') + '</div>' +
-      '<div class="kpis"><div class="kpi"><b style="color:var(--male)">' + fmtN(gObj.m) + '</b><span>ชาย' + (known ? ' · ' + pctOf(gObj.m, known) + '%' : '') + '</span></div>' +
-      '<div class="kpi"><b style="color:var(--female)">' + fmtN(gObj.f) + '</b><span>หญิง' + (known ? ' · ' + pctOf(gObj.f, known) + '%' : '') + '</span></div></div>' +
-      (gObj.u ? '<p class="note' + (known < n * .6 ? ' warn' : '') + '">ข้อมูลเพศครบ ' + pctOf(known, n) + '% · ร้อยละคำนวณจากผู้ที่ระบุเพศแล้ว</p>' : '') + '</div>');
+    // 1) สัดส่วนเพศ (ถ้ายังไม่มีข้อมูลเพศเลย แสดงสัดส่วนสายงานแทน)
+    if(known){
+      cards.push('<div class="card anim span-4"><h3>สัดส่วนเพศ</h3><p class="sub">' + SCOPE_TH[sc] + ' ' + fmtN(n) + ' ท่าน</p><div class="chart" style="max-width:230px;margin:0 auto">' +
+        svgDonut([{ v:gObj.m, c:C.m, label:'ชาย' }, { v:gObj.f, c:C.f, label:'หญิง' }, { v:gObj.u, c:C.u, label:'ยังไม่ระบุ' }], pctOf(gObj.f, known) + '%', 'เป็นผู้หญิง') + '</div>' +
+        '<div class="kpis"><div class="kpi"><b style="color:var(--male)">' + fmtN(gObj.m) + '</b><span>ชาย · ' + pctOf(gObj.m, known) + '%</span></div>' +
+        '<div class="kpi"><b style="color:var(--female)">' + fmtN(gObj.f) + '</b><span>หญิง · ' + pctOf(gObj.f, known) + '%</span></div></div>' +
+        (gObj.u ? '<p class="note' + (known < n * .6 ? ' warn' : '') + '">ข้อมูลเพศครบ ' + pctOf(known, n) + '% · ร้อยละคำนวณจากผู้ที่ระบุเพศแล้ว</p>' : '') + '</div>');
+    } else {
+      const t = st.type, tot = t.academic + t.support + t.other;
+      cards.push('<div class="card anim span-4"><h3>สัดส่วนสายงาน</h3><p class="sub">ทั้งหมด ' + fmtN(tot) + ' ท่าน</p><div class="chart" style="max-width:230px;margin:0 auto">' +
+        svgDonut([{ v:t.academic, c:TYPE_C.academic, label:'สายวิชาการ' }, { v:t.support, c:TYPE_C.support, label:'สายสนับสนุน' }, { v:t.other, c:C.u, label:'อื่น ๆ' }], pctOf(t.academic, tot) + '%', 'สายวิชาการ') + '</div>' +
+        '<div class="kpis"><div class="kpi"><b style="color:' + TYPE_C.academic + '">' + fmtN(t.academic) + '</b><span>สายวิชาการ</span></div>' +
+        '<div class="kpi"><b style="color:' + TYPE_C.support + '">' + fmtN(t.support) + '</b><span>สายสนับสนุน</span></div></div>' +
+        '<p class="note">สัดส่วนชาย–หญิงจะแสดงที่การ์ดนี้เมื่อมีข้อมูลเพศในระบบ</p></div>');
+    }
 
     // 2) ตำแหน่งวิชาการ / ระดับสายสนับสนุน
     if(sc === 'support'){
-      const rows = st.supportLevel.slice(0, 8).map(o=>({ label:o.label, segs:GSEG(o) }));
+      const rows = st.supportLevel.slice(0, 8).map((o,i)=>({ label:o.label, segs: known ? GSEG(o) : [{ v:o.total, c:PAL[(i + 1) % PAL.length], name:o.label }] }));
       cards.push('<div class="card anim span-8"><h3>ระดับตำแหน่งสายสนับสนุน</h3><p class="sub">จำนวนตามระดับ แยกเพศ</p><div class="chart">' +
-        svgColumns(rows, { w:cw(8), aria:'ระดับตำแหน่งสายสนับสนุน' }) + '</div>' + legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) + '</div>');
+        svgColumns(rows, { w:cw(8), aria:'ระดับตำแหน่งสายสนับสนุน' }) + '</div>' + (known ? legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) : '') + '</div>');
     } else {
-      const rows = st.acadRank.map(o=>({ label:o.label, segs:GSEG(o) }));
+      const rows = st.acadRank.map(o=>({ label:o.label, segs: known ? GSEG(o) : [{ v:o.total, c:RANK_C[o.label] || C.u, name:o.label }] }));
       const ac = st.type.academic;
       cards.push('<div class="card anim span-8"><h3>ตำแหน่งทางวิชาการ</h3><p class="sub">สายวิชาการ ' + fmtN(ac) + ' ท่าน · ปริญญาเอก ' + fmtN(st.phd) + ' ท่าน (' + pctOf(st.phd, ac) + '%)</p><div class="chart">' +
-        svgColumns(rows, { w:cw(8), aria:'ตำแหน่งทางวิชาการ' }) + '</div>' + legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) + '</div>');
+        svgColumns(rows, { w:cw(8), aria:'ตำแหน่งทางวิชาการ' }) + '</div>' +
+        (known ? legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) : legendHtml(st.acadRank.map(o=>({ c:RANK_C[o.label] || C.u, name:o.label + ' ' + o.total })))) + '</div>');
     }
 
     // 3) สาขา / หน่วยงาน
     const depts = st.dept.filter(o=> sc === 'all' || o[sc] > 0).map(o=>({
       label:o.label, act:'data-askdept="' + escapeHtml(o.label) + '"',
-      segs: sc === 'all' ? GSEG(o) : [{ v:o[sc], c:C.a, name:SCOPE_TH[sc] }]
+      segs: sc === 'all' && known ? GSEG(o) : [{ v: sc === 'all' ? o.total : o[sc], c:colorOf(o.label), name:SCOPE_TH[sc] }]
     })).sort((a,b)=> b.segs.reduce((s,x)=>s+x.v,0) - a.segs.reduce((s,x)=>s+x.v,0));
     cards.push('<div class="card anim span-7"><h3>บุคลากรตามสาขา / หน่วยงาน</h3><p class="sub">' + SCOPE_TH[sc] + ' · แตะแถวเพื่อดูรายชื่อ' + (sc === 'all' ? '' : '') + '</p><div class="bars-scroll">' +
-      htmlHBars(depts) + '</div>' + (sc === 'all' ? legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) : '') + '</div>');
+      htmlHBars(depts) + '</div>' + (sc === 'all' && known ? legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) : '') + '</div>');
 
     // 4) อาคาร
     const bl = st.building.filter(o=> sc === 'all' || o[sc] > 0).map(o=>({
       label:o.label, act:'data-askbldg="' + escapeHtml(o.label) + '"',
-      segs: sc === 'all' ? [{ v:o.academic, c:C.a, name:'สายวิชาการ' }, { v:o.support, c:C.b, name:'สายสนับสนุน' }, { v:o.total - o.academic - o.support, c:C.u, name:'อื่น ๆ' }]
-                         : [{ v:o[sc], c:C.a, name:SCOPE_TH[sc] }]
+      segs: sc === 'all' ? [{ v:o.academic, c:TYPE_C.academic, name:'สายวิชาการ' }, { v:o.support, c:TYPE_C.support, name:'สายสนับสนุน' }, { v:o.total - o.academic - o.support, c:C.u, name:'อื่น ๆ' }]
+                         : [{ v:o[sc], c:bldgColor(o.label), name:SCOPE_TH[sc] }]
     }));
     cards.push('<div class="card anim span-5"><h3>บุคลากรตามอาคาร</h3><p class="sub">ตำแหน่งที่ตั้งห้องทำงาน · แตะเพื่อดูรายชื่อ</p>' + htmlHBars(bl) +
-      (sc === 'all' ? legendHtml([{c:C.a,name:'สายวิชาการ'},{c:C.b,name:'สายสนับสนุน'}]) : '') + '</div>');
+      (sc === 'all' ? legendHtml([{c:TYPE_C.academic,name:'สายวิชาการ'},{c:TYPE_C.support,name:'สายสนับสนุน'}]) : '') + '</div>');
 
     // 5) แนวโน้มรายเดือน
     const tr = (TREND || []).slice(-24);
     const ser = sc === 'academic'
-      ? [{ name:'สายวิชาการ', c:C.a, k:'academic' }, { name:'รศ.', c:C.b, k:'assoc' }, { name:'ผศ.', c:C.c, k:'asst' }, { name:'ปริญญาเอก', c:C.d, k:'phd' }]
-      : sc === 'support' ? [{ name:'สายสนับสนุน', c:C.a, k:'support' }]
-      : [{ name:'ทั้งหมด', c:C.a, k:'total' }, { name:'สายวิชาการ', c:C.b, k:'academic' }, { name:'สายสนับสนุน', c:C.c, k:'support' }];
+      ? [{ name:'สายวิชาการ', c:TYPE_C.academic, k:'academic' }, { name:'รศ.', c:RANK_C['รศ.'], k:'assoc' }, { name:'ผศ.', c:'var(--c6)', k:'asst' }, { name:'ปริญญาเอก', c:'var(--c5)', k:'phd' }]
+      : sc === 'support' ? [{ name:'สายสนับสนุน', c:TYPE_C.support, k:'support' }]
+      : [{ name:'ทั้งหมด', c:'var(--c3)', k:'total' }, { name:'สายวิชาการ', c:TYPE_C.academic, k:'academic' }, { name:'สายสนับสนุน', c:TYPE_C.support, k:'support' }];
     let trendBody;
     if(tr.length >= 2){
       trendBody = '<div class="chart">' + svgLines(tr.map(o=>monthTh(o.month)), ser.map(s=>({ name:s.name, c:s.c, values:tr.map(o=>o[s.k]||0) })), { w:cw((st.employment||[]).length ? 8 : 12), area:true, aria:'แนวโน้มจำนวนบุคลากรรายเดือน' }) + '</div>' + legendHtml(ser);
@@ -2271,7 +2318,7 @@
 
     // 6) ประเภทการจ้าง (เมื่อมีข้อมูล)
     if((st.employment||[]).length){
-      const pal = [C.a, C.b, C.c, C.d, 'hsl(calc(var(--h) + 120) 40% 55%)', C.u];
+      const pal = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)'];
       const segs = st.employment.slice(0, 6).map((o,i)=>({ v:o.total, c:pal[i], label:o.label }));
       const tot = segs.reduce((a,s)=>a+s.v,0);
       cards.push('<div class="card anim span-4"><h3>ประเภทการจ้าง</h3><p class="sub">จากผู้ที่มีข้อมูล ' + fmtN(tot) + ' ท่าน</p><div class="chart" style="max-width:210px;margin:0 auto">' +
@@ -2282,12 +2329,12 @@
     const yrs = st.startYears || [];
     if(yrs.length){
       let cum = 0;
-      const rows = yrs.map(o=>({ label:o.label, segs:GSEG(o, 'ไม่ระบุเพศ') }));
+      const rows = yrs.map(o=>({ label:o.label, segs: known ? GSEG(o, 'ไม่ระบุเพศ') : [{ v:o.total, c:'var(--c3)', name:'เริ่มงาน' }] }));
       const cumVals = yrs.map(o=> cum += o.total);
       cards.push('<div class="card anim span-12"><h3>บุคลากรเริ่มปฏิบัติงานรายปี (พ.ศ.)</h3><p class="sub">จากผู้ที่มีข้อมูลวันที่เริ่มปฏิบัติงาน ' + fmtN(st.startDateKnown) + ' ท่าน · เส้นสะสมแสดงการเติบโตของคณะ</p>' +
         '<div class="chart">' + svgColumns(rows, { w:cw(12), h:220, aria:'บุคลากรเริ่มปฏิบัติงานรายปี' }) + '</div>' +
         (yrs.length >= 2 ? '<div class="chart" style="margin-top:6px">' + svgLines(yrs.map(o=>o.label), [{ name:'จำนวนสะสม', c:C.a, values:cumVals }], { w:cw(12), h:170, zero:true, area:true, aria:'จำนวนสะสม' }) + '</div>' : '') +
-        legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ไม่ระบุเพศ'}].concat(yrs.length >= 2 ? [{c:C.a,name:'จำนวนสะสม'}] : [])) + '</div>');
+        legendHtml((known ? [{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ไม่ระบุเพศ'}] : [{c:'var(--c3)',name:'เริ่มปฏิบัติงาน'}]).concat(yrs.length >= 2 ? [{c:C.a,name:'จำนวนสะสม'}] : [])) + '</div>');
     } else if(!st.local){
       cards.push('<div class="card span-12"><h3>อายุงานและการเติบโตย้อนหลัง</h3><p class="sub" style="margin:4px 0 0">เมื่อเจ้าหน้าที่บันทึก "วันที่เริ่มปฏิบัติงาน" ในระบบฐานข้อมูลบุคลากร กราฟจำนวนบุคลากรเริ่มงานรายปีและการเติบโตสะสมจะแสดงที่นี่โดยอัตโนมัติ</p></div>');
     }

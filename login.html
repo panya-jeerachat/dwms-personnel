@@ -342,9 +342,14 @@ tr.dirty td{background:#FFFBEA}
    วางที่ https://eng.msu.ac.th/assistantpersonnel/login.html
    ★ APP_URL ต้องเป็น URL Web App เดียวกับ APPS_SCRIPT_URL ในหน้าเว็บสาธารณะ (ลงท้าย /exec)
    ===================================================================== */
-var APP_URL = "https://script.google.com/macros/s/AKfycbxicXfhScB1MLNf1XRudMEDzwOT9FdL9OdmnRska9KeseqMO0o-i9MX9fb3uEr9wiEI/exec";
+var APP_URL = "https://script.google.com/macros/s/AKfycbwauLNo6oc81H-7AHBbXsPC6wgwCXzz64oo-32SKX0ThWMC64VzmjLNvRc4QGdhUAsG/exec";
 /* โหมดทำงาน: อยู่ในระบบ Google (google.script.run) หรือวางบนเซิร์ฟเวอร์คณะ (เรียก API ด้วย POST ไม่ผูกบัญชี Google) */
 var IN_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+/* รับ URL ได้ทุกรูปแบบที่ Google แสดง (…/a/macros/msu.ac.th/s/ID/exec ฯลฯ) แล้วแปลงเป็นแบบที่เรียกได้โดยไม่ต้องลงชื่อ Google */
+if(!IN_GAS){
+  var _m = /^https:\/\/script\.google\.com\/(?:a\/macros\/[^\/]+|a\/[^\/]+\/macros|macros(?:\/u\/\d+)?)\/s\/([A-Za-z0-9_-]+)\/exec/.exec(String(APP_URL || '').trim());
+  if(_m) APP_URL = 'https://script.google.com/macros/s/' + _m[1] + '/exec';
+}
 var TOKEN = null, ME = null, CFG = {}, OPT = {}, PERSONS = [], VIEW = 'dash';
 var FILTER = { q:'', dept:'', building:'', photo:'', type:'' };
 var $ = function(id){ return document.getElementById(id); };
@@ -437,12 +442,14 @@ function run(fn, args){
 }
 var OLD_BACKEND_MSG = 'ระบบหลังบ้านยังทำงานด้วยโค้ดเวอร์ชันเดิม จึงเข้าระบบไม่ได้ — ผู้ดูแล: เปิดหน้า Apps Script แล้วรันฟังก์ชัน diagnose ระบบจะบอกจุดที่ต้องแก้ (มักเกิดจากไฟล์ Code.gs เดิมค้างในโปรเจกต์ หรือยังไม่ได้ Deploy เวอร์ชันใหม่)';
 /** ตรวจตั้งแต่เปิดหน้าว่า URL ของระบบรันโค้ดเวอร์ชันใหม่แล้วหรือยัง */
+var DEV_URL_MSG = 'ตั้งค่า APP_URL ผิด: ใช้ลิงก์ที่ลงท้าย /dev ซึ่งเปิดได้เฉพาะเจ้าของสคริปต์ ต้องใช้ลิงก์ที่ลงท้าย /exec จาก "จัดการการทำให้ใช้งานได้"';
 function checkBackend(){
   if(IN_GAS) return;
+  if(/\/dev(\?|$)/.test(APP_URL)){ showBackendWarn(DEV_URL_MSG); return; }
   fetch(APP_URL + '?action=version&_ts=' + Date.now(), { credentials:'omit', cache:'no-store' })
     .then(function(r){ return r.json(); })
     .then(function(j){ if(!j || !j.version) showBackendWarn(OLD_BACKEND_MSG); })
-    .catch(function(){ showBackendWarn('เชื่อมต่อระบบหลังบ้านไม่ได้ ตรวจสอบอินเทอร์เน็ต หรือค่า APP_URL ในไฟล์ login.html'); });
+    .catch(function(){ showBackendWarn('เชื่อมต่อระบบหลังบ้านไม่ได้ — ตรวจว่า APP_URL ในไฟล์ login.html เป็นลิงก์ /exec ล่าสุด และตั้ง "ผู้มีสิทธิ์เข้าถึง" ของการทำให้ใช้งานได้เป็น "ทุกคน"'); });
 }
 function showBackendWarn(t){
   var el = document.getElementById('loginMsg');
@@ -451,6 +458,7 @@ function showBackendWarn(t){
 
 /** เรียก Apps Script ผ่าน POST แบบไม่ส่งคุกกี้ Google → ไม่เกิดปัญหาเลือกบัญชี (/u/1/) */
 function runRemote(fn, args){
+  if(/\/dev(\?|$)/.test(APP_URL)) return Promise.reject(new Error(DEV_URL_MSG));
   if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(APP_URL) && !/^http:\/\/127\.0\.0\.1/.test(APP_URL)){
     return Promise.reject(new Error('ยังไม่ได้ตั้งค่า APP_URL ในไฟล์ login.html'));
   }
