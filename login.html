@@ -435,6 +435,20 @@ function run(fn, args){
     r[fn].apply(r, args);
   });
 }
+var OLD_BACKEND_MSG = 'ระบบหลังบ้านยังเป็นโค้ดเวอร์ชันเดิม ผู้ดูแลต้องวาง Code.gs ใหม่ แล้วกด ทำให้ใช้งานได้ → จัดการการทำให้ใช้งานได้ → ✏️ → เวอร์ชันใหม่ ในรายการเดิม';
+/** ตรวจตั้งแต่เปิดหน้าว่า URL ของระบบรันโค้ดเวอร์ชันใหม่แล้วหรือยัง */
+function checkBackend(){
+  if(IN_GAS) return;
+  fetch(APP_URL + '?action=version&_ts=' + Date.now(), { credentials:'omit', cache:'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if(!j || !j.version) showBackendWarn(OLD_BACKEND_MSG); })
+    .catch(function(){ showBackendWarn('เชื่อมต่อระบบหลังบ้านไม่ได้ ตรวจสอบอินเทอร์เน็ต หรือค่า APP_URL ในไฟล์ login.html'); });
+}
+function showBackendWarn(t){
+  var el = document.getElementById('loginMsg');
+  if(el && !el.textContent) el.innerHTML = '<div class="msg err">' + esc(t) + '</div>';
+}
+
 /** เรียก Apps Script ผ่าน POST แบบไม่ส่งคุกกี้ Google → ไม่เกิดปัญหาเลือกบัญชี (/u/1/) */
 function runRemote(fn, args){
   if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(APP_URL) && !/^http:\/\/127\.0\.0\.1/.test(APP_URL)){
@@ -448,8 +462,11 @@ function runRemote(fn, args){
     body: JSON.stringify({ rpc:fn, args:args }),
     signal: ctrl ? ctrl.signal : undefined
   }).then(function(r){ return r.text().then(function(t){
-    try { return JSON.parse(t); }
+    var j;
+    try { j = JSON.parse(t); }
     catch(e){ throw new Error('ระบบตอบกลับผิดรูปแบบ (HTTP ' + r.status + ') — ตรวจว่า Deploy เวอร์ชันล่าสุดแล้ว'); }
+    if(j && j.ok === false && j.error === 'unsupported action') throw new Error(OLD_BACKEND_MSG);
+    return j;
   }); }, function(e){
     throw new Error(e && e.name === 'AbortError' ? 'ระบบตอบช้าเกินไป กรุณาลองใหม่' : 'เชื่อมต่อระบบไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่');
   }).finally(function(){ clearTimeout(timer); });
@@ -1172,6 +1189,7 @@ if(saved){
 } else {
   $('lu').focus();
 }
+checkBackend();
 })();
 </script>
 </body>
