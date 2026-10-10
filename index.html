@@ -462,6 +462,64 @@
   .lg-warn{background:var(--warn-soft); color:var(--warn); border-radius:12px; padding:10px 13px; font-size:12.8px; line-height:1.65; margin:0 0 12px;}
   .lg-foot{font-size:12.3px; color:var(--text-faint); line-height:1.7; margin:6px 0 0;}
 
+  /* ================= กราฟกดได้ + ป๊อปอัปรายละเอียด ================= */
+  [data-ins]{cursor:pointer;}
+  .chart g.ins:hover rect, .chart g.ins:focus rect{filter:brightness(1.12) saturate(1.1);}
+  .chart circle.ins:hover{filter:brightness(1.12);}
+  .chart [data-ins]:focus{outline:none;}
+  .tb-cell[data-ins]{transition:background .15s;}
+  .tb-cell[data-ins]:hover{background:var(--surface-alt);}
+  .kpi[data-ins]:hover, .emp-row:hover{border-color:var(--accent); background:var(--surface-alt);}
+  .ins-link{color:var(--c4); font-weight:600; border-bottom:1px dashed currentColor;}
+  .role-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;}
+  .role-tile{position:relative; border:1px solid var(--border); border-left:5px solid var(--rc); border-radius:12px; padding:10px 12px 14px; overflow:hidden; transition:transform .15s, border-color .15s;}
+  .role-tile:hover{transform:translateY(-2px); border-color:var(--rc);}
+  .role-tile b{display:block; font-size:26px; line-height:1.15; color:var(--rc);}
+  .role-tile span{display:block; font-size:12.8px; color:var(--text-soft); line-height:1.35; min-height:2.7em;}
+  .role-tile small{position:absolute; top:10px; right:10px; font-size:11.5px; color:var(--text-faint);}
+  .role-tile i{position:absolute; left:0; bottom:0; height:4px; background:var(--rc); opacity:.75;}
+  .emp-wrap{display:flex; gap:16px; align-items:center; flex-wrap:wrap;}
+  .emp-wrap .chart{flex:0 0 170px;}
+  .emp-list{flex:1; min-width:200px; display:flex; flex-direction:column; gap:4px;}
+  .emp-row{display:grid; grid-template-columns:auto minmax(0,1fr) auto 40px; gap:8px; align-items:center; font-size:13px; border:1px solid transparent; border-radius:8px; padding:5px 8px;}
+  .emp-row small{color:var(--text-faint); text-align:right;}
+  .trend-kpis{grid-template-columns:repeat(auto-fit,minmax(110px,1fr)) !important;}
+  .ins-overlay{position:fixed; inset:0; z-index:950; display:none; align-items:center; justify-content:center; padding:18px;
+    background:hsl(var(--h) 20% 8% / .5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);}
+  .ins-overlay.open{display:flex;}
+  .ins-box{position:relative; background:var(--surface); color:var(--text); width:min(760px,100%); max-height:90vh; overflow:auto;
+    border-radius:22px; box-shadow:0 30px 70px rgba(0,0,0,.3); animation:pop .18s ease;}
+  .ins-x{position:absolute; top:14px; right:14px; z-index:2; width:36px; height:36px; border-radius:50%; border:0; cursor:pointer;
+    background:rgba(255,255,255,.22); color:#fff; font-size:20px;}
+  .ins-head{background:var(--ic, var(--accent)); color:#fff; padding:22px 26px 20px; position:sticky; top:0; z-index:1;
+    background-image:linear-gradient(135deg, rgba(255,255,255,.14), rgba(0,0,0,.12));}
+  .ins-kicker{font-size:12.5px; opacity:.85;}
+  .ins-head h2{margin:2px 40px 8px 0; font-size:22px; line-height:1.3;}
+  .ins-big{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .ins-big b{font-size:44px; line-height:1; letter-spacing:-.02em;}
+  .ins-big span{font-size:14px; opacity:.9;}
+  .ins-body{padding:6px 26px 24px;}
+  .ins-sec{margin-top:18px;}
+  .ins-sec h4{margin:0 0 8px; font-size:13.5px; color:var(--text-soft); font-weight:600;}
+  .ins-stack{display:flex; height:14px; border-radius:7px; overflow:hidden; background:var(--surface-alt);}
+  .ins-stack i{display:block; height:100%;}
+  .ins-leg{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .ins-chip{font-size:12.5px; border:1px solid var(--border); border-radius:999px; padding:3px 10px; background:var(--surface);}
+  .ins-chip[data-ins]:hover{border-color:var(--accent); background:var(--surface-alt);}
+  .ins-chip small{color:var(--text-faint);}
+  .ins-ph{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;}
+  .ins-ph h4{margin:0;}
+  .ins-q{font-family:inherit; font-size:13.5px; padding:7px 12px; border:1px solid var(--border-strong); border-radius:10px; background:var(--surface-alt); color:var(--text); min-width:200px;}
+  .ins-people{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:8px;}
+  .ins-person{display:flex; gap:10px; align-items:center; text-align:left; font-family:inherit; color:var(--text); cursor:pointer;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:8px 10px; transition:border-color .15s, transform .15s;}
+  .ins-person:hover{border-color:var(--accent); transform:translateY(-1px);}
+  .ins-person .avatar{width:40px; height:40px; font-size:15px;}
+  .ins-person b{display:block; font-size:13.5px; line-height:1.3;}
+  .ins-person small{display:block; font-size:12px; color:var(--text-soft); line-height:1.35;}
+  .ins-person[hidden]{display:none;}
+  @media (max-width:560px){ .ins-head{padding:18px 18px 16px;} .ins-body{padding:4px 18px 20px;} .ins-big b{font-size:36px;} .ins-people{grid-template-columns:1fr;} }
+
   @media (prefers-reduced-motion:reduce){
     html{scroll-behavior:auto;}
     *, *::before, *::after{animation-duration:.01ms !important; transition-duration:.01ms !important;}
@@ -642,6 +700,7 @@
   <div class="modal-box" id="personModalBox" role="dialog" aria-modal="true"></div>
 </div>
 <div class="tip" id="chartTip" role="tooltip"></div>
+<div class="ins-overlay" id="insOverlay"><div class="ins-box" id="insBox" role="dialog" aria-modal="true" aria-labelledby="insPopTitle"></div></div>
 <div class="lg-overlay" id="loginOverlay">
   <div class="lg-box" role="dialog" aria-modal="true" aria-labelledby="lgTitle">
     <button class="lg-x" id="lgClose" aria-label="ปิด">×</button>
@@ -2065,20 +2124,22 @@
   function localStats(list){
     const st = { total:list.length, type:{academic:0,support:0,other:0}, gender:{m:0,f:0,u:list.length},
       genderByType:{academic:{m:0,f:0,u:0},support:{m:0,f:0,u:0},other:{m:0,f:0,u:0}}, phd:0, startYears:[], employment:[], local:true };
-    const g = { acadRank:{}, supportLevel:{}, dept:{}, building:{} };
+    const g = { acadRank:{}, supportLevel:{}, role:{}, dept:{}, building:{} };
     const bump = (b, label, t)=>{ if(!label) return; const o = b[label] || (b[label] = { label, total:0, m:0, f:0, u:0, academic:0, support:0 }); o.total++; o.u++; if(t !== 'other') o[t]++; };
     list.forEach(r=>{
       const c = String(r.id||'').charAt(0).toUpperCase(), t = c === 'T' ? 'academic' : c === 'S' ? 'support' : 'other';
       st.type[t]++; st.genderByType[t].u++;
       if(t === 'academic'){ bump(g.acadRank, acadRankOf(r.acadTitle), t); if(/ดร\./.test(r.acadTitle||'')) st.phd++; }
-      else if(t === 'support') bump(g.supportLevel, (r.acadTitle || 'ไม่ระบุ').slice(0, 40), t);
+      else if(t === 'support') bump(g.supportLevel, supportLevelOf(r), t);
+      bump(g.role, roleOf(r), t);
       splitMulti(r.dept).forEach(d=> bump(g.dept, d, t));
       bump(g.building, r.building || 'ไม่ระบุ', t);
     });
     const arr = o=> Object.keys(o).map(k=>o[k]), desc = (a,b)=> b.total - a.total || a.label.localeCompare(b.label,'th');
     const ORDER = ['ศ.','รศ.','ผศ.','อาจารย์','อื่น ๆ'];
     st.acadRank = arr(g.acadRank).sort((a,b)=> ORDER.indexOf(a.label) - ORDER.indexOf(b.label));
-    st.supportLevel = arr(g.supportLevel).sort(desc);
+    st.supportLevel = arr(g.supportLevel).sort((a,b)=> SLEVEL_ORDER.indexOf(a.label) - SLEVEL_ORDER.indexOf(b.label));
+    st.role = arr(g.role).sort((a,b)=> ROLE_ORDER.indexOf(a.label) - ROLE_ORDER.indexOf(b.label));
     st.dept = arr(g.dept).sort(desc);
     st.building = arr(g.building).sort(desc);
     return st;
@@ -2113,7 +2174,7 @@
   }
   function renderStats(){
     const st = currentStats(), g = st.gender, n = st.total || records.length, known = g.m + g.f;
-    const ac = st.type.academic, cell = (cls, k, v, col)=> '<div class="tb-cell ' + cls + '" style="order:3"><span class="k">' + k + '</span><span class="v' + (col ? ' col" style="--vc:' + col : '') + '">' + v + '</span></div>';
+    const ac = st.type.academic, cell = (cls, k, v, col, ins)=> '<div class="tb-cell ' + cls + '"' + (ins ? insAttr(ins) : '') + ' style="order:3"><span class="k">' + k + '</span><span class="v' + (col ? ' col" style="--vc:' + col : '') + '">' + v + '</span></div>';
     const legend = known
       ? '<span><i class="dot" style="background:var(--male)"></i>ชาย ' + fmtN(g.m) + ' (' + pctOf(g.m, known) + '%)</span>' +
         '<span><i class="dot" style="background:var(--female)"></i>หญิง ' + fmtN(g.f) + ' (' + pctOf(g.f, known) + '%)</span>' +
@@ -2121,10 +2182,10 @@
       : '<span>ยังไม่มีข้อมูลเพศ ระบบกำลังรวบรวมจากบุคลากร</span>';
     const rating = ratingStats && ratingStats.count ? '★ ' + ratingStats.avg.toFixed(1) + '<small>(' + ratingStats.count + ')</small>' : '—';
     elStatRow.innerHTML =
-      '<div class="tb-cell tb-total" style="order:1"><span class="k">บุคลากรทั้งหมด</span><span class="v"><span id="tbTotal">' + fmtN(n) + '</span><small>ท่าน</small></span></div>' +
-      cell('tb-c2', 'สายวิชาการ', fmtN(ac), TYPE_C.academic) +
-      cell('tb-c2', 'สายสนับสนุน', fmtN(st.type.support), TYPE_C.support) +
-      cell('tb-c2 end', 'คุณวุฒิปริญญาเอก', (ac ? pctOf(st.phd, ac) + '%' : '—') + '<small>' + fmtN(st.phd) + ' จาก ' + fmtN(ac) + ' ท่าน</small>', 'var(--c4)') +
+      '<div class="tb-cell tb-total"' + insAttr('all|') + ' style="order:1"><span class="k">บุคลากรทั้งหมด</span><span class="v"><span id="tbTotal">' + fmtN(n) + '</span><small>ท่าน</small></span></div>' +
+      cell('tb-c2', 'สายวิชาการ', fmtN(ac), TYPE_C.academic, 'type|academic') +
+      cell('tb-c2', 'สายสนับสนุน', fmtN(st.type.support), TYPE_C.support, 'type|support') +
+      cell('tb-c2 end', 'คุณวุฒิปริญญาเอก', (ac ? pctOf(st.phd, ac) + '%' : '—') + '<small>' + fmtN(st.phd) + ' จาก ' + fmtN(ac) + ' ท่าน</small>', 'var(--c4)', 'phd|') +
       '<div class="tb-cell tb-wide" style="order:3"><span class="k">สัดส่วนชาย : หญิง</span>' +
         '<div class="ratio" role="img" aria-label="ชาย ' + g.m + ' หญิง ' + g.f + ' ไม่ระบุ ' + g.u + '"><i class="m" style="width:' + pctOf(g.m, n) + '%"></i><i class="f" style="width:' + pctOf(g.f, n) + '%"></i></div>' +
         '<div class="ratio-legend">' + legend + '</div></div>' +
@@ -2178,7 +2239,7 @@
     const R = 70, W = 26, Cc = 2 * Math.PI * R, total = segs.reduce((a,s)=>a+s.v, 0) || 1;
     let off = 0, id = 'm' + Math.random().toString(36).slice(2,8);
     const arcs = segs.filter(s=>s.v>0).map(s=>{
-      const len = s.v / total * Cc, out = '<circle r="' + R + '" cx="100" cy="100" fill="none" style="stroke:' + s.c + '" stroke-width="' + W +
+      const len = s.v / total * Cc, out = '<circle' + (s.ins ? insAttr(s.ins) + ' class="ins"' : '') + ' r="' + R + '" cx="100" cy="100" fill="none" style="stroke:' + s.c + '" stroke-width="' + W +
         '" stroke-dasharray="' + len.toFixed(2) + ' ' + Cc.toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" data-tip="' + escapeHtml(s.label + ' ' + fmtN(s.v) + ' ท่าน (' + pctOf(s.v,total) + '%)') + '"/>';
       off += len; return out;
     }).join('');
@@ -2204,7 +2265,7 @@
       let y = P.t + ih, parts = '', sum = 0;
       r.segs.forEach(s=>{ if(!s.v) return; const h = ih * s.v / nice; y -= h; sum += s.v;
         parts += '<rect x="' + (cx-bw/2) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" style="fill:' + s.c + '" data-tip="' + escapeHtml(r.label + ' · ' + s.name + ' ' + s.v + ' ท่าน') + '"/>'; });
-      return '<g class="grow" style="transition-delay:' + Math.round(i * Math.min(60, 500 / rows.length)) + 'ms">' + parts + '</g>' +
+      return '<g class="grow' + (r.ins ? ' ins' : '') + '"' + (r.ins ? insAttr(r.ins) : '') + ' style="transition-delay:' + Math.round(i * Math.min(60, 500 / rows.length)) + 'ms">' + parts + '</g>' +
         (bw >= 14 ? '<text class="fade" x="' + cx + '" y="' + (y - 6) + '" text-anchor="middle" style="fill:var(--text);font-weight:600">' + (sum || '') + '</text>' : '') +
         (i % Math.ceil(rows.length / Math.max(1, Math.floor(iw / 34))) === 0 ? '<text x="' + cx + '" y="' + (H - 12) + '" text-anchor="middle">' + escapeHtml(r.label.length > maxChars ? r.label.slice(0, maxChars - 1) + '…' : r.label) + '</text>' : '');
     }).join('');
@@ -2215,8 +2276,8 @@
   function svgLines(labels, series, opt){
     opt = opt || {};
     const W = opt.w || 900, H = opt.h || 250, P = { l:40, r:16, t:18, b:34 }, iw = W - P.l - P.r, ih = H - P.t - P.b;
-    const all = series.flatMap(s=>s.values), maxV = Math.max(1, ...all);
-    const sc = niceScale(opt.zero ? 0 : Math.max(0, Math.min(...all) - Math.ceil(maxV * .05)), maxV);
+    const all = series.flatMap(s=>s.values).filter(v=> v !== null && v !== undefined), maxV = Math.max(1, ...all.concat([0]));
+    const sc = niceScale(opt.zero || !all.length ? 0 : Math.max(0, Math.min(...all) - Math.ceil(maxV * .05)), maxV);
     const minV = sc.lo, span = Math.max(1, sc.hi - sc.lo);
     const x = i=> P.l + (labels.length === 1 ? iw/2 : iw * i / (labels.length - 1)), y = v=> P.t + ih - ih * (v - minV) / span;
     let grid = '';
@@ -2224,9 +2285,10 @@
     const step = Math.ceil(labels.length / Math.max(2, Math.floor(iw / 64)));
     const xl = labels.map((l,i)=> i % step === 0 || i === labels.length-1 ? '<text x="' + x(i) + '" y="' + (H-12) + '" text-anchor="middle">' + escapeHtml(l) + '</text>' : '').join('');
     const paths = series.map(s=>{
-      const d = s.values.map((v,i)=> (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
-      const area = opt.area && s === series[0] ? '<path class="fade" d="' + d + ' L' + x(s.values.length-1) + ' ' + (P.t+ih) + ' L' + x(0) + ' ' + (P.t+ih) + ' Z" style="fill:' + s.c + ';opacity:.1"/>' : '';
-      const dots = s.values.map((v,i)=> '<circle class="fade" cx="' + x(i) + '" cy="' + y(v) + '" r="4" style="fill:var(--surface);stroke:' + s.c + '" stroke-width="2.5" data-tip="' + escapeHtml(labels[i] + ' · ' + s.name + ' ' + v) + '"/>').join('');
+      let pen = false;
+      const d = s.values.map((v,i)=>{ if(v === null || v === undefined){ pen = false; return ''; } const c = (pen ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); pen = true; return c; }).filter(Boolean).join(' ');
+      const area = opt.area && s === series[0] && s.values.every(v=> v !== null && v !== undefined) ? '<path class="fade" d="' + d + ' L' + x(s.values.length-1) + ' ' + (P.t+ih) + ' L' + x(0) + ' ' + (P.t+ih) + ' Z" style="fill:' + s.c + ';opacity:.1"/>' : '';
+      const dots = s.values.map((v,i)=> v === null || v === undefined ? '' : '<circle class="fade" cx="' + x(i) + '" cy="' + y(v) + '" r="4" style="fill:var(--surface);stroke:' + s.c + '" stroke-width="2.5" data-tip="' + escapeHtml(labels[i] + ' · ' + s.name + ' ' + v) + '"/>').join('');
       return area + '<path class="draw" d="' + d + '" fill="none" style="stroke:' + s.c + '" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>' + dots;
     }).join('');
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + escapeHtml(opt.aria || '') + '">' + grid + xl + paths + '</svg>';
@@ -2246,92 +2308,152 @@
   const legendHtml = items=> '<div class="legend">' + items.map(i=> '<span><i class="dot" style="background:' + i.c + '"></i>' + i.name + '</span>').join('') + '</div>';
   const GSEG = (o, name)=> [{ v:o.m||0, c:C.m, name:'ชาย' }, { v:o.f||0, c:C.f, name:'หญิง' }, { v:o.u||0, c:C.u, name:name || 'ยังไม่ระบุเพศ' }];
 
+  /* ---------- จำแนกประเภท (ตรงกับฝั่งเซิร์ฟเวอร์ Code.gs) ---------- */
+  const SLEVEL_ORDER = ['หัวหน้าสำนักงานเลขานุการคณบดี','ชำนาญการพิเศษ','ชำนาญการ','ปฏิบัติการ','ชำนาญงาน','ปฏิบัติงาน','ไม่ระบุระดับ'];
+  const SLEVEL_C = { 'หัวหน้าสำนักงานเลขานุการคณบดี':'var(--c7)', 'ชำนาญการพิเศษ':'var(--c4)', 'ชำนาญการ':'var(--c1)', 'ปฏิบัติการ':'var(--c6)', 'ชำนาญงาน':'var(--c3)', 'ปฏิบัติงาน':'var(--c5)', 'ไม่ระบุระดับ':'var(--unknown)' };
+  const SLEVEL_SHORT = { 'หัวหน้าสำนักงานเลขานุการคณบดี':'หัวหน้าสำนักงานฯ' };
+  const ROLE_ORDER = ['ผู้บริหารคณะ','ประธานหลักสูตร','อาจารย์','หัวหน้าสำนักงาน','หัวหน้ากลุ่มงาน / หัวหน้างาน','ผู้ปฏิบัติงาน','อื่น ๆ'];
+  const ROLE_C = { 'ผู้บริหารคณะ':'var(--c5)', 'ประธานหลักสูตร':'var(--c4)', 'อาจารย์':'var(--c1)', 'หัวหน้าสำนักงาน':'var(--c7)', 'หัวหน้ากลุ่มงาน / หัวหน้างาน':'var(--c2)', 'ผู้ปฏิบัติงาน':'var(--c6)', 'อื่น ๆ':'var(--unknown)' };
+  const ROLE_TYPE = { 'ผู้บริหารคณะ':'academic', 'ประธานหลักสูตร':'academic', 'อาจารย์':'academic', 'หัวหน้าสำนักงาน':'support', 'หัวหน้ากลุ่มงาน / หัวหน้างาน':'support', 'ผู้ปฏิบัติงาน':'support' };
+  function typeOf(r){ const c = String(r.id||'').charAt(0).toUpperCase(); return c === 'T' ? 'academic' : c === 'S' ? 'support' : 'other'; }
+  function supportLevelOf(r){
+    const t = String(r.acadTitle||'').trim(), p = String(r.position||'').trim();
+    if(/หัวหน้าสำนักงาน/.test(t) || /^หัวหน้าสำนักงาน/.test(p)) return SLEVEL_ORDER[0];
+    const src = t || (p.match(/(ชำนาญการพิเศษ|ชำนาญการ|ชำนาญงาน|ปฏิบัติการ|ปฏิบัติงาน)\s*$/) || [''])[0];
+    if(/ชำนาญการพิเศษ/.test(src)) return 'ชำนาญการพิเศษ';
+    if(/ชำนาญการ/.test(src)) return 'ชำนาญการ';
+    if(/ชำนาญงาน/.test(src)) return 'ชำนาญงาน';
+    if(/ปฏิบัติการ/.test(src)) return 'ปฏิบัติการ';
+    if(/ปฏิบัติงาน/.test(src)) return 'ปฏิบัติงาน';
+    return 'ไม่ระบุระดับ';
+  }
+  function roleOf(r){
+    const p = String(r.position||'').trim(), t = typeOf(r);
+    if(t === 'academic'){
+      if(/^(คณบดี|รองคณบดี|ผู้ช่วยคณบดี|หัวหน้าสำนักวิชา)/.test(p)) return 'ผู้บริหารคณะ';
+      if(/ประธานหลักสูตร/.test(p)) return 'ประธานหลักสูตร';
+      return 'อาจารย์';
+    }
+    if(t === 'support'){
+      if(/หัวหน้าสำนักงาน/.test(p) || /หัวหน้าสำนักงาน/.test(r.acadTitle||'')) return 'หัวหน้าสำนักงาน';
+      if(/หัวหน้า(กลุ่มงาน|งาน|ฝ่าย)/.test(p)) return 'หัวหน้ากลุ่มงาน / หัวหน้างาน';
+      return 'ผู้ปฏิบัติงาน';
+    }
+    return 'อื่น ๆ';
+  }
+  const isPhd = r=> typeOf(r) === 'academic' && /ดร\./.test(r.acadTitle||'');
+  const inScope = r=> INS_SCOPE === 'all' || typeOf(r) === INS_SCOPE;
+  const insAttr = key=> ' data-ins="' + escapeHtml(key) + '" tabindex="0" role="button"';
+
   function renderInsights(){
     const st = currentStats(), sc = INS_SCOPE;
     const gObj = sc === 'all' ? st.gender : st.genderByType[sc];
     const n = gObj.m + gObj.f + gObj.u, known = gObj.m + gObj.f;
     const cards = [];
+    const LEG_G = legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]);
+    const hint = '<p class="note">แตะแท่งหรือส่วนของกราฟเพื่อดูรายละเอียดและรายชื่อ</p>';
 
-    // 1) สัดส่วนเพศ (ถ้ายังไม่มีข้อมูลเพศเลย แสดงสัดส่วนสายงานแทน)
+    // 1) สัดส่วนเพศ (ยังไม่มีข้อมูลเพศ → สัดส่วนสายงาน)
     if(known){
       cards.push('<div class="card anim span-4"><h3>สัดส่วนเพศ</h3><p class="sub">' + SCOPE_TH[sc] + ' ' + fmtN(n) + ' ท่าน</p><div class="chart" style="max-width:230px;margin:0 auto">' +
-        svgDonut([{ v:gObj.m, c:C.m, label:'ชาย' }, { v:gObj.f, c:C.f, label:'หญิง' }, { v:gObj.u, c:C.u, label:'ยังไม่ระบุ' }], pctOf(gObj.f, known) + '%', 'เป็นผู้หญิง') + '</div>' +
-        '<div class="kpis"><div class="kpi"><b style="color:var(--male)">' + fmtN(gObj.m) + '</b><span>ชาย · ' + pctOf(gObj.m, known) + '%</span></div>' +
-        '<div class="kpi"><b style="color:var(--female)">' + fmtN(gObj.f) + '</b><span>หญิง · ' + pctOf(gObj.f, known) + '%</span></div></div>' +
+        svgDonut([{ v:gObj.m, c:C.m, label:'ชาย', ins:'gender|m' }, { v:gObj.f, c:C.f, label:'หญิง', ins:'gender|f' }, { v:gObj.u, c:C.u, label:'ยังไม่ระบุ', ins:'gender|u' }], pctOf(gObj.f, known) + '%', 'เป็นผู้หญิง') + '</div>' +
+        '<div class="kpis"><div class="kpi"' + insAttr('gender|m') + '><b style="color:var(--male)">' + fmtN(gObj.m) + '</b><span>ชาย · ' + pctOf(gObj.m, known) + '%</span></div>' +
+        '<div class="kpi"' + insAttr('gender|f') + '><b style="color:var(--female)">' + fmtN(gObj.f) + '</b><span>หญิง · ' + pctOf(gObj.f, known) + '%</span></div></div>' +
         (gObj.u ? '<p class="note' + (known < n * .6 ? ' warn' : '') + '">ข้อมูลเพศครบ ' + pctOf(known, n) + '% · ร้อยละคำนวณจากผู้ที่ระบุเพศแล้ว</p>' : '') + '</div>');
     } else {
       const t = st.type, tot = t.academic + t.support + t.other;
       cards.push('<div class="card anim span-4"><h3>สัดส่วนสายงาน</h3><p class="sub">ทั้งหมด ' + fmtN(tot) + ' ท่าน</p><div class="chart" style="max-width:230px;margin:0 auto">' +
-        svgDonut([{ v:t.academic, c:TYPE_C.academic, label:'สายวิชาการ' }, { v:t.support, c:TYPE_C.support, label:'สายสนับสนุน' }, { v:t.other, c:C.u, label:'อื่น ๆ' }], pctOf(t.academic, tot) + '%', 'สายวิชาการ') + '</div>' +
-        '<div class="kpis"><div class="kpi"><b style="color:' + TYPE_C.academic + '">' + fmtN(t.academic) + '</b><span>สายวิชาการ</span></div>' +
-        '<div class="kpi"><b style="color:' + TYPE_C.support + '">' + fmtN(t.support) + '</b><span>สายสนับสนุน</span></div></div>' +
+        svgDonut([{ v:t.academic, c:TYPE_C.academic, label:'สายวิชาการ', ins:'type|academic' }, { v:t.support, c:TYPE_C.support, label:'สายสนับสนุน', ins:'type|support' }, { v:t.other, c:C.u, label:'อื่น ๆ' }], pctOf(t.academic, tot) + '%', 'สายวิชาการ') + '</div>' +
+        '<div class="kpis"><div class="kpi"' + insAttr('type|academic') + '><b style="color:' + TYPE_C.academic + '">' + fmtN(t.academic) + '</b><span>สายวิชาการ</span></div>' +
+        '<div class="kpi"' + insAttr('type|support') + '><b style="color:' + TYPE_C.support + '">' + fmtN(t.support) + '</b><span>สายสนับสนุน</span></div></div>' +
         '<p class="note">สัดส่วนชาย–หญิงจะแสดงที่การ์ดนี้เมื่อมีข้อมูลเพศในระบบ</p></div>');
     }
 
     // 2) ตำแหน่งวิชาการ / ระดับสายสนับสนุน
     if(sc === 'support'){
-      const rows = st.supportLevel.slice(0, 8).map((o,i)=>({ label:o.label, segs: known ? GSEG(o) : [{ v:o.total, c:PAL[(i + 1) % PAL.length], name:o.label }] }));
-      cards.push('<div class="card anim span-8"><h3>ระดับตำแหน่งสายสนับสนุน</h3><p class="sub">จำนวนตามระดับ แยกเพศ</p><div class="chart">' +
-        svgColumns(rows, { w:cw(8), aria:'ระดับตำแหน่งสายสนับสนุน' }) + '</div>' + (known ? legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) : '') + '</div>');
+      const lv = (st.supportLevel || []).filter(o=> o.total > 0);
+      const rows = lv.map(o=>({ label:SLEVEL_SHORT[o.label] || o.label, ins:'slevel|' + o.label, segs: known ? GSEG(o) : [{ v:o.total, c:SLEVEL_C[o.label] || C.u, name:o.label }] }));
+      cards.push('<div class="card anim span-8"><h3>ระดับตำแหน่งสายสนับสนุน</h3><p class="sub">สายสนับสนุน ' + fmtN(st.type.support) + ' ท่าน · เรียงจากระดับสูงไปต่ำ</p><div class="chart">' +
+        svgColumns(rows, { w:cw(8), aria:'ระดับตำแหน่งสายสนับสนุน' }) + '</div>' +
+        (known ? LEG_G : legendHtml(lv.map(o=>({ c:SLEVEL_C[o.label] || C.u, name:(SLEVEL_SHORT[o.label] || o.label) + ' ' + o.total })))) + hint + '</div>');
     } else {
-      const rows = st.acadRank.map(o=>({ label:o.label, segs: known ? GSEG(o) : [{ v:o.total, c:RANK_C[o.label] || C.u, name:o.label }] }));
       const ac = st.type.academic;
-      cards.push('<div class="card anim span-8"><h3>ตำแหน่งทางวิชาการ</h3><p class="sub">สายวิชาการ ' + fmtN(ac) + ' ท่าน · ปริญญาเอก ' + fmtN(st.phd) + ' ท่าน (' + pctOf(st.phd, ac) + '%)</p><div class="chart">' +
+      const rows = st.acadRank.map(o=>({ label:o.label, ins:'rank|' + o.label, segs: known ? GSEG(o) : [{ v:o.total, c:RANK_C[o.label] || C.u, name:o.label }] }));
+      cards.push('<div class="card anim span-8"><h3>ตำแหน่งทางวิชาการ</h3><p class="sub">สายวิชาการ ' + fmtN(ac) + ' ท่าน · <span class="ins-link"' + insAttr('phd|') + '>ปริญญาเอก ' + fmtN(st.phd) + ' ท่าน (' + pctOf(st.phd, ac) + '%)</span></p><div class="chart">' +
         svgColumns(rows, { w:cw(8), aria:'ตำแหน่งทางวิชาการ' }) + '</div>' +
-        (known ? legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) : legendHtml(st.acadRank.map(o=>({ c:RANK_C[o.label] || C.u, name:o.label + ' ' + o.total })))) + '</div>');
+        (known ? LEG_G : legendHtml(st.acadRank.map(o=>({ c:RANK_C[o.label] || C.u, name:o.label + ' ' + o.total })))) + hint + '</div>');
     }
 
     // 3) สาขา / หน่วยงาน
     const depts = st.dept.filter(o=> sc === 'all' || o[sc] > 0).map(o=>({
-      label:o.label, act:'data-askdept="' + escapeHtml(o.label) + '"',
+      label:o.label, act:insAttr('dept|' + o.label),
       segs: sc === 'all' && known ? GSEG(o) : [{ v: sc === 'all' ? o.total : o[sc], c:colorOf(o.label), name:SCOPE_TH[sc] }]
     })).sort((a,b)=> b.segs.reduce((s,x)=>s+x.v,0) - a.segs.reduce((s,x)=>s+x.v,0));
-    cards.push('<div class="card anim span-7"><h3>บุคลากรตามสาขา / หน่วยงาน</h3><p class="sub">' + SCOPE_TH[sc] + ' · แตะแถวเพื่อดูรายชื่อ' + (sc === 'all' ? '' : '') + '</p><div class="bars-scroll">' +
-      htmlHBars(depts) + '</div>' + (sc === 'all' && known ? legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) : '') + '</div>');
+    cards.push('<div class="card anim span-7"><h3>บุคลากรตามสาขา / หน่วยงาน</h3><p class="sub">' + SCOPE_TH[sc] + ' · แตะแถวเพื่อดูรายละเอียด</p><div class="bars-scroll">' +
+      htmlHBars(depts) + '</div>' + (sc === 'all' && known ? LEG_G : '') + '</div>');
 
     // 4) อาคาร
     const bl = st.building.filter(o=> sc === 'all' || o[sc] > 0).map(o=>({
-      label:o.label, act:'data-askbldg="' + escapeHtml(o.label) + '"',
+      label:o.label, act:insAttr('bldg|' + o.label),
       segs: sc === 'all' ? [{ v:o.academic, c:TYPE_C.academic, name:'สายวิชาการ' }, { v:o.support, c:TYPE_C.support, name:'สายสนับสนุน' }, { v:o.total - o.academic - o.support, c:C.u, name:'อื่น ๆ' }]
                          : [{ v:o[sc], c:bldgColor(o.label), name:SCOPE_TH[sc] }]
     }));
-    cards.push('<div class="card anim span-5"><h3>บุคลากรตามอาคาร</h3><p class="sub">ตำแหน่งที่ตั้งห้องทำงาน · แตะเพื่อดูรายชื่อ</p>' + htmlHBars(bl) +
+    cards.push('<div class="card anim span-5"><h3>บุคลากรตามอาคาร</h3><p class="sub">ตำแหน่งที่ตั้งห้องทำงาน · แตะเพื่อดูรายละเอียด</p>' + htmlHBars(bl) +
       (sc === 'all' ? legendHtml([{c:TYPE_C.academic,name:'สายวิชาการ'},{c:TYPE_C.support,name:'สายสนับสนุน'}]) : '') + '</div>');
 
-    // 5) แนวโน้มรายเดือน
+    // 5) ประเภทบุคลากรตามบทบาท
+    const roles = (st.role || []).filter(o=> o.total > 0 && (sc === 'all' || ROLE_TYPE[o.label] === sc));
+    const roleTot = roles.reduce((a,o)=> a + o.total, 0);
+    cards.push('<div class="card anim span-6"><h3>ประเภทบุคลากรตามบทบาท</h3><p class="sub">' + SCOPE_TH[sc] + ' · จำแนกจากตำแหน่งงาน</p>' +
+      '<div class="role-grid">' + roles.map(o=> '<div class="role-tile"' + insAttr('role|' + o.label) + ' style="--rc:' + (ROLE_C[o.label] || C.u) + '">' +
+        '<b>' + fmtN(o.total) + '</b><span>' + escapeHtml(o.label) + '</span><i style="width:' + pctOf(o.total, roleTot) + '%"></i><small>' + pctOf(o.total, roleTot) + '%</small></div>').join('') + '</div>' + hint + '</div>');
+
+    // 6) ประเภทการจ้าง
+    const emp = st.employment || [];
+    if(emp.length){
+      const pal = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)'];
+      const segs = emp.slice(0, 6).map((o,i)=>({ v:o.total, c:pal[i], label:o.label, ins:'emp|' + o.label }));
+      const tot = segs.reduce((a,s)=>a+s.v,0);
+      cards.push('<div class="card anim span-6"><h3>ประเภทการจ้าง</h3><p class="sub">จากผู้ที่มีข้อมูล ' + fmtN(tot) + ' ท่าน · ทั้งคณะ</p><div class="emp-wrap"><div class="chart" style="max-width:190px">' +
+        svgDonut(segs, fmtN(tot), 'ท่าน') + '</div><div class="emp-list">' + segs.map(sg=> '<div class="emp-row"' + insAttr(sg.ins) + '><i class="dot" style="background:' + sg.c + '"></i><span>' + escapeHtml(sg.label) + '</span><b>' + sg.v + '</b><small>' + pctOf(sg.v, tot) + '%</small></div>').join('') + '</div></div></div>');
+    } else {
+      cards.push('<div class="card span-6"><h3>ประเภทการจ้าง</h3><p class="sub">ข้าราชการ · พนักงานมหาวิทยาลัย · ลูกจ้าง ฯลฯ</p><p class="note" style="margin-top:20px">ยังไม่มีข้อมูลประเภทการจ้างในระบบ เมื่อเจ้าหน้าที่บันทึกผ่านเมนู "แก้ไขแบบตาราง → ข้อมูล HR" กราฟจะแสดงที่นี่โดยอัตโนมัติ</p></div>');
+    }
+
+    // 7) แนวโน้มรายเดือน
     const tr = (TREND || []).slice(-24);
     const ser = sc === 'academic'
-      ? [{ name:'สายวิชาการ', c:TYPE_C.academic, k:'academic' }, { name:'รศ.', c:RANK_C['รศ.'], k:'assoc' }, { name:'ผศ.', c:'var(--c6)', k:'asst' }, { name:'ปริญญาเอก', c:'var(--c5)', k:'phd' }]
-      : sc === 'support' ? [{ name:'สายสนับสนุน', c:TYPE_C.support, k:'support' }]
+      ? [{ name:'สายวิชาการ', c:TYPE_C.academic, k:'academic' }, { name:'ศ.', c:RANK_C['ศ.'], k:'prof' }, { name:'รศ.', c:RANK_C['รศ.'], k:'assoc' }, { name:'ผศ.', c:'var(--c6)', k:'asst' }, { name:'อาจารย์', c:'var(--c3)', k:'lect' }, { name:'ปริญญาเอก', c:'var(--c5)', k:'phd' }]
+      : sc === 'support'
+      ? [{ name:'สายสนับสนุน', c:TYPE_C.support, k:'support' }, { name:'ชำนาญการพิเศษ', c:SLEVEL_C['ชำนาญการพิเศษ'], k:'slSpecial' }, { name:'ชำนาญการ', c:SLEVEL_C['ชำนาญการ'], k:'slPro' },
+         { name:'ปฏิบัติการ', c:SLEVEL_C['ปฏิบัติการ'], k:'slOp' }, { name:'ชำนาญงาน', c:SLEVEL_C['ชำนาญงาน'], k:'slSkill' }, { name:'ปฏิบัติงาน', c:SLEVEL_C['ปฏิบัติงาน'], k:'slPrac' }]
       : [{ name:'ทั้งหมด', c:'var(--c3)', k:'total' }, { name:'สายวิชาการ', c:TYPE_C.academic, k:'academic' }, { name:'สายสนับสนุน', c:TYPE_C.support, k:'support' }];
+    const serShown = ser.filter(s=> tr.some(o=> (o[s.k] || 0) > 0) || s === ser[0]);
     let trendBody;
     if(tr.length >= 2){
-      trendBody = '<div class="chart">' + svgLines(tr.map(o=>monthTh(o.month)), ser.map(s=>({ name:s.name, c:s.c, values:tr.map(o=>o[s.k]||0) })), { w:cw((st.employment||[]).length ? 8 : 12), area:true, aria:'แนวโน้มจำนวนบุคลากรรายเดือน' }) + '</div>' + legendHtml(ser);
-      const a = tr[0], b = tr[tr.length-1], k = ser[0].k, diff = (b[k]||0) - (a[k]||0);
-      trendBody += '<p class="note">' + ser[0].name + ' ' + monthTh(a.month) + ' → ' + monthTh(b.month) + ': ' + (diff > 0 ? 'เพิ่มขึ้น ' + diff : diff < 0 ? 'ลดลง ' + (-diff) : 'คงที่') + (diff ? ' ท่าน' : '') + '</p>';
+      trendBody = '<div class="chart">' + svgLines(tr.map(o=>monthTh(o.month)), serShown.map(s=>({ name:s.name, c:s.c, values:tr.map(o=> o[s.k] === undefined ? null : o[s.k]) })), { w:cw(12), area:true, aria:'แนวโน้มจำนวนบุคลากรรายเดือน' }) + '</div>' + legendHtml(serShown);
+      const a = tr[0], b = tr[tr.length-1], k = serShown[0].k, diff = (b[k]||0) - (a[k]||0);
+      trendBody += '<p class="note">' + serShown[0].name + ' ' + monthTh(a.month) + ' → ' + monthTh(b.month) + ': ' + (diff > 0 ? 'เพิ่มขึ้น ' + diff : diff < 0 ? 'ลดลง ' + (-diff) : 'คงที่') + (diff ? ' ท่าน' : '') + '</p>';
+      const late = serShown.filter(s2=> tr[0][s2.k] === null || tr[0][s2.k] === undefined);
+      if(late.length){
+        const first = tr.find(o=> o[late[0].k] !== null && o[late[0].k] !== undefined);
+        if(first) trendBody += '<p class="note">เส้น ' + late.map(x=> x.name).join(', ') + ' เริ่มบันทึกตั้งแต่ ' + monthTh(first.month) + ' (เดือนก่อนหน้ายังไม่มีการเก็บข้อมูลส่วนนี้)</p>';
+      }
     } else {
-      const since = tr.length ? monthTh(tr[0].month) : 'เดือนนี้';
-      trendBody = '<div class="kpis" style="grid-template-columns:repeat(' + ser.length + ',1fr)">' + ser.map(s=> '<div class="kpi"><b style="color:' + s.c + '">' + fmtN(tr.length ? tr[0][s.k] : (s.k === 'total' ? st.total : s.k === 'phd' ? st.phd : st.type[s.k] || 0)) + '</b><span>' + s.name + '</span></div>').join('') + '</div>' +
-        '<p class="note">ระบบเริ่มบันทึกสถิติรายเดือนตั้งแต่ ' + since + ' กราฟเส้นแนวโน้มจะปรากฏเมื่อมีข้อมูลตั้งแต่ 2 เดือนขึ้นไป</p>';
+      const cur = tr.length ? tr[tr.length-1] : {};
+      const val = s=> cur[s.k] != null ? cur[s.k] : (s.k === 'total' ? st.total : s.k === 'phd' ? st.phd : (st.type[s.k] || 0));
+      trendBody = '<div class="kpis trend-kpis">' + serShown.map(s=> '<div class="kpi"><b style="color:' + s.c + '">' + fmtN(val(s)) + '</b><span>' + s.name + '</span></div>').join('') + '</div>' +
+        '<p class="note">ระบบเริ่มบันทึกสถิติรายเดือนตั้งแต่ ' + (tr.length ? monthTh(tr[0].month) : 'เดือนนี้') + ' กราฟเส้นแนวโน้มจะปรากฏเมื่อมีข้อมูลตั้งแต่ 2 เดือนขึ้นไป</p>';
     }
-    cards.push('<div class="card anim span-' + ((st.employment||[]).length ? 8 : 12) + '"><h3>แนวโน้มจำนวนบุคลากรรายเดือน</h3><p class="sub">บันทึกอัตโนมัติทุกวันจากฐานข้อมูลบุคลากร</p>' + trendBody + '</div>');
+    cards.push('<div class="card anim span-12"><h3>แนวโน้มจำนวนบุคลากรรายเดือน</h3><p class="sub">' + SCOPE_TH[sc] + ' · บันทึกอัตโนมัติทุกวันจากฐานข้อมูลบุคลากร</p>' + trendBody + '</div>');
 
-    // 6) ประเภทการจ้าง (เมื่อมีข้อมูล)
-    if((st.employment||[]).length){
-      const pal = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)'];
-      const segs = st.employment.slice(0, 6).map((o,i)=>({ v:o.total, c:pal[i], label:o.label }));
-      const tot = segs.reduce((a,s)=>a+s.v,0);
-      cards.push('<div class="card anim span-4"><h3>ประเภทการจ้าง</h3><p class="sub">จากผู้ที่มีข้อมูล ' + fmtN(tot) + ' ท่าน</p><div class="chart" style="max-width:210px;margin:0 auto">' +
-        svgDonut(segs, fmtN(tot), 'ท่าน') + '</div>' + legendHtml(segs.map(s=>({ c:s.c, name:escapeHtml(s.label) + ' ' + s.v }))) + '</div>');
-    }
-
-    // 7) เริ่มปฏิบัติงานรายปี (ย้อนหลังจากวันที่เริ่มงาน)
+    // 8) เริ่มปฏิบัติงานรายปี
     const yrs = st.startYears || [];
     if(yrs.length){
       let cum = 0;
-      const rows = yrs.map(o=>({ label:o.label, segs: known ? GSEG(o, 'ไม่ระบุเพศ') : [{ v:o.total, c:'var(--c3)', name:'เริ่มงาน' }] }));
+      const rows = yrs.map(o=>({ label:o.label, ins:'year|' + o.label, segs: known ? GSEG(o, 'ไม่ระบุเพศ') : [{ v:o.total, c:'var(--c3)', name:'เริ่มงาน' }] }));
       const cumVals = yrs.map(o=> cum += o.total);
-      cards.push('<div class="card anim span-12"><h3>บุคลากรเริ่มปฏิบัติงานรายปี (พ.ศ.)</h3><p class="sub">จากผู้ที่มีข้อมูลวันที่เริ่มปฏิบัติงาน ' + fmtN(st.startDateKnown) + ' ท่าน · เส้นสะสมแสดงการเติบโตของคณะ</p>' +
+      cards.push('<div class="card anim span-12"><h3>บุคลากรเริ่มปฏิบัติงานรายปี (พ.ศ.)</h3><p class="sub">จากผู้ที่มีข้อมูลวันที่เริ่มปฏิบัติงาน ' + fmtN(st.startDateKnown) + ' ท่าน · ทั้งคณะ · เส้นสะสมแสดงการเติบโต</p>' +
         '<div class="chart">' + svgColumns(rows, { w:cw(12), h:220, aria:'บุคลากรเริ่มปฏิบัติงานรายปี' }) + '</div>' +
         (yrs.length >= 2 ? '<div class="chart" style="margin-top:6px">' + svgLines(yrs.map(o=>o.label), [{ name:'จำนวนสะสม', c:C.a, values:cumVals }], { w:cw(12), h:170, zero:true, area:true, aria:'จำนวนสะสม' }) + '</div>' : '') +
         legendHtml((known ? [{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ไม่ระบุเพศ'}] : [{c:'var(--c3)',name:'เริ่มปฏิบัติงาน'}]).concat(yrs.length >= 2 ? [{c:C.a,name:'จำนวนสะสม'}] : [])) + '</div>');
@@ -2343,7 +2465,7 @@
     lastW = elCharts.clientWidth;
     document.getElementById('insSub').textContent = st.local
       ? 'สัดส่วนและการกระจายตัวของบุคลากร (กำลังโหลดข้อมูลล่าสุด)'
-      : 'สัดส่วนและการกระจายตัวของบุคลากร แสดงเป็นตัวเลขรวมเท่านั้น ไม่เปิดเผยข้อมูลรายบุคคล';
+      : 'สัดส่วนและการกระจายตัวของบุคลากร แตะกราฟเพื่อดูรายละเอียด · ข้อมูลเพศและประเภทการจ้างแสดงเป็นตัวเลขรวมเท่านั้น';
     elCharts.querySelectorAll('path.draw').forEach(p=>{ try{ const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; }catch(e){} });
     observeCharts();
   }
@@ -2358,14 +2480,126 @@
     document.querySelectorAll('#insScope button').forEach(x=> x.setAttribute('aria-pressed', String(x === b)));
     renderInsights();
   });
-  /* คลิกแถวกราฟ → ให้ผู้ช่วยค้นหาแสดงรายชื่อ */
-  function chartAct(t){
-    const d = t.getAttribute('data-askdept'), bl = t.getAttribute('data-askbldg');
-    if(d){ const known = getDepts().find(x=> canon(x) === canon(d)); askDeptList(known || d); goAssistant(); }
-    else if(bl && bl !== 'ไม่ระบุ'){ askBuildingList(bl); goAssistant(); }
+
+  /* =====================================================================
+     ป๊อปอัปรายละเอียด — แตะกราฟ ตัวเลข หรือป้ายสี แล้วเห็นจำนวน สัดส่วน การกระจายตัว และรายชื่อ
+     ===================================================================== */
+  const elIns = document.getElementById('insOverlay'), elInsBox = document.getElementById('insBox');
+  let insLast = null;
+  function statObj(list, label){ return (list || []).find(o=> o.label === label) || null; }
+  function insBreak(title, items, total){
+    items = items.filter(i=> i.v > 0);
+    if(items.length < 1) return '';
+    return '<div class="ins-sec"><h4>' + title + '</h4><div class="ins-stack">' +
+      items.map(i=> '<i style="width:' + (i.v / total * 100).toFixed(2) + '%;background:' + i.c + '" title="' + escapeHtml(i.label + ' ' + i.v) + '"></i>').join('') + '</div><div class="ins-leg">' +
+      items.map(i=> '<span class="ins-chip"' + (i.ins ? insAttr(i.ins) : '') + '><i class="dot" style="background:' + i.c + '"></i>' + escapeHtml(i.label) + ' <b>' + i.v + '</b> <small>' + pctOf(i.v, total) + '%</small></span>').join('') + '</div></div>';
   }
-  elCharts.addEventListener('click', e=>{ const t = e.target.closest('[data-askdept],[data-askbldg]'); if(t) chartAct(t); });
-  elCharts.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ const t = e.target.closest('[data-askdept],[data-askbldg]'); if(t){ e.preventDefault(); chartAct(t); } } });
+  function countBy(list, fn, order, colorFn, insKind){
+    const m = {}; list.forEach(r=> { const k = fn(r); if(k) m[k] = (m[k] || 0) + 1; });
+    let keys = Object.keys(m);
+    keys.sort(order ? (a,b)=> (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99) : (a,b)=> m[b] - m[a]);
+    return keys.map(k=>({ label:k, v:m[k], c:colorFn(k), ins: insKind ? insKind + '|' + k : '' }));
+  }
+  function genderSec(o){
+    if(!o || !(o.m + o.f)) return '';
+    const tot = o.m + o.f + o.u;
+    return insBreak('สัดส่วนเพศ (ตัวเลขรวม)', [{ label:'ชาย', v:o.m, c:C.m }, { label:'หญิง', v:o.f, c:C.f }, { label:'ยังไม่ระบุ', v:o.u, c:C.u }], tot);
+  }
+  function openInsight(key){
+    const st = currentStats(), i = key.indexOf('|'), kind = key.slice(0, i), val = key.slice(i + 1);
+    const D = {
+      all:   { t:'บุคลากรทั้งหมด', k:'ภาพรวม', c:'var(--c3)', m:()=>true, base:records.length, baseL:'', g:st.gender },
+      type:  { t: val === 'academic' ? 'สายวิชาการ' : 'สายสนับสนุน', k:'สายงาน', c:TYPE_C[val], m:r=> typeOf(r) === val, base:records.length, baseL:'ของบุคลากรทั้งหมด', g:(st.genderByType||{})[val] },
+      rank:  { t:'ตำแหน่งทางวิชาการ ' + val, k:'สายวิชาการ', c:RANK_C[val], m:r=> typeOf(r) === 'academic' && acadRankOf(r.acadTitle) === val, base:st.type.academic, baseL:'ของสายวิชาการ', g:statObj(st.acadRank, val) },
+      phd:   { t:'คุณวุฒิปริญญาเอก', k:'สายวิชาการ', c:'var(--c4)', m:isPhd, base:st.type.academic, baseL:'ของสายวิชาการ' },
+      slevel:{ t:'ระดับ' + val, k:'สายสนับสนุน', c:SLEVEL_C[val], m:r=> typeOf(r) === 'support' && supportLevelOf(r) === val, base:st.type.support, baseL:'ของสายสนับสนุน', g:statObj(st.supportLevel, val) },
+      role:  { t:val, k:'ประเภทบุคลากรตามบทบาท', c:ROLE_C[val], m:r=> roleOf(r) === val, base:records.length, baseL:'ของบุคลากรทั้งหมด', g:statObj(st.role, val) },
+      dept:  { t:val, k:'สาขา / หน่วยงาน · ' + SCOPE_TH[INS_SCOPE], c:colorOf(val), m:r=> hasDept(r, val) && inScope(r), base:records.filter(inScope).length, baseL:'ของ' + SCOPE_TH[INS_SCOPE], g:INS_SCOPE === 'all' ? statObj(st.dept, val) : null },
+      bldg:  { t:'อาคาร ' + val, k:'ที่ตั้งห้องทำงาน · ' + SCOPE_TH[INS_SCOPE], c:bldgColor(val), m:r=> (r.building || 'ไม่ระบุ') === val && inScope(r), base:records.filter(inScope).length, baseL:'ของ' + SCOPE_TH[INS_SCOPE], g:INS_SCOPE === 'all' ? statObj(st.building, val) : null }
+    };
+    let html = '', headN = 0, headPct = '';
+    const d = D[kind];
+    if(d){
+      const list = records.filter(d.m).sort((a,b)=> (a.building + a.floor + a.room).localeCompare(b.building + b.floor + b.room, 'th') || a.name.localeCompare(b.name, 'th'));
+      headN = list.length; headPct = d.base ? pctOf(list.length, d.base) + '% ' + d.baseL : '';
+      const ac = list.filter(r=> typeOf(r) === 'academic'), sp = list.filter(r=> typeOf(r) === 'support');
+      let secs = '';
+      if(kind !== 'type' && ac.length && sp.length) secs += insBreak('สายงาน', [{ label:'สายวิชาการ', v:ac.length, c:TYPE_C.academic, ins:'type|academic' }, { label:'สายสนับสนุน', v:sp.length, c:TYPE_C.support, ins:'type|support' }], list.length);
+      if(kind !== 'rank' && ac.length) secs += insBreak('ตำแหน่งทางวิชาการ', countBy(ac, r=> acadRankOf(r.acadTitle), ['ศ.','รศ.','ผศ.','อาจารย์','อื่น ๆ'], k=> RANK_C[k] || C.u, 'rank'), ac.length);
+      if(kind !== 'slevel' && sp.length) secs += insBreak('ระดับสายสนับสนุน', countBy(sp, supportLevelOf, SLEVEL_ORDER, k=> SLEVEL_C[k] || C.u, 'slevel').map(x=> Object.assign(x, { label:SLEVEL_SHORT[x.label] || x.label })), sp.length);
+      if(kind !== 'role') secs += insBreak('บทบาท', countBy(list, roleOf, ROLE_ORDER, k=> ROLE_C[k] || C.u, 'role'), list.length);
+      if(kind !== 'bldg') secs += insBreak('อาคาร', countBy(list, r=> r.building || 'ไม่ระบุ', null, bldgColor, 'bldg'), list.length);
+      if(kind !== 'dept'){
+        const dm = {}; list.forEach(r=> splitMulti(r.dept).forEach(x=> dm[x] = (dm[x] || 0) + 1));
+        const items = Object.keys(dm).sort((a,b)=> dm[b] - dm[a]).slice(0, 8).map(x=>({ label:x, v:dm[x], c:colorOf(x), ins:'dept|' + x }));
+        if(items.length > 1) secs += '<div class="ins-sec"><h4>สาขา / หน่วยงาน</h4><div class="ins-leg">' + items.map(it=> '<span class="ins-chip"' + insAttr(it.ins) + '><i class="dot" style="background:' + it.c + '"></i>' + escapeHtml(it.label) + ' <b>' + it.v + '</b></span>').join('') + '</div></div>';
+      }
+      if(d.g) secs += genderSec(d.g);
+      const people = '<div class="ins-sec"><div class="ins-ph"><h4>รายชื่อ ' + fmtN(list.length) + ' ท่าน</h4>' + (list.length > 8 ? '<input class="ins-q" id="insQ" placeholder="กรองรายชื่อ…" aria-label="กรองรายชื่อ">' : '') + '</div>' +
+        '<div class="ins-people" id="insPeople">' + list.map(r=> '<button class="ins-person" data-pid="' + escapeHtml(r.id) + '" data-q="' + escapeHtml(canon([r.acadTitle, r.name, r.position, r.dept, r.room, r.building, r.email].join(' '))) + '">' +
+          personAvatarHtml(r, '') + '<span><b>' + escapeHtml(fullName(r)) + '</b><small>' + escapeHtml([r.position, [r.building, r.room].filter(Boolean).join(' ')].filter(Boolean).join(' · ')) + '</small></span></button>').join('') + '</div></div>';
+      html = d.k ? (secs + people) : people;
+      html = '<div class="ins-head" style="--ic:' + d.c + '"><span class="ins-kicker">' + escapeHtml(d.k) + '</span><h2 id="insPopTitle">' + escapeHtml(d.t) + '</h2>' +
+        '<div class="ins-big"><b>' + fmtN(headN) + '</b><span>ท่าน' + (headPct ? ' · ' + headPct : '') + '</span></div></div><div class="ins-body">' + html + '</div>';
+    } else {
+      // ข้อมูลที่แสดงเฉพาะตัวเลขรวม (เพศ / ประเภทการจ้าง / ปีที่เริ่มงาน)
+      let t = '', k = '', c = 'var(--c3)', o = null, secs = '';
+      if(kind === 'gender'){
+        const gl = { m:'ชาย', f:'หญิง', u:'ยังไม่ระบุเพศ' }[val]; t = 'บุคลากร' + gl; k = 'สัดส่วนเพศ'; c = val === 'm' ? C.m : val === 'f' ? C.f : C.u;
+        const gt = st.genderByType || {};
+        headN = st.gender[val] || 0; headPct = pctOf(headN, st.total) + '% ของบุคลากรทั้งหมด';
+        secs += insBreak('ตามสายงาน', [{ label:'สายวิชาการ', v:(gt.academic||{})[val] || 0, c:TYPE_C.academic, ins:'type|academic' }, { label:'สายสนับสนุน', v:(gt.support||{})[val] || 0, c:TYPE_C.support, ins:'type|support' }], headN || 1);
+        secs += insBreak('ตามตำแหน่งทางวิชาการ', st.acadRank.map(x=>({ label:x.label, v:x[val] || 0, c:RANK_C[x.label] || C.u, ins:'rank|' + x.label })), st.acadRank.reduce((a,x)=> a + (x[val] || 0), 0) || 1);
+        secs += insBreak('ตามระดับสายสนับสนุน', (st.supportLevel||[]).map(x=>({ label:SLEVEL_SHORT[x.label] || x.label, v:x[val] || 0, c:SLEVEL_C[x.label] || C.u, ins:'slevel|' + x.label })), (st.supportLevel||[]).reduce((a,x)=> a + (x[val] || 0), 0) || 1);
+        secs += insBreak('ตามบทบาท', (st.role||[]).map(x=>({ label:x.label, v:x[val] || 0, c:ROLE_C[x.label] || C.u, ins:'role|' + x.label })), headN || 1);
+      } else if(kind === 'emp' || kind === 'year'){
+        o = statObj(kind === 'emp' ? st.employment : st.startYears, val);
+        t = kind === 'emp' ? val : 'เริ่มปฏิบัติงานปี พ.ศ. ' + val; k = kind === 'emp' ? 'ประเภทการจ้าง' : 'อายุงาน';
+        headN = o ? o.total : 0;
+        const base = kind === 'emp' ? (st.employment||[]).reduce((a,x)=> a + x.total, 0) : st.startDateKnown;
+        headPct = pctOf(headN, base) + '% ของผู้ที่มีข้อมูล';
+        if(o){
+          secs += insBreak('ตามสายงาน', [{ label:'สายวิชาการ', v:o.academic, c:TYPE_C.academic, ins:'type|academic' }, { label:'สายสนับสนุน', v:o.support, c:TYPE_C.support, ins:'type|support' }], o.total);
+          secs += genderSec(o);
+        }
+      }
+      html = '<div class="ins-head" style="--ic:' + c + '"><span class="ins-kicker">' + k + '</span><h2 id="insPopTitle">' + escapeHtml(t) + '</h2>' +
+        '<div class="ins-big"><b>' + fmtN(headN) + '</b><span>ท่าน · ' + headPct + '</span></div></div><div class="ins-body">' + secs +
+        '<p class="note">ข้อมูลกลุ่มนี้แสดงเป็นตัวเลขรวมเท่านั้น ไม่เปิดเผยรายชื่อรายบุคคลบนหน้าสาธารณะ</p></div>';
+    }
+    elInsBox.innerHTML = '<button class="ins-x" id="insX" aria-label="ปิด">×</button>' + html;
+    if(!elIns.classList.contains('open')) insLast = document.activeElement;
+    elIns.classList.add('open'); document.body.style.overflow = 'hidden';
+    elInsBox.scrollTop = 0;
+    document.getElementById('insX').focus();
+    const q = document.getElementById('insQ');
+    if(q) q.addEventListener('input', ()=>{ const v = canon(q.value); elInsBox.querySelectorAll('.ins-person').forEach(b=> b.hidden = v && b.dataset.q.indexOf(v) === -1); });
+  }
+  function closeInsight(){
+    elIns.classList.remove('open'); document.body.style.overflow = '';
+    if(insLast && insLast.focus) insLast.focus();
+  }
+  elIns.addEventListener('click', e=>{
+    if(e.target === elIns || e.target.closest('#insX')) return closeInsight();
+    const p = e.target.closest('[data-pid]'); if(p) return openPersonModal(p.dataset.pid);
+    const t = e.target.closest('[data-ins]'); if(t) openInsight(t.getAttribute('data-ins'));
+  });
+  /* Esc: ปิดทีละชั้น — ถ้าเปิดรายละเอียดรายคนซ้อนอยู่ ให้ปิดชั้นนั้นก่อน (ตรวจสถานะก่อนตัวจัดการอื่นทำงาน) */
+  document.addEventListener('keydown', e=>{
+    if(e.key !== 'Escape' || !elIns.classList.contains('open')) return;
+    if(personModalOverlay.classList.contains('open')){ setTimeout(()=>{ document.body.style.overflow = 'hidden'; }, 0); return; }
+    closeInsight();
+  }, true);
+  /* ปิดรายละเอียดรายคนด้วยการคลิก → ป๊อปอัปยังเปิดอยู่ ล็อกการเลื่อนหน้าไว้เหมือนเดิม */
+  personModalOverlay.addEventListener('click', ()=> setTimeout(()=>{ if(elIns.classList.contains('open') && !personModalOverlay.classList.contains('open')) document.body.style.overflow = 'hidden'; }, 0));
+  function insFromEvent(e){
+    const t = e.target.closest('[data-ins]'); if(!t) return false;
+    e.preventDefault(); openInsight(t.getAttribute('data-ins')); return true;
+  }
+  elCharts.addEventListener('click', insFromEvent);
+  elCharts.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' ') insFromEvent(e); });
+  elStatRow.addEventListener('click', insFromEvent);
+  elStatRow.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' ') insFromEvent(e); });
 
   /* แสดงผลเมื่อเลื่อนมาถึง (ครั้งเดียว) */
   function revealCard(card){
