@@ -1871,42 +1871,56 @@
     const today = new Date().toDateString() === d.toDateString();
     return today ? fmtTime(d) : d.toLocaleDateString('th-TH', { day:'numeric', month:'short' }) + ' ' + fmtTime(d);
   }
+  /**
+   * ดึงข้อมูลจากระบบ
+   *  - ใช้ fetch เป็นหลัก และ "รอจนเสร็จ" (ครั้งแรกของวันระบบอาจใช้เวลาเตรียมข้อมูล 5–20 วินาที)
+   *  - ใช้ JSONP สำรอง เฉพาะเมื่อ fetch ล้มเหลวจริง (เช่น ส่วนขยายเบราว์เซอร์บล็อก) หรือเงียบเกิน 25 วินาที
+   *  - ถือว่าล้มเหลวเมื่อทุกวิธีล้มเหลวแล้วเท่านั้น
+   */
   function fetchDirectory(force){
     return new Promise((resolve, reject)=>{
-      let settled = false;
+      let settled = false, fetchDead = false, jsonpDead = false, jsonpStarted = false, lastErr = null;
       const done = (ok, v)=>{ if(settled) return; settled = true; ok ? resolve(v) : reject(v); };
+      const valid = j=> j && Array.isArray(j.records) && j.records.length > 0;
       const sep = API_URL.indexOf('?') !== -1 ? '&' : '?';
       const base = API_URL + sep + '_ts=' + Date.now() + (force ? '&refresh=1' : '');
-
-      // วิธีที่ 1: fetch() ตรง
-      fetch(base, { method:'GET', cache:'no-store' })
-        .then(r=> r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
-        .then(j=> done(true, j))
-        .catch(()=>{ /* รอวิธีที่ 2 */ });
-
-      // วิธีที่ 2: JSONP สำรอง (เผื่อส่วนขยาย/ตัวบล็อกโฆษณาสกัด fetch)
-      setTimeout(()=>{
-        if(settled) return;
-        const cb = '__dwmsCb_' + Date.now();
-        window[cb] = function(j){ done(true, j); try{ delete window[cb]; }catch(e){} };
+      const failOne = (which, err)=>{
+        lastErr = err || lastErr;
+        if(which === 'fetch') fetchDead = true; else jsonpDead = true;
+        if(fetchDead && jsonpDead) done(false, lastErr || new Error('network'));
+        else if(which === 'fetch') startJsonp();
+      };
+      function startJsonp(){
+        if(jsonpStarted || settled) return;
+        jsonpStarted = true;
+        const cb = '__dwmsCb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
         const sc = document.createElement('script');
+        const cleanup = ()=>{ try{ delete window[cb]; }catch(e){ window[cb] = undefined; } if(sc.parentNode) sc.parentNode.removeChild(sc); };
+        window[cb] = function(j){ cleanup(); if(valid(j)) done(true, j); else failOne('jsonp', new Error((j && j.error) || 'ข้อมูลว่าง')); };
+        sc.onerror = ()=>{ cleanup(); failOne('jsonp', new Error('jsonp')); };
         sc.src = base + '&callback=' + cb;
-        sc.onerror = ()=> done(false, new Error('เชื่อมต่อระบบไม่ได้'));
         document.body.appendChild(sc);
-      }, 4000);
-
-      setTimeout(()=> done(false, new Error('หมดเวลารอการตอบกลับ')), 45000);
+      }
+      fetch(base, { method:'GET', cache:'no-store', credentials:'omit' })
+        .then(r=> r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+        .then(j=> valid(j) ? done(true, j) : failOne('fetch', new Error((j && j.error) || 'ข้อมูลว่าง')))
+        .catch(err=> failOne('fetch', err));
+      setTimeout(startJsonp, 25000);                                   // fetch เงียบนานผิดปกติ → ลองอีกทางคู่กัน
+      setTimeout(()=> done(false, lastErr || new Error('timeout')), 70000);
     });
   }
 
-  function syncAll(force){
+  const RETRY_DELAYS = [3000, 8000, 20000, 60000];
+  let failCount = 0, retryTimer = null, slowTimer = null, staleTries = 0;
+  function syncAll(force, manual){
     if(!API_URL || syncing) return;
+    if(manual){ failCount = 0; clearTimeout(retryTimer); }
     syncing = true;
     syncBtn.disabled = true; retryPhotoBtn.disabled = true;
-    setSyncState('loading', force ? 'กำลังดึงข้อมูลล่าสุดจากระบบ (ข้ามแคช)…' : 'กำลังซิงก์ข้อมูลล่าสุด…');
-    syncNote.textContent = '';
+    setSyncState('loading', failCount ? 'กำลังเชื่อมต่อใหม่ (ครั้งที่ ' + (failCount + 1) + ')…' : 'กำลังอัปเดตข้อมูลล่าสุด…');
+    clearTimeout(slowTimer);
+    slowTimer = setTimeout(()=> setSyncState('loading', 'ระบบกำลังเตรียมข้อมูลล่าสุด อาจใช้เวลาสักครู่ — ค้นหาได้ตามปกติระหว่างรอ'), 6000);
     fetchDirectory(force).then(res=>{
-      if(!res || !Array.isArray(res.records) || !res.records.length) throw new Error('ไม่พบข้อมูลบุคลากร');
       records = res.records.map(r=>({
         id: String(r.id||''), acadTitle: r.acadTitle||'', name: r.name||'', position: r.position||'',
         dept: r.dept||'', building: r.building||'', floor: String(r.floor||''), room: String(r.room||''),
@@ -1914,7 +1928,7 @@
       }));
       if(res.ratingStats) ratingStats = res.ratingStats;
       BACKEND_VERSION = res.version || '';
-      lastSyncAt = Date.now();
+      lastSyncAt = Date.now(); failCount = 0;
       STATS = res.stats || null;
       TREND = Array.isArray(res.trend) ? res.trend : [];
       refreshAll();
@@ -1922,19 +1936,35 @@
       saveLocalCache(records);
       warmPhotos(records);
       setSyncState('live', 'ข้อมูล ณ ' + fmtServerTime(res.updatedAt) + ' น.');
-      syncNote.textContent = BACKEND_VERSION ? '' :
-        'ระบบหลังบ้านยังทำงานด้วยโค้ดเวอร์ชันเดิม (ปุ่มเข้าสู่ระบบจะยังใช้ไม่ได้) — ผู้ดูแล: รันฟังก์ชัน diagnose ในหน้า Apps Script เพื่อดูจุดที่ต้องแก้';
+      syncNote.textContent = !BACKEND_VERSION
+        ? 'ระบบหลังบ้านยังทำงานด้วยโค้ดเวอร์ชันเดิม (ปุ่มเข้าสู่ระบบจะยังใช้ไม่ได้) — ผู้ดูแล: รันฟังก์ชัน diagnose ในหน้า Apps Script เพื่อดูจุดที่ต้องแก้'
+        : '';
+      if(res.stale){ if(++staleTries <= 3){ clearTimeout(retryTimer); retryTimer = setTimeout(()=> syncAll(false), 20000); } }  // ได้ชุดสำรอง → ขอชุดสดอีกครั้งในอีกครู่
+      else staleTries = 0;
     }).catch(err=>{
-      setSyncState('err', 'ซิงก์ไม่สำเร็จ — แสดงข้อมูลที่บันทึกไว้');
-      syncNote.textContent = API_URL_ISSUE || ((err && err.message ? err.message : 'เชื่อมต่อไม่ได้') +
-        ' — ถ้าเพิ่งเปลี่ยน URL ระบบ: ต้องเป็นลิงก์ /exec และตั้ง "ผู้มีสิทธิ์เข้าถึง" เป็น "ทุกคน" (ค้นหาข้อมูลที่บันทึกไว้ได้ตามปกติ)');
+      if(API_URL_ISSUE){ setSyncState('err', 'ตั้งค่าการเชื่อมต่อไม่ถูกต้อง'); syncNote.textContent = API_URL_ISSUE; return; }
+      failCount++;
+      const savedAt = (()=>{ try{ const c = JSON.parse(localStorage.getItem(LOCAL_CACHE_KEY) || 'null'); return c && c.savedAt; }catch(e){ return null; } })();
+      const savedTxt = savedAt ? ' (บันทึกไว้เมื่อ ' + fmtServerTime(new Date(savedAt).toISOString()) + ' น.)' : '';
+      if(failCount <= RETRY_DELAYS.length){
+        setSyncState('loading', 'กำลังเชื่อมต่อใหม่อัตโนมัติ… แสดงข้อมูลล่าสุดที่มี' + savedTxt);
+        syncNote.textContent = '';
+        clearTimeout(retryTimer);
+        retryTimer = setTimeout(()=> syncAll(force), RETRY_DELAYS[failCount - 1]);
+      } else {
+        setSyncState('err', 'ยังเชื่อมต่อระบบไม่ได้ — แสดงข้อมูลล่าสุดที่มี' + savedTxt);
+        syncNote.textContent = 'ค้นหาได้ตามปกติ ระบบจะลองเชื่อมต่อใหม่เองเมื่อกลับมาที่หน้านี้ หรือกดปุ่ม "ซิงก์"';
+        console.warn('[DWMS] sync failed:', err);
+      }
     }).finally(()=>{
+      clearTimeout(slowTimer);
       syncing = false;
       syncBtn.disabled = false; retryPhotoBtn.disabled = false;
     });
   }
-  syncBtn.addEventListener('click', ()=>syncAll(false));
-  retryPhotoBtn.addEventListener('click', ()=>syncAll(true));
+
+  syncBtn.addEventListener('click', ()=>syncAll(false, true));
+  retryPhotoBtn.addEventListener('click', ()=>syncAll(true, true));
 
   /* ================= ให้คะแนนความพึงพอใจ (1-5 ดาว) =================
      ส่งไปเก็บที่ Google Apps Script (URL เดียวกับที่ใช้ซิงก์ข้อมูลบุคลากร)
@@ -2649,7 +2679,7 @@
 
   // 3) ซิงก์อัตโนมัติ: กลับมาที่แท็บหลังห่างไป 3 นาที และทุก 10 นาทีขณะเปิดหน้าไว้
   document.addEventListener('visibilitychange', ()=>{
-    if(document.visibilityState === 'visible' && Date.now() - lastSyncAt > 3 * 60 * 1000) syncAll(false);
+    if(document.visibilityState === 'visible' && (Date.now() - lastSyncAt > 3 * 60 * 1000 || failCount > RETRY_DELAYS.length)) syncAll(false, true);
   });
   setInterval(()=>{ if(document.visibilityState === 'visible') syncAll(false); }, 10 * 60 * 1000);
 
