@@ -3,546 +3,594 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ผู้ช่วยค้นหาห้องพัก/ห้องทำงานบุคลากร | คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</title>
-<meta name="description" content="ระบบผู้ช่วยค้นหาห้องพัก/ห้องทำงานบุคลากรคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม">
+<title>ทำเนียบบุคลากร | คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</title>
+<meta name="description" content="ทำเนียบและผู้ช่วยค้นหาห้องทำงานบุคลากร พร้อมภาพรวมสถิติบุคลากร คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม">
+<meta name="theme-color" content="#F3F8F5">
+<script>
+/* ใช้ธีมที่บันทึกไว้ก่อนวาดหน้า (กันสีกะพริบ) + ฟังก์ชันเฉดสีตามเวลาของวัน */
+(function(){
+  var F = [[0,262,48],[5,250,44],[7,380,62],[10,512,58],[15,530,55],[18,574,62],[21,610,50],[24,622,48]];
+  window.__dwmsHue = function(d){
+    var t = d.getHours() + d.getMinutes() / 60, i = 0;
+    while(i < F.length - 2 && t >= F[i+1][0]) i++;
+    var a = F[i], b = F[i+1], k = (t - a[0]) / (b[0] - a[0]);
+    return { h: Math.round(a[1] + (b[1] - a[1]) * k) % 360, s: Math.round(a[2] + (b[2] - a[2]) * k) };
+  };
+  var P = { msu:[152,58], blueprint:[214,62], copper:[20,62], volt:[262,48], steel:[200,16] }, st = {};
+  try{ st = JSON.parse(localStorage.getItem('dwms_theme') || '{}'); }catch(e){}
+  var hs = st.k === 'auto' ? window.__dwmsHue(new Date()) : { h:(P[st.k]||P.msu)[0], s:(P[st.k]||P.msu)[1] };
+  var r = document.documentElement, mode = st.mode || 'system';
+  r.style.setProperty('--h', hs.h); r.style.setProperty('--sat', hs.s + '%');
+  var dark = mode === 'dark' || (mode === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  r.setAttribute('data-mode', dark ? 'dark' : 'light');
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://eng.msu.ac.th">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="dns-prefetch" href="https://script.googleusercontent.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* =====================================================================
+     ธีมไดนามิก — ทุกสีคำนวณจาก --h (เฉดสี) และ --sat ที่ JS เปลี่ยนได้
+     โหมดสว่าง/มืด สลับด้วย [data-mode] บน <html>
+     ===================================================================== */
   :root{
-    /* ---- โทนสีหลัก: ขาว-เขียว ไดนามิก สดใส เป็นธรรมชาติ ---- */
-    --bg:#FFFFFF;
-    --bg-gradient: linear-gradient(160deg, #F2FBF3 0%, #E9F8EC 22%, #E3F6E9 55%, #F5FDF6 100%);
-    --surface:#FFFFFF;
-    --surface-alt:#F0FAF2;
-    --border:#DCF0DF;
-    --border-strong:#B7E4C0;
-    --text:#1E2B21;
-    --text-soft:#57705C;
-    --text-faint:#93AC98;
-
-    --gold-50:#EFFBF1;
-    --gold-100:#DDF5E1;
-    --gold-300:#8FDE9F;
-    --gold-500:#27AE60;
-    --gold-600:#1F9550;
-    --gold-700:#177A41;
-
-    --gray-100:#EEF6EF;
-    --gray-200:#DCEBDD;
-    --gray-400:#A6C4AB;
-    --gray-600:#5D7962;
-    --gray-800:#33422F;
-
-    --accent:var(--gold-600);
-    --accent-soft:var(--gold-100);
-    --accent-strong:var(--gold-700);
-    --accent-grad: linear-gradient(135deg, var(--gold-500), var(--gold-700));
-
-    --success:#1F9550;
-    --success-soft:#E4F6EA;
-    --warn:#B4841F;
-    --warn-soft:#FBF1DE;
-    --danger:#C0453F;
-    --danger-soft:#FBEAE8;
-
-    --radius:14px;
-    --radius-sm:9px;
-    --shadow:0 1px 2px rgba(30,50,33,0.05), 0 8px 24px rgba(30,50,33,0.07);
-    --shadow-sm:0 1px 2px rgba(30,50,33,0.06);
+    --h:152; --sat:58%;
+    --accent:hsl(var(--h) var(--sat) 34%);
+    --accent-strong:hsl(var(--h) var(--sat) 26%);
+    --accent-soft:hsl(var(--h) calc(var(--sat) * .7) 92%);
+    --accent-2:hsl(calc(var(--h) + 38) calc(var(--sat) * .8) 42%);
+    --accent-grad:linear-gradient(135deg, hsl(var(--h) var(--sat) 40%), hsl(calc(var(--h) + 24) var(--sat) 30%));
+    --paper:hsl(var(--h) 28% 97%);
+    --grid:hsl(var(--h) 40% 50% / .07);
+    --surface:#fff;
+    --surface-alt:hsl(var(--h) 30% 96%);
+    --border:hsl(var(--h) 22% 88%);
+    --border-strong:hsl(var(--h) 22% 78%);
+    --text:hsl(var(--h) 25% 13%);
+    --text-soft:hsl(var(--h) 12% 38%);
+    --text-faint:hsl(var(--h) 8% 56%);
+    --male:hsl(205 68% 44%);
+    --female:hsl(338 62% 52%);
+    --unknown:hsl(var(--h) 8% 78%);
+    --success:hsl(150 60% 32%); --success-soft:hsl(150 50% 92%);
+    --warn:hsl(38 70% 36%);     --warn-soft:hsl(40 85% 92%);
+    --danger:hsl(4 60% 47%);
+    --shadow:0 1px 2px hsl(var(--h) 30% 20% / .05), 0 10px 30px hsl(var(--h) 30% 20% / .07);
+    --shadow-sm:0 1px 2px hsl(var(--h) 30% 20% / .06);
+    --radius:16px; --radius-sm:10px;
+    color-scheme:light;
+  }
+  html[data-mode="dark"]{
+    --accent:hsl(var(--h) var(--sat) 62%);
+    --accent-strong:hsl(var(--h) var(--sat) 72%);
+    --accent-soft:hsl(var(--h) 30% 20%);
+    --accent-2:hsl(calc(var(--h) + 38) calc(var(--sat) * .8) 64%);
+    --accent-grad:linear-gradient(135deg, hsl(var(--h) var(--sat) 42%), hsl(calc(var(--h) + 24) var(--sat) 32%));
+    --paper:hsl(var(--h) 22% 8%);
+    --grid:hsl(var(--h) 50% 70% / .06);
+    --surface:hsl(var(--h) 18% 12%);
+    --surface-alt:hsl(var(--h) 18% 15%);
+    --border:hsl(var(--h) 14% 22%);
+    --border-strong:hsl(var(--h) 14% 30%);
+    --text:hsl(var(--h) 15% 92%);
+    --text-soft:hsl(var(--h) 10% 70%);
+    --text-faint:hsl(var(--h) 8% 52%);
+    --male:hsl(205 75% 62%);
+    --female:hsl(338 72% 68%);
+    --unknown:hsl(var(--h) 8% 34%);
+    --success:hsl(150 50% 60%); --success-soft:hsl(150 30% 18%);
+    --warn:hsl(40 80% 65%);     --warn-soft:hsl(40 40% 18%);
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.25);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+    color-scheme:dark;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
   body{
     font-family:'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
-    background:var(--bg-gradient);
-    background-attachment:fixed;
-    color:var(--text);
-    -webkit-font-smoothing:antialiased;
-    line-height:1.6;
-    min-height:100vh;
+    color:var(--text); background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:24px 24px;
+    -webkit-font-smoothing:antialiased; line-height:1.6; min-height:100vh;
+    font-variant-numeric:tabular-nums;
+    transition:background-color .4s ease, color .4s ease;
   }
-  .mono{font-family:'IBM Plex Mono', ui-monospace, monospace;}
   a{color:var(--accent-strong);}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 20px 40px;}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
 
-  .wrap{
-    max-width:1080px;
-    margin:0 auto;
-    padding:22px 18px 40px;
+  /* ================= แถบบน ================= */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
   }
+  .topbar-in{max-width:1180px; margin:0 auto; padding:10px 20px; display:flex; align-items:center; gap:14px;}
+  .brand{display:flex; align-items:center; gap:11px; text-decoration:none; color:inherit; min-width:0;}
+  .brand-emblem{width:40px;height:40px;border-radius:12px;background:var(--accent-grad);display:grid;place-items:center;flex-shrink:0;}
+  .brand-emblem svg{width:24px;height:24px;}
+  .brand b{display:block;font-size:14.5px;line-height:1.25;}
+  .brand small{display:block;font-size:12px;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .top-actions{margin-left:auto; display:flex; align-items:center; gap:8px;}
+  .icon-btn, .home-link{
+    font-family:inherit; font-size:13px; font-weight:500; text-decoration:none; color:var(--text);
+    border:1px solid var(--border-strong); background:var(--surface); border-radius:999px;
+    height:36px; padding:0 14px; display:inline-flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap;
+  }
+  .icon-btn:hover, .home-link:hover{border-color:var(--accent); color:var(--accent-strong);}
+  .home-link.primary{background:var(--accent-grad); color:#fff; border-color:transparent;}
+  .home-link.primary:hover{color:#fff; filter:brightness(1.08);}
 
-  /* ================= HEADER ================= */
-  header.top{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:18px;
-    flex-wrap:wrap;
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:18px 22px;
-    box-shadow:var(--shadow);
-    margin-bottom:16px;
-    position:relative;
-    overflow:hidden;
+  /* ตัวเลือกธีม */
+  .theme-wrap{position:relative;}
+  .theme-pop{
+    position:absolute; right:0; top:44px; width:280px; padding:14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow); display:none; z-index:60;
   }
-  header.top::before{
-    content:"";
-    position:absolute; inset:0;
-    background:linear-gradient(120deg, var(--gold-50) 0%, transparent 55%);
-    pointer-events:none;
+  .theme-pop.open{display:block;}
+  .theme-pop h4{margin:0 0 8px; font-size:12.5px; color:var(--text-soft); font-weight:600;}
+  .swatches{display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:6px;}
+  .swatch{
+    aspect-ratio:1; border-radius:50%; border:2px solid var(--surface); cursor:pointer; padding:0;
+    box-shadow:0 0 0 1px var(--border-strong);
   }
-  .brand{
-    display:flex; align-items:center; gap:14px;
-    position:relative; z-index:1;
+  .swatch[aria-pressed="true"]{box-shadow:0 0 0 2px var(--text);}
+  .swatch.auto{background:conic-gradient(hsl(22 70% 45%),hsl(152 58% 34%),hsl(215 65% 42%),hsl(265 55% 48%),hsl(22 70% 45%));}
+  .theme-name{font-size:12.5px; color:var(--text-soft); margin:0 0 12px; min-height:19px;}
+  .modes{display:flex; border:1px solid var(--border-strong); border-radius:999px; padding:3px;}
+  .modes button{flex:1; border:0; background:none; font-family:inherit; font-size:12.5px; color:var(--text-soft); padding:6px 4px; border-radius:999px; cursor:pointer;}
+  .modes button[aria-pressed="true"]{background:var(--accent-soft); color:var(--accent-strong); font-weight:600;}
+
+  /* ================= HERO ================= */
+  .hero{display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:28px; align-items:center; padding:36px 0 26px;}
+  .hero h1{font-size:clamp(28px, 4.2vw, 46px); line-height:1.18; margin:0 0 12px; font-weight:700; letter-spacing:-.01em;}
+  .hero h1 .ln{display:block; color:var(--accent);}
+  .hero p.lede{margin:0 0 22px; color:var(--text-soft); font-size:15.5px; max-width:34em;}
+  .hero-search{
+    display:flex; align-items:center; gap:6px; background:var(--surface);
+    border:1.5px solid var(--border-strong); border-radius:18px; padding:6px 6px 6px 16px;
+    box-shadow:var(--shadow); transition:border-color .2s, box-shadow .2s;
   }
-  .brand-emblem{
-    width:52px;height:52px;flex-shrink:0;
-    border-radius:50%;
-    background:var(--accent-grad);
-    display:flex;align-items:center;justify-content:center;
-    box-shadow:0 3px 10px rgba(173,128,33,0.35);
+  .hero-search:focus-within{border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft), var(--shadow);}
+  .hero-search svg{flex-shrink:0; color:var(--text-faint);}
+  .hero-search input{flex:1; min-width:0; border:0; background:none; font-family:inherit; font-size:16px; color:var(--text); padding:10px 4px; outline:none;}
+  .hero-search button{
+    border:0; border-radius:13px; background:var(--accent-grad); color:#fff;
+    font-family:inherit; font-weight:600; font-size:14.5px; padding:0 20px; height:44px; cursor:pointer;
   }
-  .brand-emblem svg{ width:30px;height:30px; }
-  .brand-eyebrow{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:10.5px;
-    letter-spacing:0.13em;
-    text-transform:uppercase;
-    color:var(--accent-strong);
-    font-weight:600;
-    margin-bottom:3px;
+  .hero-search button.mic{background:var(--surface-alt); color:var(--text); width:44px; padding:0; font-size:18px;}
+  .examples{display:flex; flex-wrap:wrap; gap:7px; margin-top:14px;}
+  .example-chip{
+    font-family:inherit; font-size:12.5px; color:var(--text-soft);
+    background:var(--surface); border:1px dashed var(--border-strong);
+    padding:5px 12px; border-radius:999px; cursor:pointer;
   }
-  h1{
-    font-size:19px;
-    font-weight:700;
-    margin:0 0 3px;
-    letter-spacing:-0.01em;
-    color:var(--text);
+  .example-chip:hover{border-style:solid; border-color:var(--accent); color:var(--accent-strong);}
+
+  /* กรอบรายละเอียดแบบแบบงานวิศวกรรม (title block) */
+  .hero > *{min-width:0;}
+  .titleblock{
+    background:var(--surface); border:2px solid var(--text); border-radius:4px;
+    display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); position:relative; box-shadow:var(--shadow);
   }
-  .subtitle{
-    font-size:12.5px;
-    color:var(--text-soft);
-    margin:0;
+  .titleblock::before{
+    content:""; position:absolute; inset:-9px; border:1px solid var(--border-strong); border-radius:6px; pointer-events:none;
   }
-  .sync-box{ text-align:right; position:relative; z-index:1; }
-  .home-link{
-    display:inline-block; font-size:11.5px; font-weight:600; text-decoration:none;
-    color:var(--accent-strong); background:var(--accent-soft);
-    padding:5px 11px; border-radius:16px; margin-bottom:8px;
-  }
-  .home-link:hover{ background:var(--gold-300); color:#fff; }
-  .sync-status-inline{
-    font-size:11.5px;
-    color:var(--text-soft);
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-  }
-  .sync-dot{ width:7px;height:7px; border-radius:50%; background:var(--text-faint); flex-shrink:0; }
+  .tb-cell{padding:10px 14px; border-right:1px solid var(--border-strong); border-bottom:1px solid var(--border-strong); min-width:0;}
+  .tb-cell .k{display:block; font-size:11.5px; color:var(--text-faint); line-height:1.3;}
+  .tb-cell .v{display:block; overflow-wrap:anywhere; font-size:22px; font-weight:700; line-height:1.25;}
+  .tb-cell .v small{font-size:12px; font-weight:500; color:var(--text-soft); margin-left:2px;}
+  .tb-total{grid-column:span 4;}
+  .tb-total .v{font-size:56px; line-height:1; letter-spacing:-.02em; color:var(--accent);}
+  .tb-rev{grid-column:span 2; border-right:0; display:flex; flex-direction:column; justify-content:center;}
+  .tb-c2{grid-column:span 2;}
+  .tb-c2:nth-child(5){border-right:0;}
+  .tb-wide{grid-column:span 6; border-right:0;}
+  .tb-c3{grid-column:span 2;}
+  .tb-last{border-bottom:0;}
+  .tb-c2.end, .tb-c3.end{border-right:0;}
+  .ratio{display:flex; height:14px; border-radius:7px; overflow:hidden; background:var(--unknown); margin:8px 0 6px;}
+  .ratio i{display:block; height:100%; transition:width 1s cubic-bezier(.2,.8,.2,1);}
+  .ratio .m{background:var(--male);} .ratio .f{background:var(--female);}
+  .ratio-legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--text-soft);}
+  .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle;}
+  .sync-line{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-soft);}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text-faint);flex-shrink:0;}
   .sync-dot.live{background:var(--success);}
   .sync-dot.err{background:var(--danger);}
   .sync-dot.loading{background:var(--warn); animation:pulse 1s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .sync-tools{display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;}
   .sync-btn{
-    font-family:inherit; font-size:11.5px; font-weight:500;
-    padding:6px 12px; border-radius:8px; margin-top:6px;
-    border:1px solid var(--border-strong); background:var(--surface); color:var(--text);
-    cursor:pointer;
+    font-family:inherit; font-size:11.5px; padding:4px 10px; border-radius:999px; cursor:pointer;
+    border:1px solid var(--border-strong); background:var(--surface); color:var(--text-soft);
   }
-  .sync-btn:hover{background:var(--accent-soft); border-color:var(--accent);}
-  .sync-btn:disabled{opacity:.55; cursor:default;}
-  .sync-note{ font-size:11px; color:var(--danger); margin-top:4px; max-width:280px; text-align:right; margin-left:auto; }
+  .sync-btn:hover{border-color:var(--accent); color:var(--accent-strong);}
+  .sync-btn:disabled{opacity:.5; cursor:default;}
+  .sync-note{font-size:11.5px; color:var(--danger); margin-top:4px;}
 
-  /* ================= STAT TILES ================= */
-  .stat-row{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:10px;
-    margin-bottom:16px;
-  }
-  .stat-tile{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:var(--radius-sm);
-    padding:12px 14px;
-    box-shadow:var(--shadow-sm);
-  }
-  .stat-tile .num{ font-size:20px; font-weight:700; color:var(--accent-strong); font-family:'IBM Plex Mono',monospace; }
-  .stat-tile .lbl{ font-size:11px; color:var(--text-soft); margin-top:2px; }
+  /* ================= หัวข้อส่วน ================= */
+  .section{margin-top:34px;}
+  .section-head{display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px;}
+  .section-head h2{margin:0; font-size:22px; line-height:1.3;}
+  .section-head p{margin:2px 0 0; color:var(--text-soft); font-size:13.5px;}
 
-  /* ================= QUICK FILTER CHIPS ================= */
-  .filter-panel{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:14px 16px;
-    box-shadow:var(--shadow-sm);
-    margin-bottom:16px;
+  /* ================= ผังอาคาร ================= */
+  .siteplan{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px;}
+  .bldg{
+    position:relative; text-align:left; font-family:inherit; color:var(--text); cursor:pointer;
+    background:var(--surface); border:1.5px solid var(--border-strong); border-radius:6px; padding:14px 14px 12px;
+    overflow:hidden; transition:transform .15s ease, border-color .15s ease;
   }
-  .filter-panel-title{
-    font-size:12px; font-weight:600; color:var(--text-soft);
-    margin-bottom:9px; display:flex; align-items:center; gap:6px;
+  .bldg:hover{transform:translateY(-2px); border-color:var(--accent);}
+  .bldg::after{ /* แนวเส้นบอกระยะ */
+    content:""; position:absolute; left:14px; right:14px; bottom:8px; height:6px;
+    border-left:1px solid var(--text-faint); border-right:1px solid var(--text-faint);
+    background:linear-gradient(var(--text-faint),var(--text-faint)) center/100% 1px no-repeat; opacity:.5;
   }
-  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
+  .bldg .code{display:block; font-size:26px; font-weight:700; line-height:1.1;}
+  .bldg .cnt{display:block; font-size:13px; color:var(--text-soft); margin:2px 0 10px;}
+  .bldg .fill{position:absolute; inset:auto 0 0 0; background:var(--accent-soft); z-index:0; transition:height .9s ease;}
+  .bldg > *:not(.fill){position:relative; z-index:1;}
+  .chip-row{display:flex; flex-wrap:wrap; gap:7px;}
+  #deptChipsRow{margin-top:12px;}
   .chip{
-    font-family:inherit; font-size:12.5px; font-weight:500;
-    color:var(--gray-800);
-    background:var(--gray-100);
-    border:1px solid transparent;
-    padding:7px 13px;
-    border-radius:20px;
-    cursor:pointer;
-    transition:all .12s ease;
+    font-family:inherit; font-size:12.5px; font-weight:500; color:var(--text);
+    background:var(--surface); border:1px solid var(--border); padding:6px 12px; border-radius:999px; cursor:pointer;
   }
-  .chip:hover{ background:var(--accent-soft); color:var(--accent-strong); }
-  .chip.active{ background:var(--accent-grad); color:#fff; box-shadow:0 2px 6px rgba(173,128,33,.3);}
-  .chip.clear-chip{ background:transparent; border:1px solid var(--border-strong); color:var(--text-soft); }
-  .chip-sep{ width:1px; background:var(--border); margin:2px 4px; }
-  select.dept-select{
-    font-family:inherit; font-size:12.5px;
-    padding:7px 10px; border-radius:9px;
-    border:1px solid var(--border-strong); background:#fff; color:var(--text);
-    max-width:230px;
-  }
+  .chip:hover{background:var(--accent-soft); border-color:var(--accent); color:var(--accent-strong);}
+  .chip .n{color:var(--text-faint); margin-left:3px;}
 
-  /* ================= CHAT CARD ================= */
+  /* ================= ผู้ช่วยค้นหา (แชท) ================= */
+  .assist{display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:16px; align-items:start;}
   .chat-card{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    box-shadow:var(--shadow);
-    display:flex; flex-direction:column;
-    height:60vh; min-height:420px;
-    overflow:hidden;
-    margin-bottom:14px;
-  }
-  .chat-head{
-    padding:12px 16px; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; justify-content:space-between;
-    background:linear-gradient(90deg, var(--gold-50), transparent);
-  }
-  .chat-head-title{ font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:7px; }
-  .chat-head-badge{
-    font-size:10.5px; font-family:'IBM Plex Mono',monospace; color:var(--gray-600);
-    background:var(--gray-100); padding:3px 8px; border-radius:6px;
-  }
-  .chat-scroll{
-    flex:1; overflow-y:auto; padding:16px;
-    display:flex; flex-direction:column; gap:12px;
-    scroll-behavior:smooth;
-  }
-  .msg{ max-width:92%; display:flex; flex-direction:column; gap:4px; }
-  .msg.user{ align-self:flex-end; align-items:flex-end; }
-  .msg.assistant{ align-self:flex-start; align-items:flex-start; }
-  .bubble{
-    padding:11px 14px; border-radius:14px; font-size:13.5px; line-height:1.6;
-  }
-  .msg.user .bubble{
-    background:var(--accent-grad); color:#fff; border-bottom-right-radius:4px;
-  }
-  .msg.assistant .bubble{
-    background:var(--surface-alt); color:var(--text); border:1px solid var(--border);
-    border-bottom-left-radius:4px;
-  }
-  .msg-time{ font-size:10px; color:var(--text-faint); padding:0 4px; }
-
-  .ans-title{ font-size:13.5px; font-weight:700; margin-bottom:6px; color:var(--accent-strong); }
-  .ans-note{ font-size:12px; color:var(--text-soft); margin-top:6px; }
-
-  /* person card (used in chat + directory grid) */
-  .person-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin-top:8px; }
-  .rating-panel{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    box-shadow:var(--shadow-sm); padding:18px 20px; margin-bottom:16px; text-align:center;
+    box-shadow:var(--shadow); display:flex; flex-direction:column; height:62vh; min-height:440px; overflow:hidden;
   }
-  .rating-title{ font-size:14px; font-weight:700; color:var(--text); }
-  .rating-sub{ font-size:11.5px; color:var(--text-soft); margin-top:3px; margin-bottom:12px; }
-  .stars{ font-size:32px; line-height:1; letter-spacing:6px; margin-bottom:12px; }
-  .stars span{ color:var(--gray-200); cursor:pointer; transition:color .1s ease, transform .1s ease; display:inline-block; }
-  .stars span:hover{ transform:scale(1.12); }
-  .stars.hover-preview span.on, .stars span.selected{ color:var(--gold-500); }
-  .rating-comment{
-    width:100%; max-width:420px; font-family:inherit; font-size:12.5px;
-    border:1px solid var(--border-strong); border-radius:10px; padding:9px 12px;
-    resize:vertical; margin-bottom:10px; display:block; margin-left:auto; margin-right:auto;
-  }
-  .rating-comment:focus{ outline:none; border-color:var(--accent); }
-  .rating-submit{
-    font-family:inherit; font-weight:600; font-size:13px; color:#fff;
-    background:var(--accent-grad); border:none; padding:9px 26px; border-radius:10px;
-    cursor:pointer;
-  }
-  .rating-submit:disabled{ opacity:.45; cursor:not-allowed; }
-  .rating-submit:not(:disabled):hover{ filter:brightness(1.06); }
-  .rating-thanks{ font-size:13px; color:var(--success); font-weight:600; margin-top:4px; }
-  .rating-diag{ font-size:11px; color:var(--text-faint); margin-top:10px; }
-  .rating-diag a{ color:var(--accent-strong); }
-
-  .info-banner{
-    background:var(--gold-50); border:1px solid var(--border-strong);
-    border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:14px;
-    font-size:11.5px; color:var(--text-soft); line-height:1.7;
-  }
-  .info-banner b{ color:var(--accent-strong); }
-
-  /* ================= PERSON DETAIL MODAL ================= */
-  .modal-overlay{
-    position:fixed; inset:0; background:rgba(20,30,22,0.55);
-    display:none; align-items:center; justify-content:center; z-index:1000;
-    padding:20px;
-  }
-  .modal-overlay.open{ display:flex; }
-  .modal-box{
-    background:#fff; border-radius:18px; max-width:420px; width:100%;
-    max-height:88vh; overflow-y:auto; padding:22px 22px 24px;
-    box-shadow:0 20px 60px rgba(20,30,22,0.35);
-    position:relative; animation:modal-pop .16s ease;
-  }
-  @keyframes modal-pop{ from{ transform:scale(.96); opacity:0; } to{ transform:scale(1); opacity:1; } }
-  .modal-close{
-    position:absolute; top:12px; right:12px; width:32px;height:32px;border-radius:50%;
-    border:1px solid var(--border-strong); background:#fff; cursor:pointer; font-size:15px;
-    display:flex; align-items:center; justify-content:center; color:var(--text-soft);
-  }
-  .modal-close:hover{ background:var(--accent-soft); color:var(--accent-strong); }
-  .modal-avatar-row{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:14px; }
-  .modal-name{ font-size:17px; font-weight:700; color:var(--text); }
-  .modal-acad{ font-size:12px; color:var(--text-faint); margin-top:2px; }
-  .modal-field{
-    display:flex; gap:10px; padding:10px 0; border-top:1px solid var(--border);
-    font-size:13px;
-  }
-  .modal-field:first-of-type{ border-top:1px solid var(--border); margin-top:6px; }
-  .modal-field .f-icon{ flex-shrink:0; width:20px; text-align:center; }
-  .modal-field .f-label{ color:var(--text-faint); font-size:10.5px; display:block; margin-bottom:2px; }
-  .modal-field .f-value{ color:var(--text); font-weight:500; }
-  .modal-field .f-value a{ color:var(--accent-strong); text-decoration:none; }
-  .person-card{ cursor:pointer; transition:box-shadow .12s ease, transform .12s ease; }
-  .person-card:hover{ box-shadow:0 4px 14px rgba(30,50,33,0.12); transform:translateY(-1px); }
-  .person-card{
-    background:#fff; border:1px solid var(--border); border-radius:12px;
-    padding:12px; display:flex; gap:11px; align-items:flex-start;
-    box-shadow:var(--shadow-sm);
-  }
-  .person-card.detailed{ flex-direction:column; }
-  .avatar{
-    width:46px;height:46px;border-radius:50%;flex-shrink:0;
-    display:flex;align-items:center;justify-content:center;
-    color:#fff; font-weight:700; font-size:16px;
-    background-size:cover; background-position:center;
-    border:2px solid var(--gold-100);
-  }
-  .avatar-lg{ width:64px;height:64px; font-size:22px; }
-  .avatar-xl{ width:140px;height:140px; font-size:46px; margin-bottom:12px; border-width:4px; }
-  .person-main{ flex:1; min-width:0; }
-  .person-name{ font-size:13.5px; font-weight:700; color:var(--text); line-height:1.35; }
-  .person-acad{ font-size:11px; color:var(--text-faint); }
-  .person-position{
-    display:inline-block; font-size:10.5px; font-weight:600; color:var(--accent-strong);
-    background:var(--accent-soft); padding:2px 8px; border-radius:6px; margin-top:5px;
-  }
-  .person-dept{ font-size:11.5px; color:var(--text-soft); margin-top:4px; }
-  .person-loc{
-    margin-top:8px; font-size:12.5px; font-weight:600; color:var(--gray-800);
-    background:var(--gray-100); border-radius:8px; padding:6px 10px;
-    display:flex; align-items:center; gap:6px;
-  }
-  .person-loc .locpin{ color:var(--accent-strong); }
-  .person-contact{ margin-top:7px; font-size:11.5px; }
-  .person-contact a{ color:var(--accent-strong); text-decoration:none; }
-  .person-contact a:hover{ text-decoration:underline; }
-  .person-status{ font-size:10px; font-weight:600; padding:2px 7px; border-radius:6px; margin-top:6px; display:inline-block; }
-  .person-status.ok{ background:var(--success-soft); color:var(--success); }
-  .person-status.other{ background:var(--warn-soft); color:var(--warn); }
-  .person-note{ font-size:11px; color:var(--text-soft); margin-top:5px; font-style:italic; }
-  .person-header-row{ display:flex; gap:11px; width:100%; }
-
-  .more-note{ font-size:11.5px; color:var(--text-soft); margin-top:8px; }
-
-  .typing{ display:flex; gap:4px; padding:4px 0; }
-  .typing span{ width:6px;height:6px;border-radius:50%; background:var(--text-faint); animation:blink 1.2s infinite; }
-  .typing span:nth-child(2){ animation-delay:.2s; }
-  .typing span:nth-child(3){ animation-delay:.4s; }
-  @keyframes blink{ 0%,80%,100%{opacity:.25;} 40%{opacity:1;} }
-
-  /* ================= INPUT ROW ================= */
-  .chat-input-row{
-    display:flex; align-items:flex-end; gap:8px;
-    padding:12px 14px; border-top:1px solid var(--border);
-    background:var(--surface-alt);
-  }
+  .chat-head{padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--surface-alt);}
+  .chat-head-title{font-size:14px; font-weight:600;}
+  .chat-head-badge{font-size:11.5px; color:var(--text-soft); border:1px solid var(--border-strong); padding:2px 9px; border-radius:999px;}
+  .chat-scroll{flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; scroll-behavior:smooth;}
+  .msg{max-width:94%; display:flex; flex-direction:column; gap:4px;}
+  .msg.user{align-self:flex-end; align-items:flex-end;}
+  .msg.assistant{align-self:flex-start; align-items:flex-start;}
+  .bubble{padding:11px 14px; border-radius:16px; font-size:14px; line-height:1.6;}
+  .msg.user .bubble{background:var(--accent-grad); color:#fff; border-bottom-right-radius:4px;}
+  .msg.assistant .bubble{background:var(--surface-alt); border:1px solid var(--border); border-bottom-left-radius:4px;}
+  .msg-time{font-size:10.5px; color:var(--text-faint); padding:0 4px;}
+  .ans-title{font-size:14px; font-weight:700; margin-bottom:6px; color:var(--accent-strong);}
+  .ans-note, .more-note{font-size:12.5px; color:var(--text-soft); margin-top:6px;}
+  .typing{display:flex; gap:4px; padding:4px 0;}
+  .typing span{width:6px;height:6px;border-radius:50%;background:var(--text-faint);animation:blink 1.2s infinite;}
+  .typing span:nth-child(2){animation-delay:.2s;} .typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
+  .chat-input-row{display:flex; align-items:flex-end; gap:8px; padding:12px 14px; border-top:1px solid var(--border); background:var(--surface-alt);}
   .mic-btn, .mute-btn{
-    flex-shrink:0; width:40px;height:40px; border-radius:50%;
-    border:1px solid var(--border-strong); background:#fff; cursor:pointer;
-    font-size:17px; display:flex; align-items:center; justify-content:center;
-    transition:all .15s ease;
+    flex-shrink:0; width:42px; height:42px; border-radius:50%; border:1px solid var(--border-strong);
+    background:var(--surface); color:var(--text); cursor:pointer; font-size:17px; display:grid; place-items:center;
   }
-  .mic-btn:hover, .mute-btn:hover{ background:var(--accent-soft); border-color:var(--accent); }
-  .mic-btn.listening{
-    background:var(--danger); border-color:var(--danger); color:#fff;
-    animation:mic-pulse 1s infinite;
-  }
-  @keyframes mic-pulse{
-    0%{ box-shadow:0 0 0 0 rgba(181,80,74,.5); }
-    70%{ box-shadow:0 0 0 10px rgba(181,80,74,0); }
-    100%{ box-shadow:0 0 0 0 rgba(181,80,74,0); }
-  }
-  .mic-btn:disabled{ opacity:.4; cursor:not-allowed; }
-  .mute-btn.muted{ background:var(--gray-200); color:var(--gray-600); }
+  .mic-btn:hover, .mute-btn:hover{border-color:var(--accent);}
+  .mic-btn.listening{background:var(--danger); border-color:var(--danger); color:#fff; animation:mic 1s infinite;}
+  @keyframes mic{0%{box-shadow:0 0 0 0 hsl(4 60% 47% / .5);}70%{box-shadow:0 0 0 10px hsl(4 60% 47% / 0);}100%{box-shadow:0 0 0 0 hsl(4 60% 47% / 0);}}
+  .mic-btn:disabled{opacity:.4; cursor:not-allowed;}
+  .mute-btn.muted{opacity:.55;}
   .chat-input{
-    flex:1; resize:none; font-family:inherit; font-size:13.5px;
-    border:1px solid var(--border-strong); border-radius:12px;
-    padding:10px 13px; max-height:100px; min-height:40px;
-    background:#fff; color:var(--text);
+    flex:1; resize:none; font-family:inherit; font-size:14px; color:var(--text); background:var(--surface);
+    border:1px solid var(--border-strong); border-radius:14px; padding:10px 13px; max-height:110px; min-height:42px;
   }
-  .chat-input:focus{ outline:none; border-color:var(--accent); }
-  .send-btn{
-    flex-shrink:0; font-family:inherit; font-weight:600; font-size:13px;
-    padding:0 18px; height:40px; border-radius:12px; border:none;
-    background:var(--accent-grad); color:#fff; cursor:pointer;
-  }
-  .send-btn:hover{ filter:brightness(1.06); }
-  .voice-status{
-    font-size:11.5px; color:var(--accent-strong); padding:0 14px 10px; min-height:16px;
-    display:flex; align-items:center; gap:6px;
-  }
+  .chat-input:focus{outline:none; border-color:var(--accent);}
+  .send-btn{flex-shrink:0; font-family:inherit; font-weight:600; font-size:14px; padding:0 20px; height:42px; border-radius:14px; border:0; background:var(--accent-grad); color:#fff; cursor:pointer;}
+  .voice-status{font-size:12px; color:var(--accent-strong); padding:0 14px 8px; min-height:14px; background:var(--surface-alt);}
+  .tips{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; font-size:13px; color:var(--text-soft);}
+  .tips h3{margin:0 0 8px; font-size:14.5px; color:var(--text);}
+  .tips ul{margin:0; padding-left:18px;}
+  .tips li{margin:5px 0;}
+  .tips b{color:var(--text);}
 
-  .examples{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:18px; }
-  .example-chip{
-    font-family:inherit; font-size:12px; color:var(--gray-800);
-    background:#fff; border:1px solid var(--border-strong);
-    padding:6px 12px; border-radius:20px; cursor:pointer;
+  /* ================= การ์ดบุคลากร ================= */
+  .person-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; margin-top:8px;}
+  .person-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px;
+    display:flex; gap:11px; align-items:flex-start; cursor:pointer; position:relative;
+    transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
   }
-  .example-chip:hover{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-strong); }
+  .person-card:hover{transform:translateY(-2px); border-color:var(--accent); box-shadow:var(--shadow);}
+  .person-card.detailed{flex-direction:column;}
+  .person-header-row{display:flex; gap:12px; width:100%;}
+  .avatar{
+    width:46px; height:46px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:17px; overflow:hidden; box-shadow:0 0 0 2px var(--surface), 0 0 0 3.5px var(--accent-soft);
+  }
+  .avatar-lg{width:62px; height:62px; font-size:22px;}
+  .avatar-xl{width:150px; height:150px; font-size:50px; margin-bottom:14px; box-shadow:0 0 0 4px var(--surface), 0 0 0 6px var(--accent);}
+  .person-main{flex:1; min-width:0;}
+  .person-name{font-size:14px; font-weight:700; line-height:1.35;}
+  .person-position{display:inline-block; font-size:11.5px; font-weight:600; color:var(--accent-strong); background:var(--accent-soft); padding:2px 8px; border-radius:6px; margin-top:5px;}
+  .person-dept{font-size:12.5px; color:var(--text-soft); margin-top:4px;}
+  .person-loc{
+    margin-top:8px; font-size:13px; font-weight:600; background:var(--surface-alt); border:1px dashed var(--border-strong);
+    border-radius:8px; padding:6px 10px; display:flex; align-items:center; gap:6px;
+  }
+  .person-contact{margin-top:7px; font-size:12.5px; word-break:break-all;}
+  .person-contact a{text-decoration:none;}
+  .person-contact a:hover{text-decoration:underline;}
+  .person-status{font-size:11px; font-weight:600; padding:2px 7px; border-radius:6px; margin-top:6px; margin-left:4px; display:inline-block;}
+  .person-status.ok{background:var(--success-soft); color:var(--success);}
+  .person-status.other{background:var(--warn-soft); color:var(--warn);}
+  .person-note{font-size:12px; color:var(--text-soft); margin-top:5px; font-style:italic;}
+  .empty-note{font-size:13.5px; color:var(--text-soft); text-align:center; padding:28px 10px;}
 
-  /* ================= DIRECTORY SECTION ================= */
-  .directory-panel{
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+  /* ================= ภาพรวมบุคลากร (กราฟ) ================= */
+  .seg{display:inline-flex; border:1px solid var(--border-strong); border-radius:999px; padding:3px; background:var(--surface);}
+  .seg button{border:0; background:none; font-family:inherit; font-size:13px; color:var(--text-soft); padding:6px 14px; border-radius:999px; cursor:pointer;}
+  .seg button[aria-pressed="true"]{background:var(--accent); color:#fff; font-weight:600;}
+  html[data-mode="dark"] .seg button[aria-pressed="true"]{color:hsl(var(--h) 30% 10%);}
+  .charts{display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:14px;}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 18px 16px; min-width:0;}
+  .card h3{margin:0; font-size:15px;}
+  .card .sub{margin:2px 0 12px; font-size:12.5px; color:var(--text-soft);}
+  .span-4{grid-column:span 4;} .span-5{grid-column:span 5;} .span-6{grid-column:span 6;} .span-7{grid-column:span 7;} .span-8{grid-column:span 8;} .span-12{grid-column:span 12;}
+  .chart svg{display:block; max-width:100%; height:auto; overflow:visible; margin:0 auto;}
+  .chart text{font-family:inherit; fill:var(--text-soft); font-size:12px;}
+  .chart .gridline{stroke:var(--border); stroke-width:1;}
+  .chart .axis{stroke:var(--border-strong);}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--text-soft); margin-top:10px;}
+  .note{font-size:12px; color:var(--text-faint); margin-top:10px;}
+  .note.warn{color:var(--warn);}
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:12px;}
+  .kpi{border:1px solid var(--border); border-radius:10px; padding:8px 10px;}
+  .kpi b{display:block; font-size:20px; line-height:1.2;}
+  .kpi span{font-size:12px; color:var(--text-soft);}
+  .hbar{display:grid; grid-template-columns:minmax(90px,170px) minmax(0,1fr) 36px; align-items:center; gap:10px; padding:5px 4px; border-radius:8px; cursor:pointer; font-size:13px;}
+  .hbar:hover{background:var(--surface-alt);}
+  .hbar .lbl{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .hbar .track{display:flex; height:14px; border-radius:7px; overflow:hidden; background:var(--surface-alt);}
+  .hbar .track i{display:block; height:100%; width:0; transition:width .9s cubic-bezier(.2,.8,.2,1);}
+  .hbar b{text-align:right;}
+  .bars-scroll{max-height:440px; overflow:auto; padding-right:4px;}
+  .anim .grow{transform:scaleY(0); transform-origin:bottom; transform-box:fill-box; transition:transform .9s cubic-bezier(.2,.8,.2,1);}
+  .anim .draw{transition:stroke-dashoffset 1.4s ease;}
+  .anim .fade{opacity:0; transition:opacity .6s ease .6s;}
+  .anim.in .grow{transform:scaleY(1);}
+  .anim.in .fade{opacity:1;}
+  .anim.in .draw{stroke-dashoffset:0 !important;}
+  .tip{
+    position:fixed; z-index:200; pointer-events:none; background:var(--text); color:var(--paper);
+    font-size:12.5px; padding:6px 10px; border-radius:8px; white-space:nowrap; opacity:0; transition:opacity .12s;
+    transform:translate(-50%, calc(-100% - 10px));
   }
-  .directory-head{
-    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
-    margin-bottom:12px;
-  }
-  .directory-title{ font-size:14px; font-weight:700; display:flex; align-items:center; gap:7px; }
-  .directory-count{ font-size:11.5px; color:var(--text-soft); }
-  .toggle-btn{
-    font-family:inherit; font-size:12px; font-weight:600;
-    padding:7px 13px; border-radius:9px; border:1px solid var(--border-strong);
-    background:#fff; cursor:pointer; color:var(--text);
-  }
-  .toggle-btn:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .tip.show{opacity:1;}
+
+  /* ================= ทำเนียบ ================= */
+  .directory-panel{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px;}
+  .directory-head{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px;}
+  .directory-title{font-size:16px; font-weight:700;}
+  .directory-count{font-size:13px; color:var(--text-soft); font-weight:500;}
+  .toggle-btn{font-family:inherit; font-size:13px; font-weight:500; padding:7px 14px; border-radius:999px; border:1px solid var(--border-strong); background:var(--surface); color:var(--text); cursor:pointer;}
+  .toggle-btn:hover{border-color:var(--accent);}
   .browse-search{
-    width:100%; font-family:inherit; font-size:13px; padding:9px 12px;
-    border:1px solid var(--border-strong); border-radius:10px; margin-bottom:12px;
+    width:100%; font-family:inherit; font-size:14px; padding:10px 14px; color:var(--text); background:var(--surface-alt);
+    border:1px solid var(--border-strong); border-radius:12px; margin-bottom:12px;
   }
-  .browse-search:focus{ outline:none; border-color:var(--accent); }
-  .empty-note{ font-size:12.5px; color:var(--text-soft); text-align:center; padding:26px 10px; }
+  .browse-search:focus{outline:none; border-color:var(--accent);}
 
-  footer.foot{
-    text-align:center; font-size:11px; color:var(--text-faint); padding:14px 0 6px;
-    line-height:1.8;
+  /* ================= คะแนน ================= */
+  .rating-panel{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px; text-align:center; margin-top:34px;}
+  .rating-title{font-size:16px; font-weight:700;}
+  .rating-sub{font-size:13px; color:var(--text-soft); margin:3px 0 12px;}
+  .stars{font-size:34px; line-height:1; letter-spacing:6px; margin-bottom:12px;}
+  .stars span{color:var(--border-strong); cursor:pointer; display:inline-block; transition:color .1s, transform .1s;}
+  .stars span:hover{transform:scale(1.12);}
+  .stars.hover-preview span.on, .stars span.selected{color:hsl(42 90% 52%);}
+  .rating-comment{
+    width:100%; max-width:440px; font-family:inherit; font-size:13.5px; color:var(--text); background:var(--surface-alt);
+    border:1px solid var(--border-strong); border-radius:12px; padding:9px 12px; resize:vertical; margin:0 auto 10px; display:block;
   }
-  footer.foot b{ color:var(--text-soft); }
+  .rating-submit{font-family:inherit; font-weight:600; font-size:14px; color:#fff; background:var(--accent-grad); border:0; padding:9px 28px; border-radius:12px; cursor:pointer;}
+  .rating-submit:disabled{opacity:.45; cursor:not-allowed;}
+  .rating-thanks{font-size:13.5px; color:var(--success); font-weight:600; margin-top:6px;}
+  .rating-diag{font-size:12px; color:var(--text-faint); margin-top:10px;}
 
-  @media (max-width:720px){
-    .stat-row{ grid-template-columns:repeat(2,1fr); }
-    header.top{ flex-direction:column; align-items:flex-start; }
-    .sync-box{ text-align:left; width:100%; }
-    .sync-note{ margin-left:0; text-align:left; }
-    .chat-card{ height:64vh; }
-    .person-grid{ grid-template-columns:1fr; }
+  footer.foot{text-align:center; font-size:12px; color:var(--text-faint); padding:30px 0 10px; line-height:1.9;}
+  footer.foot b{color:var(--text-soft);}
+
+  /* ================= ป๊อปอัปรายละเอียด ================= */
+  .modal-overlay{position:fixed; inset:0; background:hsl(var(--h) 30% 6% / .6); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; backdrop-filter:blur(3px);}
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:var(--surface); color:var(--text); border-radius:20px; max-width:430px; width:100%; max-height:88vh; overflow-y:auto;
+    padding:26px 22px 22px; box-shadow:0 24px 60px rgba(0,0,0,.35); position:relative; animation:pop .18s ease;
+  }
+  @keyframes pop{from{transform:scale(.96);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .modal-close{position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%; border:1px solid var(--border-strong); background:var(--surface); color:var(--text-soft); cursor:pointer; font-size:15px;}
+  .modal-avatar-row{display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:12px;}
+  .modal-name{font-size:18px; font-weight:700;}
+  .modal-acad{font-size:12.5px; color:var(--text-faint); margin-top:2px;}
+  .modal-field{display:flex; gap:10px; padding:10px 0; border-top:1px solid var(--border); font-size:13.5px;}
+  .modal-field .f-icon{flex-shrink:0; width:20px; text-align:center;}
+  .modal-field .f-label{color:var(--text-faint); font-size:11.5px; display:block; margin-bottom:2px;}
+  .modal-field .f-value{font-weight:500;}
+  .modal-field .f-value a{text-decoration:none;}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    *, *::before, *::after{animation-duration:.01ms !important; transition-duration:.01ms !important;}
+  }
+  @media (max-width:980px){
+    .assist{grid-template-columns:1fr;}
+    .span-4,.span-5,.span-6,.span-7,.span-8{grid-column:span 12;}
+  }
+  @media (max-width:820px){
+    .hero{grid-template-columns:minmax(0,1fr); padding-top:22px;}
+    .brand small{display:none;}
+    .top-actions .hide-sm{display:none;}
+  }
+  @media (max-width:560px){
+    .wrap{padding:0 14px 30px;}
+    .topbar-in{padding:8px 14px;}
+    .tb-cell{padding:8px 10px;}
+    .tb-cell .v{font-size:19px;}
+    .tb-total{grid-column:span 6; border-right:0;}
+    .tb-total .v{font-size:52px;}
+    .tb-rev{grid-column:span 6; flex-direction:row; flex-wrap:wrap; align-items:center; gap:4px 10px;}
+    .tb-rev .k{display:none;}
+    .tb-rev .sync-tools{margin-top:0;}
+    .chat-card{height:70vh;}
+    .person-grid{grid-template-columns:1fr;}
+    .hero-search button.go{padding:0 14px;}
+    .hbar{grid-template-columns:minmax(70px,110px) minmax(0,1fr) 30px;}
   }
 </style>
 </head>
 <body>
 
-<div class="wrap">
-
-  <header class="top">
-    <div class="brand">
-      <div class="brand-emblem">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#fff"/>
-          <path d="M6 10.5V15c0 1.5 2.5 3 6 3s6-1.5 6-3v-4.5" stroke="#fff" stroke-width="1.4" fill="none"/>
-          <path d="M22 7v6" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#top" aria-label="หน้าแรก">
+      <span class="brand-emblem" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="#fff"/><path d="M6 10.5V15c0 1.5 2.5 3 6 3s6-1.5 6-3v-4.5" stroke="#fff" stroke-width="1.5"/><path d="M22 7v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
+      <span><b>ทำเนียบบุคลากร</b><small>คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</small></span>
+    </a>
+    <div class="top-actions">
+      <a class="home-link hide-sm" href="#insights">ภาพรวมบุคลากร</a>
+      <div class="theme-wrap">
+        <button class="icon-btn" id="themeBtn" aria-haspopup="true" aria-expanded="false" aria-controls="themePop" title="เปลี่ยนธีมสี">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a9 9 0 100 18c1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.1 0-.9.7-1.6 1.6-1.6H16a5 5 0 005-5C21 6.6 17 3 12 3z" stroke="currentColor" stroke-width="1.8"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10" cy="7" r="1.3" fill="currentColor"/><circle cx="14.5" cy="7" r="1.3" fill="currentColor"/></svg>
+          <span class="hide-sm">ธีม</span>
+        </button>
+        <div class="theme-pop" id="themePop" role="dialog" aria-label="ตั้งค่าธีม">
+          <h4>สีของหน้า</h4>
+          <div class="swatches" id="swatches"></div>
+          <p class="theme-name" id="themeName"></p>
+          <h4>ความสว่าง</h4>
+          <div class="modes" id="modes">
+            <button data-mode="light">สว่าง</button><button data-mode="dark">มืด</button><button data-mode="system">ตามเครื่อง</button>
+          </div>
+        </div>
       </div>
-      <div>
-        <div class="brand-eyebrow">ENGINEERING · MSU DIRECTORY</div>
-        <h1>ผู้ช่วยค้นหาห้องพัก/ห้องทำงานบุคลากร</h1>
-        <p class="subtitle">คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</p>
+      <a class="home-link hide-sm" href="https://eng.msu.ac.th/">หน้าหลักคณะ</a>
+      <a class="home-link primary" id="adminLink" href="#" target="_blank" rel="noopener">บุคลากรเข้าสู่ระบบ</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap" id="top">
+
+  <section class="hero">
+    <div>
+      <h1>ใครอยู่ห้องไหน<span class="ln">ถามได้เลย</span></h1>
+      <p class="lede">ค้นหาอาจารย์และเจ้าหน้าที่ด้วยชื่อ สาขา ตำแหน่ง หรือเลขห้อง พิมพ์สั้น ๆ หรือสะกดเพี้ยนเล็กน้อยก็ยังเจอ</p>
+      <form class="hero-search" id="heroForm" role="search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <label class="sr" for="heroInput">ค้นหาบุคลากร</label>
+        <input id="heroInput" type="search" autocomplete="off" placeholder="เช่น คณบดี, โยธา EN2, ห้อง 207A">
+        <button type="button" class="mic" id="heroMic" title="ถามด้วยเสียง" aria-label="ถามด้วยเสียง">🎤</button>
+        <button type="submit" class="go">ค้นหา</button>
+      </form>
+      <div class="examples" id="examples"></div>
+    </div>
+
+    <div class="titleblock" aria-label="ข้อมูลสรุปบุคลากร">
+      <div id="statRow" style="display:contents"></div>
+      <div class="tb-cell tb-rev" style="order:2">
+        <span class="k">ปรับปรุงข้อมูล</span>
+        <div class="sync-line"><span class="sync-dot" id="syncDot"></span><span id="syncText">กำลังเตรียมข้อมูล…</span></div>
+        <div class="sync-tools">
+          <button class="sync-btn" id="syncBtn" title="ซิงก์ข้อมูลล่าสุด">ซิงก์</button>
+          <button class="sync-btn" id="retryPhotoBtn" title="ดึงข้อมูลและรูปล่าสุดโดยข้ามแคช ใช้เมื่อเพิ่งแก้ไขข้อมูลแล้วหน้าเว็บยังไม่อัปเดต">ข้ามแคช</button>
+        </div>
+        <div class="sync-note" id="syncNote"></div>
       </div>
     </div>
-    <div class="sync-box">
-      <a class="home-link" href="https://eng.msu.ac.th/">🏠 กลับหน้าหลัก</a>
-      <span class="sync-status-inline"><span class="sync-dot" id="syncDot"></span><span id="syncText">กำลังเตรียมข้อมูล…</span></span>
-      <div><button class="sync-btn" id="syncBtn">🔄 ซิงก์ข้อมูลล่าสุด</button> <button class="sync-btn" id="retryPhotoBtn" title="ดึงรูปภาพล่าสุดจริงๆ โดยข้ามแคชเดิม ใช้เมื่อเพิ่งเปลี่ยน/ลบรูปในชีตแล้วเว็บยังไม่อัปเดต">🖼️ ดึงรูปภาพล่าสุด (ข้ามแคช)</button></div>
-      <div class="sync-note" id="syncNote"></div>
+  </section>
+
+  <section class="section" aria-labelledby="planTitle">
+    <div class="section-head">
+      <div><h2 id="planTitle">ผังอาคาร</h2><p>แตะอาคารหรือสาขาเพื่อดูรายชื่อบุคลากรทั้งหมด ผู้ที่สังกัดหลายสาขาจะปรากฏในทุกสาขา</p></div>
     </div>
-  </header>
+    <div class="siteplan" id="buildingChips"></div>
+    <div class="chip-row" id="deptChipsRow"></div>
+  </section>
 
-  <div class="stat-row" id="statRow"></div>
-
-  <div class="filter-panel">
-    <div class="filter-panel-title">🏢 ค้นหาด่วนตามอาคาร / สาขาวิชา <span style="font-weight:500;opacity:.75;">(ผู้ที่สังกัดหลายสาขาจะปรากฏในทุกสาขาที่สังกัด)</span></div>
-    <div class="chip-row" id="buildingChips"></div>
-    <div class="chip-row" id="deptChipsRow" style="margin-top:8px;"></div>
-  </div>
-
-  <div class="info-banner">
-    💡 ข้อมูลตัวอักษร (ชื่อ/ห้อง/ตำแหน่ง) ค้นหาได้ทันที — ส่วน<b>รูปภาพ</b>อาจใช้เวลาโหลดเพิ่มเติมสูงสุดประมาณ 2 นาทีหลังเปิดหน้าเว็บ กรุณารอหากต้องการดูรูปเปรียบเทียบยืนยันตัวบุคคล<br>
-    🔊 หากต้องการให้ระบบ<b>ตอบด้วยเสียง</b> กรุณาพิมพ์หรือกดค้นหาอย่างน้อย 1 ครั้งก่อน (ข้อจำกัดของเบราว์เซอร์ที่ต้องมีการโต้ตอบจากผู้ใช้ก่อนจึงจะเล่นเสียงได้)<br>
-    🔎 <b>ค้นหาแบบยืดหยุ่น:</b> พิมพ์สั้นๆ หรือใช้ตัวย่อก็ได้ (ไฟฟ้า, โยธา, EE, EV, สวล.) · สะกดเพี้ยนเล็กน้อยก็ยังเจอ (เมคคาทรอนิค) ·
-    ใส่หลายเงื่อนไขพร้อมกันได้ (เช่น "โยธา EN2 ชั้น 2") · <b>ผู้ที่สังกัดมากกว่า 1 สาขา จะค้นเจอได้จากทุกสาขาที่สังกัด</b> ·
-    ถ้าไม่พบผลลัพธ์ที่ตรงครบทุกเงื่อนไข ระบบจะผ่อนเงื่อนไขให้อัตโนมัติพร้อมแจ้งให้ทราบ
-  </div>
-
-  <div class="chat-card">
-    <div class="chat-head">
-      <div class="chat-head-title">💬 ผู้ช่วยค้นหาห้องพัก/ห้องทำงานบุคลากร</div>
-      <div class="chat-head-badge">ไม่ใช้ AI · ค้นหาตามกฎที่กำหนดไว้</div>
+  <section class="section" id="assistant" aria-labelledby="chatTitle">
+    <div class="section-head"><div><h2 id="chatTitle">ผู้ช่วยค้นหา</h2><p>พิมพ์หรือกดไมโครโฟนเพื่อถามด้วยเสียง ระบบตอบกลับด้วยเสียงได้</p></div></div>
+    <div class="assist">
+      <div class="chat-card">
+        <div class="chat-head">
+          <div class="chat-head-title">ถาม–ตอบ ห้องทำงานบุคลากร</div>
+          <div class="chat-head-badge">ค้นหาตามกฎ ไม่ใช้ AI</div>
+        </div>
+        <div class="chat-scroll" id="chatScroll" aria-live="polite"></div>
+        <div class="chat-input-row">
+          <button class="mic-btn" id="micBtn" type="button" title="พูดถาม (ไมโครโฟน)" aria-label="พูดถาม">🎤</button>
+          <textarea class="chat-input" id="chatInput" rows="1" placeholder="พิมพ์ชื่อ ห้อง อาคาร ตำแหน่ง หรือสาขา" aria-label="ข้อความค้นหา"></textarea>
+          <button class="mute-btn" id="muteBtn" type="button" title="ปิด/เปิดเสียงตอบ" aria-label="ปิดหรือเปิดเสียงตอบ">🔊</button>
+          <button class="send-btn" id="sendBtn">ถาม</button>
+        </div>
+        <div class="voice-status" id="voiceStatus"></div>
+      </div>
+      <aside class="tips">
+        <h3>ค้นหาให้เจอเร็วขึ้น</h3>
+        <ul>
+          <li>ใช้ตัวย่อได้ เช่น <b>ไฟฟ้า, โยธา, EE, EV, สวล.</b></li>
+          <li>ใส่หลายเงื่อนไขพร้อมกัน เช่น <b>โยธา EN2 ชั้น 2</b></li>
+          <li>ถามตามตำแหน่ง เช่น <b>รองคณบดีฝ่ายวิชาการ</b> หรือ <b>รศ. สาขาไฟฟ้า</b></li>
+          <li>สะกดผิดเล็กน้อยก็ยังเจอ เช่น <b>เมคคาทรอนิค</b></li>
+          <li>ถ้าไม่มีผลที่ตรงทุกเงื่อนไข ระบบผ่อนเงื่อนไขให้และแจ้งว่าผ่อนข้อใด</li>
+          <li>ระบบอ่านคำตอบด้วยเสียงหลังจากคุณค้นหาครั้งแรก (ข้อกำหนดของเบราว์เซอร์)</li>
+        </ul>
+      </aside>
     </div>
-    <div class="chat-scroll" id="chatScroll"></div>
-    <div class="chat-input-row">
-      <button class="mic-btn" id="micBtn" type="button" title="พูดถาม (ไมโครโฟน)">🎤</button>
-      <textarea class="chat-input" id="chatInput" rows="1" placeholder="พิมพ์ชื่อ, ห้อง, อาคาร, ตำแหน่ง หรือสาขา เช่น EN1-207, โยธา EN2, รองคณบดีฝ่ายวิชาการ"></textarea>
-      <button class="mute-btn" id="muteBtn" type="button" title="ปิด/เปิดเสียงตอบ">🔊</button>
-      <button class="send-btn" id="sendBtn">ถาม</button>
-    </div>
-    <div class="voice-status" id="voiceStatus"></div>
-  </div>
+  </section>
 
-  <div class="examples" id="examples"></div>
+  <section class="section" id="insights" aria-labelledby="insTitle">
+    <div class="section-head">
+      <div><h2 id="insTitle">ภาพรวมบุคลากร</h2><p id="insSub">สัดส่วนและการกระจายตัวของบุคลากร แสดงเป็นตัวเลขรวมเท่านั้น</p></div>
+      <div class="seg" id="insScope" role="group" aria-label="เลือกกลุ่มบุคลากร">
+        <button data-scope="all" aria-pressed="true">ทั้งหมด</button><button data-scope="academic" aria-pressed="false">สายวิชาการ</button><button data-scope="support" aria-pressed="false">สายสนับสนุน</button>
+      </div>
+    </div>
+    <div class="charts" id="charts"></div>
+  </section>
 
-  <div class="directory-panel">
-    <div class="directory-head">
-      <div class="directory-title">📋 ทำเนียบบุคลากรทั้งหมด <span class="directory-count" id="dirCount"></span></div>
-      <button class="toggle-btn" id="dirToggleBtn">ซ่อนทำเนียบ</button>
+  <section class="section">
+    <div class="directory-panel">
+      <div class="directory-head">
+        <div class="directory-title">ทำเนียบบุคลากรทั้งหมด <span class="directory-count" id="dirCount"></span></div>
+        <button class="toggle-btn" id="dirToggleBtn">ซ่อนทำเนียบ</button>
+      </div>
+      <div id="dirBody">
+        <input class="browse-search" id="browseSearch" type="text" placeholder="กรองทำเนียบ เช่น ไฟฟ้า, โยธา EN2, 207A, ชื่อ (พิมพ์ผิดนิดหน่อยก็ยังเจอ)" aria-label="กรองทำเนียบ">
+        <div class="person-grid" id="directoryGrid"></div>
+      </div>
     </div>
-    <div id="dirBody">
-      <input class="browse-search" id="browseSearch" type="text" placeholder="พิมพ์เพื่อกรองทำเนียบ เช่น ไฟฟ้า, โยธา EN2, 207A, สมชาย (พิมพ์ผิดนิดหน่อยก็ยังเจอ)…">
-      <div class="person-grid" id="directoryGrid"></div>
-    </div>
-  </div>
+  </section>
 
   <div class="rating-panel" id="ratingPanel">
-    <div class="rating-title">⭐ ให้คะแนนความพึงพอใจในการใช้งานระบบนี้</div>
-    <div class="rating-sub">ความเห็นของคุณช่วยให้เราปรับปรุงระบบให้ดีขึ้นได้ครับ</div>
+    <div class="rating-title">ระบบนี้ช่วยคุณได้มากแค่ไหน</div>
+    <div class="rating-sub">คะแนนและความคิดเห็นของคุณช่วยให้เราปรับปรุงระบบ</div>
     <div class="stars" id="ratingStars">
       <span data-star="1">★</span><span data-star="2">★</span><span data-star="3">★</span><span data-star="4">★</span><span data-star="5">★</span>
     </div>
-    <textarea class="rating-comment" id="ratingComment" rows="2" placeholder="ความคิดเห็นเพิ่มเติม (ถ้ามี ไม่บังคับ)"></textarea>
+    <textarea class="rating-comment" id="ratingComment" rows="2" placeholder="ความคิดเห็นเพิ่มเติม (ไม่บังคับ)"></textarea>
     <button class="rating-submit" id="ratingSubmitBtn" disabled>ส่งคะแนน</button>
     <div class="rating-thanks" id="ratingThanks" style="display:none;">🙏 ขอบคุณสำหรับคะแนนและความคิดเห็นครับ!</div>
     <div class="rating-diag" id="ratingDiag"></div>
   </div>
 
   <footer class="foot">
-    ระบบนี้ค้นหาข้อมูลด้วยกฎที่กำหนดไว้ล่วงหน้าเท่านั้น <b>ไม่มีการใช้ปัญญาประดิษฐ์ (AI)</b> ในการประมวลผลคำตอบ<br>
-    ข้อมูลบุคลากรซิงก์แบบเรียลไทม์จาก Google Sheets ของคณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม<br><br>
+    ค้นหาด้วยกฎที่กำหนดไว้ล่วงหน้า <b>ไม่ใช้ปัญญาประดิษฐ์ (AI)</b> · ข้อมูลจากระบบฐานข้อมูลบุคลากร คณะวิศวกรรมศาสตร์<br>
+    สถิติแสดงเป็นตัวเลขรวม ไม่เปิดเผยข้อมูลส่วนบุคคล<br><br>
     © 2569 คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม<br>
     พัฒนาโดย นายปัญญา จีระฉัตร | นักวิชาการโสตทัศนศึกษา | <a href="mailto:panya.j@msu.ac.th">panya.j@msu.ac.th</a>
   </footer>
@@ -550,8 +598,9 @@
 </div>
 
 <div class="modal-overlay" id="personModalOverlay">
-  <div class="modal-box" id="personModalBox"></div>
+  <div class="modal-box" id="personModalBox" role="dialog" aria-modal="true"></div>
 </div>
+<div class="tip" id="chartTip" role="tooltip"></div>
 
 <script id="recordData" type="application/json">[{"id": "T001", "acadTitle": "ศาสตราจารย์ ดร.", "name": "อนงค์ฤทธิ์  แข็งแรง", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "anongrit.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T002", "acadTitle": "ศาสตราจารย์ ดร.", "name": "วรวัฒน์  เสงี่ยมวิบูล", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "wor_nui@yahoo.com", "note": "", "photo": ""}, {"id": "T003", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "จักรมาส  เลาหวณิช", "position": "คณบดีคณะวิศวกรรมศาสตร์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "2", "room": "คณบดี", "status": "ปกติ", "email": "juckamas.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T004", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "เกียรติศักดิ์  ศรีประทีป", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "keartisaks@hotmail.com", "note": "", "photo": ""}, {"id": "T005", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุดสาคร  อินธิเดช", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "220A-220B", "status": "ปกติ", "email": "sudsakorn.i@msu.ac.th", "note": "", "photo": ""}, {"id": "T006", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "บพิธ  บุปผโชติ", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "bopit.b@msu.ac.th", "note": "", "photo": ""}, {"id": "T007", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "อภินันท์  อุรโสภณ", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "Aurasopon@yahoo.com", "note": "", "photo": ""}, {"id": "T008", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "อดิศักดิ์  ปัตติยะ", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN3", "floor": "1", "room": "101", "status": "ปกติ", "email": "adisak_pattiya@yahoo.com", "note": "", "photo": ""}, {"id": "T009", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "กริสน์  ชัยมูล", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN2", "floor": "2", "room": "202", "status": "ปกติ", "email": "k.chaimoon@msu.ac.th", "note": "", "photo": ""}, {"id": "T010", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สหลาภ  หอมวุฒิวงศ์", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายอำนวยการ", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "", "status": "ปกติ", "email": "sahalaph.h@msu.ac.th", "note": "", "photo": ""}, {"id": "T011", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "เรืองรุชดิ์  ชีระโรจน์", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "220A-220B", "status": "ปกติ", "email": "raungrut.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T012", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุพรรณ  ยั่งยืน", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN2", "floor": "2", "room": "203", "status": "ปกติ", "email": "suphan.y@msu.ac.th", "note": "", "photo": ""}, {"id": "T013", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ชลธี  โพธิ์ทอง", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายวิจัย นวัตกรรมและวิเทศสัมพันธ์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN2", "floor": "2", "room": "201", "status": "ปกติ", "email": "chonlatee.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T014", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "เกียรติสิน กาญจนวนิชกุล", "position": "อาจารย์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "", "status": "ปกติ", "email": "kiattisin.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T015", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ยศฐา ศรีเทพ", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "yottha.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T016", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "วสันต์  ด้วงคำจันทร์", "position": "อาจารย์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN3", "floor": "3", "room": "", "status": "ปกติ", "email": "wasan.d@msu.ac.th", "note": "", "photo": ""}, {"id": "T017", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "นิวัตร์ อังควิศิษฐพันธ์", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "niwat.a@msu.ac.th", "note": "", "photo": ""}, {"id": "T018", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุพรรณนิกา  วัฒนะ", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN2", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "supannika.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T019", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "พิทักษ์  พร้อมไธสง", "position": "อาจารย์", "dept": "วิศวกรรมรถไฟความเร็วสูง", "building": "EN1", "floor": "1", "room": "105", "status": "ปกติ", "email": "pitak.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T020", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "กฤต โง้วธนสุวรรณ", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "1", "room": "104", "status": "ปกติ", "email": "Grit.n@msu.ac.th", "note": "", "photo": ""}, {"id": "T021", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ณัฐพล  ภูมิสะอาด", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายบริหารและวางแผน", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "nattapol.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T022", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "จินดาพร  จำรัสเลิศลักษณ์", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "220A-220B", "status": "ปกติ", "email": "jindaporn.msu@gmail.com", "note": "", "photo": ""}, {"id": "T023", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ธีรยุทธ  ชาติชนะยืนยง", "position": "อาจารย์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "theerayuth.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T024", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "อลงกรณ์  ละม่อม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "alongkorn_lamom@msu.ac.t", "note": "", "photo": ""}, {"id": "T025", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นิดา  ชัยมูล", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN2", "floor": "2", "room": "202", "status": "ปกติ", "email": "n.seelsaen@gmail.com", "note": "", "photo": ""}, {"id": "T026", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ทรงชัย  วิริยะอำไพวงศ์", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "songchai.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T027", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ละมุล  วิเศษ", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "lamulwiset@hotmail.com", "note": "", "photo": ""}, {"id": "T028", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "เพชร  เพ็งชัย", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "petchpengchai@zoho.com", "note": "", "photo": ""}, {"id": "T029", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "โสภา  แคนสี", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN2", "floor": "2", "room": "", "status": "ปกติ", "email": "sopa.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T030", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "เกสร  วงศ์เกษม", "position": "รองคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายวิชาการและพัฒนานิสิต", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "2", "room": "221A-221B", "status": "ปกติ", "email": "siriluk.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T031", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "ธีรพัฒน์ ชมภูคำ", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "teerapat.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T032", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ธวัฒน์ชัย  คุณะโคตร", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "tawatchai.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T033", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ณัฐวุฒิ สุวรรณทา", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "nattawoot.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T034", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นพปฎล เสงี่ยมศักดิ์", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "noppadol.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T035", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ศิวา แก้วปลั่ง", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "siwa.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T036", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นเรศ  มีโส", "position": "อาจารย์", "dept": "วิศวกรรมชีวภาพ", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "n_meeso@yahoo.com", "note": "", "photo": ""}, {"id": "T037", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ชัยชาญ โชติถนอม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "chaicharn.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T038", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "รัตนา  หอมวิเชียร", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "207A-207B", "status": "ปกติ", "email": "rattana.h@msu.ac.th", "note": "", "photo": ""}, {"id": "T039", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นวรัตน์ พิลาแดง", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "403H", "status": "ปกติ", "email": "nawarat.p@msu.ac.th", "note": "", "photo": ""}, {"id": "T040", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ชัยยงค์  เสริมผล", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "chaiyong.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T041", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "พงษ์พันธ์  แทนเกษม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "209A-209B", "status": "ปกติ", "email": "civilphongphan@gmail.com", "note": "", "photo": ""}, {"id": "T042", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "เชิดพงษ์  เชี่ยวชาญวัฒนา", "position": "อาจารย์", "dept": "วิศวกรรมรถไฟความเร็วสูง", "building": "EN2", "floor": "2", "room": "203", "status": "ปกติ", "email": "cherdpong.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T043", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นบปนม  แก้วหานาม", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "219A-219B", "status": "ปกติ", "email": "napanom.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T044", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ศตวรรษ  ทวงชน", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "sattawat.t@msu.ac.th", "note": "", "photo": ""}, {"id": "T045", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "วจัสกร กาญจนะ", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "1", "room": "403H", "status": "ปกติ", "email": "wajussakorn.k@msu.ac.th", "note": "", "photo": ""}, {"id": "T046", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "สุรชัย วงชารี", "position": "อาจารย์", "dept": "วิศวกรรมสิ่งแวดล้อม", "building": "EN1", "floor": "2", "room": "221A-221B", "status": "ปกติ", "email": "surachai.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T047", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "นรินทร์  ศิริวรรณ", "position": "อาจารย์", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "narin.s@msu.ac.th", "note": "", "photo": ""}, {"id": "T048", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "บัญชา  วัฒนะ", "position": "อาจารย์", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "2", "room": "218A", "status": "ปกติ", "email": "buncha.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T049", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "สริญญา ศาลางาม", "position": "อาจารย์", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "2", "room": "221A-221B", "status": "ปกติ", "email": "sarinya.sa@msu.ac.th", "note": "", "photo": ""}, {"id": "T050", "acadTitle": "รองศาสตราจารย์ ดร.", "name": "กิตตินันท์  วันสาสืบ", "position": "อาจารย์", "dept": "วิศวกรรมยานยนต์ไฟฟ้า", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "kittinan.w@msu.ac.th", "note": "", "photo": ""}, {"id": "T051", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ธนายุทธ ไชยธงรัตน์", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "1", "room": "104", "status": "ปกติ", "email": "Tanayut.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T052", "acadTitle": "อาจารย์ ดร.", "name": "ณรงค์กรณ์  อุทาทิพย์", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมยานยนต์ไฟฟ้า", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "narongkorn.u@msu.ac.th", "note": "", "photo": ""}, {"id": "T053", "acadTitle": "อาจารย์ ดร.", "name": "ณัฏฐพล  ไชยดวงศรี", "position": "ผู้ช่วยคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายสารสนเทศ", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "nuttapon.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T054", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "ปิยณัฐ จันโทสุทธิ์", "position": "ผู้ช่วยคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายปฏิบัติการวิศวกรรม", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-307", "status": "ปกติ", "email": "piyanat.j@msu.ac.th", "note": "", "photo": ""}, {"id": "T055", "acadTitle": "อาจารย์ ดร.", "name": "ปริญญ์ ชุปวา", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "prarin.c@msu.ac.th", "note": "", "photo": ""}, {"id": "T056", "acadTitle": "ผู้ช่วยศาสตราจารย์ ดร.", "name": "คเณศ ถุงออด", "position": "หัวหน้าสำนักวิชาวิศวกรรมศาสตร์", "dept": "วิศวกรรมเมคาทรอนิกส์", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "kaned.th@msu.ac.th", "note": "", "photo": ""}, {"id": "T057", "acadTitle": "อาจารย์ ดร.", "name": "ทวีศักดิ์ ทองแสน", "position": "ผู้ช่วยคณบดีคณะวิศวกรรมศาสตร์ ฝ่ายกิจการนิสิต", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "taweesak.th@msu.ac.th", "note": "", "photo": ""}, {"id": "T058", "acadTitle": "อาจารย์ ดร.", "name": "รพีภัทร เตชะรุ่งเรืองสกุล", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "2", "room": "208A-208B", "status": "ปกติ", "email": "rapeepat.tee@msu.ac.th", "note": "", "photo": ""}, {"id": "T059", "acadTitle": "อาจารย์", "name": "สุรพงษ์ ลิวไธสง", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN1", "floor": "1", "room": "104", "status": "ปกติ", "email": "Surapong.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T060", "acadTitle": "อาจารย์", "name": "ณัฏฐพงษ์ ลาดบัตร", "position": "อาจารย์", "dept": "วิศวกรรมโยธา", "building": "EN2", "floor": "2", "room": "", "status": "ปกติ", "email": "Nuttapong.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T061", "acadTitle": "อาจารย์ ดร.", "name": "ชณัฐ วิพัทนะพร", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมเครื่องกล", "building": "EN1", "floor": "3", "room": "ตรงข้ามห้อง EN1-308", "status": "ปกติ", "email": "chanat.v@msu.ac.th", "note": "", "photo": ""}, {"id": "T062", "acadTitle": "อาจารย์", "name": "กฤษฏิ์  เลิศล้ำ", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมปฏิบัติ", "building": "EN2", "floor": "2", "room": "201", "status": "ปกติ", "email": "krit.l@msu.ac.th", "note": "", "photo": ""}, {"id": "T063", "acadTitle": "อาจารย์", "name": "เดชา อินทร์โท่โล่", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมรถไฟความเร็วสูง", "building": "EN5", "floor": "2", "room": "202", "status": "ปกติ", "email": "decha.i@msu.ac.th", "note": "", "photo": ""}, {"id": "T064", "acadTitle": "อาจารย์", "name": "ณัฐนิชา อิ่มน้ำขาว", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมการผลิต", "building": "EN1", "floor": "4", "room": "412H", "status": "ปกติ", "email": "nutnicha.i@msu.ac.th", "note": "", "photo": ""}, {"id": "T065", "acadTitle": "อาจารย์", "name": "บัณริ เข็มกลัดมุกต์", "position": "ประธานหลักสูตร", "dept": "วิศวกรรมไฟฟ้า", "building": "EN1", "floor": "4", "room": "406", "status": "ปกติ", "email": "banri.k@msu.ac.th", "note": "", "photo": ""}, {"id": "S001", "acadTitle": "หัวหน้าสำนักงานเลขานุการคณะวิศวกรรมศาสตร์", "name": "วิรายา ภมรสมิต", "position": "หัวหน้าสำนักงานเลขานุการคณะวิศวกรรมศาสตร์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "viraya.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S002", "acadTitle": "ชำนาญการพิเศษ", "name": "พยุงศักดิ์ ภักดีพล", "position": "หัวหน้ากลุ่มงานบริหาร นักวิเคราะห์นโยบายและแผน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "phayungsak.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S003", "acadTitle": "ปฏิบัติการ", "name": "เกศรินทร์ ภูผานี", "position": "ฝ่ายงานงานบุคคล", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "kessarin.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S004", "acadTitle": "ปฏิบัติการ", "name": "พัชนี คำวงษา", "position": "ฝ่ายงานธุรการและงานเลขานุการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "phatchanee.k@msu.ac.th", "note": "", "photo": ""}, {"id": "S005", "acadTitle": "ปฏิบัติงาน", "name": "ชญาภา ชาดา", "position": "งานห้องสมุดและงานเลขานุการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "chayapa.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S006", "acadTitle": "ปฏิบัติการ", "name": "พัชรา ติตะสี", "position": "ฝ่ายงานวิจัย และวิเทศสัมพันธ์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "patchara.ti@msu.ac.th", "note": "", "photo": ""}, {"id": "S007", "acadTitle": "ปฏิบัติการ", "name": "นิตยา คำมูลนาม", "position": "ฝ่ายงานคอมพิวเตอร์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "2", "room": "ห้องสมุด", "status": "ปกติ", "email": "nittaya.ku@msu.ac.th", "note": "", "photo": ""}, {"id": "S008", "acadTitle": "ปฏิบัติการ", "name": "ปัญญา จีระฉัตร", "position": "ฝ่ายงานงานโสตทัศนูปกรณ์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "3", "room": "ห้องพักเจ้าหน้าระหว่างห้องปฏิบัติการคอมพิวเตอร์ 313 - 314 , 312", "status": "ปกติ", "email": "panya.j@msu.ac.th", "note": "", "photo": ""}, {"id": "S009", "acadTitle": "ปฏิบัติงาน", "name": "ดนัย ไชยมาตย์", "position": "ฝ่ายงานสวน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "ติดห้อง EN1-105 ห้องพักเจ้าหน้าที่", "status": "ปกติ", "email": "Danai.C@msu.ac.th", "note": "", "photo": ""}, {"id": "S010", "acadTitle": "ปฏิบัติงาน", "name": "ชัชวาล หมวดนา", "position": "ฝ่ายงานยานยนต์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "Chatchawal.M@msu.ac.th", "note": "", "photo": ""}, {"id": "S011", "acadTitle": "ปฏิบัติงาน", "name": "จีระศักดิ์ บรรจงปรุ", "position": "ฝ่ายงานยานยนต์", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "", "note": "", "photo": ""}, {"id": "S012", "acadTitle": "ปฏิบัติการ", "name": "ลำพูน ศรีโพธิ์ผา", "position": "หัวหน้ากลุ่มงานนโยบาย แผนและคลัง นักวิชาการเงินและบัญชีปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "lumpoon.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S013", "acadTitle": "ปฏิบัติการ", "name": "พักตร์วิภา วิระหา", "position": "ฝ่ายงานการเงิน และบัญชี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "Pukwipha.K@msu.ac.th", "note": "", "photo": ""}, {"id": "S014", "acadTitle": "ปฏิบัติการ", "name": "วิรุฬ พลชำนิ", "position": "ฝ่ายงานพัสดุ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "wirun.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S015", "acadTitle": "ปฏิบัติการ", "name": "จันทิมา ไวยกรรณ์", "position": "ฝ่ายงานพัสดุ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "jantima.w@msu.ac.th", "note": "", "photo": ""}, {"id": "S016", "acadTitle": "ปฏิบัติการ", "name": "สถาพร พวงมะลัย", "position": "งานกรอบคำรับรองการปฏิบัติงานราชการ(ก.พ.ร.)", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "sataporn.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S017", "acadTitle": "ปฏิบัติการ", "name": "อนุชา ชังชั่ว", "position": "ฝ่ายงานประกันคุณภาพการศึกษา/EdPEx", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "112", "status": "ปกติ", "email": "anucha.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S018", "acadTitle": "ชำนาญการ", "name": "นางสาวเสาวลักษณ์ เรียงพรม", "position": "ฝ่ายงานวิชาการระดับปริญญาตรี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "saowaluk.ria@msu.ac.th", "note": "", "photo": ""}, {"id": "S019", "acadTitle": "ปฏิบัติการ", "name": "สุภาวดี กั้วพงษ์", "position": "ฝ่ายงานวิชาการระดับปริญญาตรี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "supawadee@msu.ac.th", "note": "", "photo": ""}, {"id": "S020", "acadTitle": "ปฏิบัติการ", "name": "เมธินี ไชยวงษา", "position": "ฝ่ายงานวิชาการระดับปริญญาตรี", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "methinee.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S021", "acadTitle": "ปฏิบัติการ", "name": "วรินญา ชื่นใจ", "position": "ฝ่ายงานวิชาการระดับบัณฑิตศึกษา", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "warinya.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S022", "acadTitle": "ปฏิบัติการ", "name": "วรลักษณ์ ศิริประเสริฐ", "position": "ฝ่ายงานวิชาการระดับบัณฑิตศึกษา", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "woralak.si@msu.ac.th", "note": "", "photo": ""}, {"id": "S023", "acadTitle": "ปฏิบัติการ", "name": "อธิวัฒน์ อุดมก้านตง", "position": "ฝ่ายงานกิจการนิสิต", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "1", "room": "โพธิ์วิศว์ วิชาการศึกษา", "status": "ปกติ", "email": "atiwat.u@msu.ac.th", "note": "", "photo": ""}, {"id": "S024", "acadTitle": "ปฏิบัติการ", "name": "ตรีญาภัทร์ แสงตา", "position": "หัวหน้างานฝ่ายบริการวิชาการและบริการวิชาชีพ นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "treeyapat.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S025", "acadTitle": "ปฏิบัติการ", "name": "นัฐราช แสนมีมา", "position": "หัวหน้างานห้องปฏิบัติการ นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "nattarat.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S026", "acadTitle": "ปฏิบัติการ", "name": "สุระ ทับสีแก้ว", "position": "หัวหน้างานอาคารสถานที่ ผู้ปฏิบัติงานวิทยาศาสตร์ปฏิบัติงาน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "sura.t@msu.ac.th", "note": "", "photo": ""}, {"id": "S027", "acadTitle": "ปฏิบัติการ", "name": "ภูพิงค์ ช่วยอุดม", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "4", "room": "418", "status": "ปกติ", "email": "pooping.c@msu.ac.th", "note": "", "photo": ""}, {"id": "S028", "acadTitle": "ปฏิบัติการ", "name": "ศิวณัทร ศรีโลห้อ", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "4", "room": "414", "status": "ปกติ", "email": "siwanut.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S029", "acadTitle": "ชำนาญการ", "name": "มีศักดิ์ธนา พัวพิทยาธร", "position": "วิศวกรโยธาปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "103", "status": "ปกติ", "email": "meesakthana.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S030", "acadTitle": "ปฏิบัติการ", "name": "สุวิทย์ เสนาลาด", "position": "ผู้ปฏิบัติงานวิทยาศาสตร์ปฏิบัติงาน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "suwit.sena@msu.ac.th", "note": "", "photo": ""}, {"id": "S031", "acadTitle": "ปฏิบัติการ", "name": "สมนึก พันเสนา", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "somnuek.pa@msu.ac.th", "note": "", "photo": ""}, {"id": "S032", "acadTitle": "ปฏิบัติการ", "name": "สุรเชษฐ สวนจันทร์", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN1", "floor": "3", "room": "318", "status": "ปกติ", "email": "surachet.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S033", "acadTitle": "ปฏิบัติการ", "name": "จตุพล สายจันทา", "position": "นักวิชาการศึกษา", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "jatapon.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S034", "acadTitle": "ปฏิบัติการ", "name": "ปริวัตร เวฬุวนารักษ์", "position": "ผู้ปฏิบัติงานวิทยาศาสตร์ปฏิบัติงาน", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "pariwat.w@msu.ac.th", "note": "", "photo": ""}, {"id": "S035", "acadTitle": "ปฏิบัติการ", "name": "สัจจพงษ์ แสนงาม", "position": "วิศวกรโยธาปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "sutchapong.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S036", "acadTitle": "ปฏิบัติการ", "name": "ธีระเดช ทรงอาจ", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "Teeradet.s@msu.ac.th", "note": "", "photo": ""}, {"id": "S037", "acadTitle": "ปฏิบัติการ", "name": "วันชัย พิลึก", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "wanchai.p@msu.ac.th", "note": "", "photo": ""}, {"id": "S038", "acadTitle": "ปฏิบัติการ", "name": "ณัชพร สอนสี", "position": "นักวิทยาศาสตร์ปฏิบัติการ", "dept": "สำนักงานเลขานุการคณบดี", "building": "EN2", "floor": "1", "room": "101", "status": "ปกติ", "email": "natchaporn.s@msu.ac.th", "note": "", "photo": ""}]</script>
 
@@ -560,15 +609,11 @@
   "use strict";
 
   /* ================= CONFIG ================= */
-  // แก้ SHEET_ID / SHEET_GID ให้ตรงกับ Google Sheet ของคุณ
-  // ต้องแชร์ชีทเป็น "ทุกคนที่มีลิงก์ - ผู้ดู (Viewer)" จึงจะซิงก์สดได้
-  const SHEET_ID = "1aHKzP3MQw7YJNTIhIqHgFeq_eM1_eHNBceHZUVPCoTw";
-  const SHEET_GID = "0";
-  // รูปภาพที่ฝังแบบ "Insert image in cell" ใน Google Sheets ไม่สามารถอ่านผ่าน
-  // gviz/CSV ได้เลย (เป็นข้อจำกัดของ Google เอง) จึงต้องใช้ Google Apps Script
-  // เป็นตัวกลางอ่านรูปแล้วส่งกลับมาเป็น JSON แทน — ดูวิธีติดตั้งท้ายไฟล์นี้
-  // (ค้นหาคำว่า "APPS SCRIPT SETUP") แล้วนำ Web app URL มาใส่ตรงนี้
+  // ข้อมูลทั้งหมด (ข้อความ + ลิงก์รูปบนเซิร์ฟเวอร์คณะ) มาจาก Apps Script Web App ของ
+  // "ระบบฐานข้อมูลบุคลากร" — ใส่ URL ที่ลงท้ายด้วย /exec (URL เดิมใช้ต่อได้ ถ้า Deploy เป็นเวอร์ชันใหม่)
+  // ข้อมูลภายในบุคลากรถูกจัดการผ่านหน้า  APPS_SCRIPT_URL + "?page=admin"
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxicXfhScB1MLNf1XRudMEDzwOT9FdL9OdmnRska9KeseqMO0o-i9MX9fb3uEr9wiEI/exec";
+  (function(){ const a = document.getElementById('adminLink'); if(a){ if(APPS_SCRIPT_URL) a.href = APPS_SCRIPT_URL + '?page=admin'; else a.remove(); } })();
 
   const elChatScroll = document.getElementById('chatScroll');
   const elChatInput = document.getElementById('chatInput');
@@ -794,7 +839,7 @@
       const init = escapeHtml(initials(r.name));
       // ถ้ารูปโหลดไม่ได้ (เช่นลิงก์หมดอายุ) จะสลับกลับเป็นวงกลมตัวอักษรย่อให้อัตโนมัติ ไม่ขึ้นไอคอนรูปพัง
       return '<div class="'+cls+'" style="background:'+bg+';" data-fallback="1">' +
-        '<img src="'+escapeHtml(photo)+'" alt="" loading="lazy" ' +
+        '<img src="'+escapeHtml(photo)+'" alt="" loading="lazy" decoding="async" width="96" height="96" ' +
         'style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;" ' +
         'onerror="this.parentElement.textContent=\''+init+'\'; this.remove();">' +
         '</div>';
@@ -864,41 +909,7 @@
 
   /* ================= STAT TILES ================= */
   let ratingStats = { avg: null, count: 0 };
-  function renderStats(){
-    const buildings = getBuildings();
-    const depts = getDepts();
-    const ratingTile = ratingStats.count
-      ? '<div class="stat-tile"><div class="num">⭐ '+ratingStats.avg.toFixed(1)+'</div><div class="lbl">คะแนนความพึงพอใจ ('+ratingStats.count+' รีวิว)</div></div>'
-      : '<div class="stat-tile"><div class="num">⭐ —</div><div class="lbl">ยังไม่มีคะแนนความพึงพอใจ</div></div>';
-    elStatRow.innerHTML =
-      '<div class="stat-tile"><div class="num">'+records.length+'</div><div class="lbl">บุคลากรทั้งหมด</div></div>' +
-      '<div class="stat-tile"><div class="num">'+buildings.length+'</div><div class="lbl">อาคาร</div></div>' +
-      '<div class="stat-tile"><div class="num">'+depts.length+'</div><div class="lbl">สาขา/หน่วยงาน</div></div>' +
-      ratingTile;
-  }
-
   /* ================= FILTER CHIPS ================= */
-  function renderChips(){
-    const buildings = getBuildings();
-    elBuildingChips.innerHTML =
-      buildings.map(b=>'<button class="chip" data-building="'+escapeHtml(b)+'">🏢 '+escapeHtml(b)+'</button>').join('');
-
-    const depts = getDepts();
-    elDeptChipsRow.innerHTML =
-      depts.map(d=>'<button class="chip" data-dept="'+escapeHtml(d)+'">🎓 '+escapeHtml(deptKeyword(d))+' <span style="opacity:.7;">('+countInDept(d)+')</span></button>').join('');
-
-    elBuildingChips.querySelectorAll('[data-building]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        askBuildingList(btn.getAttribute('data-building'));
-      });
-    });
-    elDeptChipsRow.querySelectorAll('[data-dept]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        askDeptList(btn.getAttribute('data-dept'));
-      });
-    });
-  }
-
   /* ---- คลิกชิป = กรองแบบตรงหมวดหมู่ 100% (ไม่ผ่านตัวเดาความหมายภาษาธรรมชาติ) ---- */
   function askBuildingList(building){
     const list = records.filter(r=>r.building===building)
@@ -1610,297 +1621,122 @@
     btn.addEventListener('click', ()=>{ elChatInput.value = EXAMPLE_QUESTIONS[i]; handleSend(); });
   });
 
-  /* ================= LIVE SYNC (Google Sheet, JSONP, gviz) ================= */
-  const HEADER_MAP = {
-    id:        ["ลำดับ"],
-    acadTitle: ["ตำแหน่งทางวิชาการ"],
-    name:      ["ชื่อ - นามสกุล","ชื่อ-นามสกุล","ชื่อ – นามสกุล"],
-    position:  ["ตำแหน่ง"],
-    // รองรับหลายคอลัมน์สาขา เช่น "หน่วยงาน/สาขา", "สาขา 2", "หน่วยงานที่ 2" — ระบบจะรวมให้เอง
-    dept:      ["หน่วยงาน/สาขา","หน่วยงาน","สาขา"],
-    building:  ["อาคาร"],
-    floor:     ["ชั้น"],
-    room:      ["ห้อง"],
-    status:    ["สถานะ"],
-    email:     ["E-Mail","E-mail","Email","อีเมล"],
-    note:      ["หมายเหตุ"],
-    photo:     ["รูปภาพ"]
-  };
-
-  function buildHeaderIndex(cols, headerMap){
-    const labels = cols.map(c => ((c && (c.label || c.id)) || "").trim());
-    const idx = {};
-    Object.keys(headerMap).forEach(key=>{
-      const candidates = headerMap[key];
-      let found = -1;
-      for(let i=0;i<labels.length;i++){
-        if(candidates.indexOf(labels[i]) !== -1){ found = i; break; }
-      }
-      if(found === -1){
-        for(let i=0;i<labels.length;i++){
-          if(candidates.some(c => labels[i].indexOf(c) !== -1)){ found = i; break; }
-        }
-      }
-      idx[key] = found;
-    });
-    return idx;
-  }
-  function cellText(row, i){
-    if(i < 0 || !row.c || !row.c[i]) return "";
-    const cell = row.c[i];
-    const raw = (cell.f !== undefined && cell.f !== null) ? cell.f : cell.v;
-    return raw === null || raw === undefined ? "" : String(raw).trim();
-  }
-  /* หาทุกคอลัมน์ที่เป็น "สาขา/หน่วยงาน" (บางชีทแยกเป็นหลายคอลัมน์สำหรับคนที่อยู่หลายสาขา) */
-  function findDeptColumns(cols){
-    const labels = (cols||[]).map(c => ((c && (c.label || c.id)) || "").trim());
-    const out = [];
-    labels.forEach((lb, i)=>{
-      const c = canon(lb);
-      if(!c) return;
-      if(c.indexOf("หน่วยงาน") !== -1 || c.indexOf("สาขา") !== -1 || c.indexOf("ภาควิชา") !== -1) out.push(i);
-    });
-    return out;
-  }
-  function gvizToRecords(table){
-    const idx = buildHeaderIndex(table.cols || [], HEADER_MAP);
-    const deptCols = findDeptColumns(table.cols || []);
-    const out = [];
-    (table.rows || []).forEach(row=>{
-      if(!row.c) return;
-      const name = cellText(row, idx.name);
-      if(!name) return;
-      out.push({
-        id: cellText(row, idx.id),
-        acadTitle: cellText(row, idx.acadTitle),
-        name: name,
-        position: cellText(row, idx.position),
-        dept: (deptCols.length ? deptCols.map(i=>cellText(row, i)).filter(Boolean).join(" / ") : cellText(row, idx.dept)),
-        building: cellText(row, idx.building),
-        floor: cellText(row, idx.floor),
-        room: cellText(row, idx.room),
-        status: cellText(row, idx.status),
-        email: cellText(row, idx.email),
-        note: cellText(row, idx.note),
-        photo: cellText(row, idx.photo)
-      });
-    });
-    return out;
-  }
-
+  /* ================= ซิงก์ข้อมูลจากระบบฐานข้อมูลบุคลากร (v6) =================
+     ข้อมูลข้อความ + ลิงก์รูป มาพร้อมกันในคำขอเดียวจาก Apps Script (มีแคชฝั่งเซิร์ฟเวอร์)
+     รูปภาพโหลดตรงจากเซิร์ฟเวอร์คณะ eng.msu.ac.th (เบราว์เซอร์จำรูปไว้ 1 ปี)
+     ลำดับการแสดงผล: แคชในเครื่อง → (ข้อมูลสำรองในไฟล์) → ข้อมูลสดจากระบบ */
   function setSyncState(state, text){
     syncDot.className = 'sync-dot' + (state ? ' ' + state : '');
     syncText.textContent = text;
   }
-
-  const CALLBACK_NAME = "__gvizStaffCallback";
-  let syncTimeoutId = null;
 
   function refreshAll(){
     buildSearchIndex();   // สร้างดัชนีค้นหาใหม่ทุกครั้งที่ข้อมูลเปลี่ยน (รองรับหลายสาขาต่อคน)
     renderStats();
     renderChips();
     renderDirectory();
+    renderInsights();
   }
 
-  /* ================= แคชในเครื่อง (localStorage) =================
-     เนื่องจากข้อมูลบุคลากรไม่ได้เปลี่ยนบ่อย จึงเก็บชุดข้อมูลล่าสุด
-     (รวมรูปภาพ) ไว้ในเครื่องผู้ใช้ด้วย เพื่อให้ "เปิดแอปใหม่" แสดงผลได้
-     ทันทีโดยไม่ต้องรอเครือข่ายเลย แล้วค่อยอัปเดตข้อมูลสดแบบเงียบๆ ในพื้นหลัง
-     (ถ้ารูปภาพในแคชหมดอายุแล้ว การ์ดจะสลับไปแสดงตัวอักษรย่อให้อัตโนมัติ) */
-  const LOCAL_CACHE_KEY = 'staffDirectoryCacheV1';
+  const LOCAL_CACHE_KEY = 'staffDirectoryCacheV7';
   function loadLocalCache(){
     try{
       const raw = localStorage.getItem(LOCAL_CACHE_KEY);
       if(!raw) return null;
       const parsed = JSON.parse(raw);
       if(parsed && Array.isArray(parsed.records) && parsed.records.length) return parsed;
-    }catch(e){ /* localStorage อาจถูกปิด (เช่นโหมดส่วนตัว) ไม่เป็นไร ข้ามไป */ }
+    }catch(e){ /* localStorage อาจถูกปิด (โหมดส่วนตัว) */ }
     return null;
   }
   function saveLocalCache(recs){
-    try{
-      localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify({ records: recs, savedAt: Date.now() }));
-    }catch(e){ /* พื้นที่เต็ม/ถูกปิดใช้งาน ไม่กระทบการทำงานหลัก */ }
+    try{ localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify({ records: recs, stats: STATS, trend: TREND, savedAt: Date.now() })); }catch(e){}
   }
 
-  /* รวมรูปภาพจาก Apps Script เข้ากับ records ปัจจุบัน โดยจับคู่ด้วย id
-     (ไม่แทนที่ทั้งก้อน เพื่อไม่ให้ไปทับข้อมูลข้อความที่อาจสดกว่าจาก gviz) */
-  function mergePhotosById(photoRecords){
-    const photoMap = {};
-    photoRecords.forEach(r=>{ if(r.id) photoMap[r.id] = r.photo || ''; });
-    let changed = false;
-    records = records.map(r=>{
-      // แก้บั๊ก: เดิมเช็ค "photoMap[r.id] &&" ทำให้ถ้าลบรูปออก (ค่าใหม่เป็นสตริงว่าง)
-      // จะไม่ถูกอัปเดตเลย เพราะสตริงว่างเป็นค่า falsy — ทำให้รูปเก่าค้างอยู่ตลอด
-      if(r.id && Object.prototype.hasOwnProperty.call(photoMap, r.id) && photoMap[r.id] !== (r.photo||'')){
-        changed = true;
-        return Object.assign({}, r, { photo: photoMap[r.id] });
-      }
-      return r;
-    });
-    return changed;
-  }
-
-  /* เมื่อรูปภาพมาถึงทีหลัง ให้รีเฟรชการ์ดที่แสดงอยู่ (ทั้งทำเนียบ และข้อความล่าสุดในแชท)
-     โดยไม่ต้องให้ผู้ใช้ค้นหาใหม่ */
+  /* เมื่อข้อมูลใหม่มาถึง ให้รีเฟรชการ์ดในข้อความแชทล่าสุดด้วย โดยผู้ใช้ไม่ต้องค้นหาใหม่ */
   function refreshVisibleCards(){
-    renderDirectory();
     if(lastPersonMsgEl && lastPersonIds && lastPersonMsgEl.isConnected){
       const bubble = lastPersonMsgEl.querySelector('.bubble');
-      if(bubble){
-        const shown = lastPersonIds.map(id=>records.find(r=>r.id===id)).filter(Boolean);
-        if(shown.length){
-          const cards = bubble.querySelectorAll('.person-card');
-          if(cards.length === shown.length){
-            const newGridHtml = shown.length === 1 ? personCardHtml(shown[0]) : personGridHtml(shown);
-            const gridWrap = bubble.querySelector('.person-grid') || bubble.querySelector('.person-card');
-            if(gridWrap){
-              const tmp = document.createElement('div');
-              tmp.innerHTML = newGridHtml;
-              gridWrap.replaceWith(tmp.firstElementChild || tmp);
-            }
-          }
-        }
+      if(!bubble) return;
+      const shown = lastPersonIds.map(id=>records.find(r=>r.id===id)).filter(Boolean);
+      const cards = bubble.querySelectorAll('.person-card');
+      if(!shown.length || cards.length !== shown.length) return;
+      const newGridHtml = shown.length === 1 ? personCardHtml(shown[0]) : personGridHtml(shown);
+      const gridWrap = bubble.querySelector('.person-grid') || bubble.querySelector('.person-card');
+      if(gridWrap){
+        const tmp = document.createElement('div');
+        tmp.innerHTML = newGridHtml;
+        gridWrap.replaceWith(tmp.firstElementChild || tmp);
       }
     }
   }
 
-  function syncFromSheet(){
-    if(!SHEET_ID || SHEET_ID.indexOf("YOUR_") === 0){
-      return;
-    }
-    setSyncState('loading', 'กำลังซิงก์ข้อมูล…');
-    syncNote.textContent = "";
-
-    const prevScript = document.getElementById('gviz-jsonp-script');
-    if(prevScript) prevScript.remove();
-
-    function fail(reasonText){
-      setSyncState('err', 'ซิงก์ข้อความไม่สำเร็จ — แสดงข้อมูลสำรอง');
-      syncNote.textContent = 'เชื่อมต่อ Google Sheet ไม่ได้ (' + reasonText + ')';
-      if(syncTimeoutId){ clearTimeout(syncTimeoutId); syncTimeoutId = null; }
-    }
-
-    window[CALLBACK_NAME] = function(response){
-      try{
-        if(!response || response.status === 'error'){
-          fail('ตรวจสอบสิทธิ์ "ทุกคนที่มีลิงก์ - ผู้ดู"');
-          return;
-        }
-        const newRecords = gvizToRecords(response.table);
-        if(!newRecords.length){ fail('ไม่พบแถวข้อมูลในชีท'); return; }
-        // เก็บรูปภาพเดิม (ถ้ามีจาก Apps Script/แคชไปแล้ว) ไว้ ไม่ให้ข้อความอย่างเดียวมาทับ
-        const photoById = {};
-        records.forEach(r=>{ if(r.id && r.photo) photoById[r.id] = r.photo; });
-        records = newRecords.map(r=> photoById[r.id] ? Object.assign({}, r, { photo: photoById[r.id] }) : r);
-        refreshAll();
-        const hasAnyPhoto = records.some(r=>r.photo);
-        setSyncState('live', 'ซิงก์ข้อความล่าสุด ' + fmtTime(new Date()) + ' น.' + (hasAnyPhoto ? '' : ' (กำลังโหลดรูปภาพเพิ่มเติม…)'));
-        if(syncTimeoutId){ clearTimeout(syncTimeoutId); syncTimeoutId = null; }
-      }catch(e){
-        fail('อ่านข้อมูลไม่สำเร็จ: ' + e.message);
-      }
-    };
-
-    const gidParam = SHEET_GID ? ("&gid=" + encodeURIComponent(SHEET_GID)) : "";
-    const url = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
-      "/gviz/tq?tqx=out:json;responseHandler:" + CALLBACK_NAME + gidParam;
-
-    const script = document.createElement('script');
-    script.id = 'gviz-jsonp-script';
-    script.src = url;
-    script.onerror = function(){ fail('โหลดสคริปต์จาก Google Sheets ไม่สำเร็จ (เครือข่าย/สิทธิ์การเข้าถึง)'); };
-    document.body.appendChild(script);
-    syncTimeoutId = setTimeout(()=>{ fail('หมดเวลารอการตอบกลับจากชีท'); }, 10000);
+  /* ดึงรูปล่วงหน้าแบบเงียบๆ เมื่อเบราว์เซอร์ว่าง → เปิดดูรายละเอียด/ค้นหาแล้วรูปขึ้นทันที */
+  function warmPhotos(list){
+    const urls = list.map(r=>r.photo).filter(u=>u && /^https:\/\//.test(u));
+    const idle = window.requestIdleCallback || (fn=>setTimeout(fn, 1500));
+    idle(()=>{ urls.slice(0, 200).forEach(u=>{ const im = new Image(); im.decoding = 'async'; im.src = u; }); });
   }
 
-  /* ================= ซิงก์รูปภาพ (Google Apps Script) — ทำงานคู่ขนาน =================
-     gviz อ่านรูปแบบ "Insert image in cell" ไม่ได้ จึงต้องใช้ Apps Script Web App
-     แยกต่างหากสำหรับรูปภาพเท่านั้น โดยทำงาน "คู่ขนาน" ไปกับ syncFromSheet() ด้านบน
-     ไม่ใช่รอต่อคิว — ผู้ใช้เห็นข้อมูลข้อความและค้นหาได้ทันทีจาก gviz (เร็ว) ในขณะที่
-     รูปภาพจะทยอย "โผล่" เข้ามาเสริมทีหลังเมื่อ Apps Script ตอบกลับ (อาจช้ากว่า)
-
-     ลองสองวิธีขนานกัน เพราะบางเบราว์เซอร์/ส่วนขยาย (เช่น ตัวบล็อกโฆษณาบางตัวใน
-     Chrome) อาจปิดกั้นการโหลดผ่าน <script> tag ได้ — ถ้าวิธีแรก (fetch) โดนบล็อก
-     วิธีที่สอง (JSONP) จะยังพยายามต่อให้ */
-  const GAS_CALLBACK_NAME = "__gasStaffCallback";
-  let gasOverallTimeoutId = null;
-
-  function syncPhotosFromAppsScript(forceRefresh){
-    if(!APPS_SCRIPT_URL) return;
-    let settled = false;
-
-    function onSuccess(response){
-      if(settled) return;
-      try{
-        if(!response || !response.records || !response.records.length){
-          syncNote.textContent = 'ไม่พบข้อมูลรูปภาพจาก Apps Script';
-          return;
-        }
-        settled = true;
-        if(gasOverallTimeoutId){ clearTimeout(gasOverallTimeoutId); gasOverallTimeoutId = null; }
-        const changed = mergePhotosById(response.records);
-        if(changed){
-          refreshVisibleCards();
-          saveLocalCache(records);
-        }
-        if(response.ratingStats){ ratingStats = response.ratingStats; renderStats(); }
-        setSyncState('live', 'ซิงก์สดพร้อมรูปภาพล่าสุด ' + fmtTime(new Date()) + ' น.');
-        syncNote.textContent = '';
-      }catch(e){
-        syncNote.textContent = 'อ่านข้อมูลรูปภาพไม่สำเร็จ: ' + e.message;
-      }
-    }
-
-    // forceRefresh=true (เช่นตอนกด "ลองซิงก์รูปภาพอีกครั้ง") จะข้ามแคชฝั่ง Apps Script
-    // ไปเลย เพื่อดึงรูปล่าสุดจริงๆ (ใช้เวลานานกว่าปกติ แต่รับประกันว่าไม่ใช่รูปเก่าค้างแคช)
-    const refreshParam = forceRefresh ? '&refresh=1' : '';
-
-    // วิธีที่ 1: fetch() ตรงๆ — เร็วกว่า และมักไม่โดนตัวบล็อกโฆษณาสกัดเท่า <script> tag
-    const fetchUrl = APPS_SCRIPT_URL + (APPS_SCRIPT_URL.indexOf('?')!==-1?'&':'?') + '_ts=' + Date.now() + refreshParam;
-    fetch(fetchUrl, { method:'GET', cache:'no-store' })
-      .then(r=> r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
-      .then(onSuccess)
-      .catch(()=>{ /* เงียบไว้ก่อน รอวิธีที่ 2 */ });
-
-    // วิธีที่ 2: JSONP ผ่าน <script> tag — สำรองไว้เผื่อวิธีแรกโดนบล็อก (CORS/extension)
-    setTimeout(()=>{
-      if(settled) return;
-      const prevScript = document.getElementById('gas-jsonp-script');
-      if(prevScript) prevScript.remove();
-      window[GAS_CALLBACK_NAME] = onSuccess;
+  let syncing = false;
+  function fetchDirectory(force){
+    return new Promise((resolve, reject)=>{
+      let settled = false;
+      const done = (ok, v)=>{ if(settled) return; settled = true; ok ? resolve(v) : reject(v); };
       const sep = APPS_SCRIPT_URL.indexOf('?') !== -1 ? '&' : '?';
-      const url = APPS_SCRIPT_URL + sep + 'callback=' + GAS_CALLBACK_NAME + '&_ts=' + Date.now() + refreshParam;
-      const script = document.createElement('script');
-      script.id = 'gas-jsonp-script';
-      script.src = url;
-      script.onerror = function(){
-        if(!settled) syncNote.textContent = 'ยังซิงก์รูปภาพไม่สำเร็จ ลองกดปุ่ม "ลองซิงก์รูปภาพอีกครั้ง" หรือตรวจสอบส่วนขยาย/ตัวบล็อกโฆษณาในเบราว์เซอร์';
-      };
-      document.body.appendChild(script);
-    }, 3500);
+      const base = APPS_SCRIPT_URL + sep + '_ts=' + Date.now() + (force ? '&refresh=1' : '');
 
-    // เผื่อเวลาไว้นานพอสมควร (พบว่าบางครั้ง Apps Script ใช้เวลาสร้างข้อมูลใหม่ถึง ~2 นาที
-    // ถ้าตั้งตัวจับเวลาอัตโนมัติ/แคชไว้แล้วตามคำแนะนำ ปกติจะเร็วกว่านี้มาก)
-    gasOverallTimeoutId = setTimeout(()=>{
-      if(!settled){
-        syncNote.textContent = 'ยังไม่สามารถซิงก์รูปภาพได้ในขณะนี้ ลองกดปุ่ม "ลองซิงก์รูปภาพอีกครั้ง" ด้านล่าง หรือตรวจสอบส่วนขยาย/ตัวบล็อกโฆษณาในเบราว์เซอร์ (ข้อมูลข้อความยังใช้งานค้นหาได้ตามปกติ)';
-      }
-    }, 130000);
+      // วิธีที่ 1: fetch() ตรง
+      fetch(base, { method:'GET', cache:'no-store' })
+        .then(r=> r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+        .then(j=> done(true, j))
+        .catch(()=>{ /* รอวิธีที่ 2 */ });
+
+      // วิธีที่ 2: JSONP สำรอง (เผื่อส่วนขยาย/ตัวบล็อกโฆษณาสกัด fetch)
+      setTimeout(()=>{
+        if(settled) return;
+        const cb = '__dwmsCb_' + Date.now();
+        window[cb] = function(j){ done(true, j); try{ delete window[cb]; }catch(e){} };
+        const sc = document.createElement('script');
+        sc.src = base + '&callback=' + cb;
+        sc.onerror = ()=> done(false, new Error('เชื่อมต่อระบบไม่ได้'));
+        document.body.appendChild(sc);
+      }, 4000);
+
+      setTimeout(()=> done(false, new Error('หมดเวลารอการตอบกลับ')), 45000);
+    });
   }
 
-  function syncAll(){
-    setSyncState('loading', 'กำลังซิงก์ข้อมูลล่าสุด…');
-    syncNote.textContent = "";
-    syncFromSheet();          // เร็ว — อัปเดตข้อความ/ค้นหาได้ทันที
-    syncPhotosFromAppsScript(); // อาจช้ากว่า — รูปภาพจะทยอยโผล่มาเสริมทีหลัง ไม่บล็อกการค้นหา
+  function syncAll(force){
+    if(!APPS_SCRIPT_URL || syncing) return;
+    syncing = true;
+    syncBtn.disabled = true; retryPhotoBtn.disabled = true;
+    setSyncState('loading', force ? 'กำลังดึงข้อมูลล่าสุดจากระบบ (ข้ามแคช)…' : 'กำลังซิงก์ข้อมูลล่าสุด…');
+    syncNote.textContent = '';
+    fetchDirectory(force).then(res=>{
+      if(!res || !Array.isArray(res.records) || !res.records.length) throw new Error('ไม่พบข้อมูลบุคลากร');
+      records = res.records.map(r=>({
+        id: String(r.id||''), acadTitle: r.acadTitle||'', name: r.name||'', position: r.position||'',
+        dept: r.dept||'', building: r.building||'', floor: String(r.floor||''), room: String(r.room||''),
+        status: r.status||'', email: r.email||'', note: r.note||'', photo: r.photo||''
+      }));
+      if(res.ratingStats) ratingStats = res.ratingStats;
+      STATS = res.stats || null;
+      TREND = Array.isArray(res.trend) ? res.trend : [];
+      refreshAll();
+      refreshVisibleCards();
+      saveLocalCache(records);
+      warmPhotos(records);
+      setSyncState('live', 'ข้อมูลล่าสุด ' + fmtTime(new Date()) + ' น.');
+    }).catch(err=>{
+      setSyncState('err', 'ซิงก์ไม่สำเร็จ — แสดงข้อมูลที่บันทึกไว้');
+      syncNote.textContent = (err && err.message ? err.message : 'เชื่อมต่อไม่ได้') + ' — ลองกดซิงก์อีกครั้ง หรือตรวจสอบส่วนขยาย/ตัวบล็อกโฆษณา (ค้นหาข้อมูลได้ตามปกติ)';
+    }).finally(()=>{
+      syncing = false;
+      syncBtn.disabled = false; retryPhotoBtn.disabled = false;
+    });
   }
-  syncBtn.addEventListener('click', syncAll);
-  retryPhotoBtn.addEventListener('click', ()=>{
-    syncNote.textContent = 'กำลังดึงรูปภาพล่าสุดจริงๆ (ข้ามแคชเดิม อาจใช้เวลาถึง ~1 นาที)…';
-    syncPhotosFromAppsScript(true); // บังคับข้ามแคชฝั่ง Apps Script เพื่อให้ได้รูปล่าสุดแน่นอน
-  });
+  syncBtn.addEventListener('click', ()=>syncAll(false));
+  retryPhotoBtn.addEventListener('click', ()=>syncAll(true));
 
   /* ================= ให้คะแนนความพึงพอใจ (1-5 ดาว) =================
      ส่งไปเก็บที่ Google Apps Script (URL เดียวกับที่ใช้ซิงก์ข้อมูลบุคลากร)
@@ -2013,17 +1849,399 @@
   }catch(e){}
 
 
+  /* =====================================================================
+     v7 — ธีมไดนามิก + กรอบข้อมูลสรุป + ผังอาคาร + กราฟภาพรวมบุคลากร
+     ===================================================================== */
+  let STATS = null, TREND = [];
+  const TH_MONTH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  function monthTh(ym){ const m = /^(\d{4})-(\d{2})$/.exec(ym||''); return m ? TH_MONTH[+m[2]-1] + ' ' + String(+m[1] + 543).slice(-2) : ym; }
+  function pctOf(a, b){ return b ? Math.round(a / b * 100) : 0; }
+  function fmtN(n){ return Number(n||0).toLocaleString('th-TH'); }
+  function goAssistant(){ document.getElementById('assistant').scrollIntoView({ behavior:'smooth', block:'start' }); }
+
+  /* ---------- ธีม ---------- */
+  const THEMES = [
+    { k:'msu',       name:'เขียว มมส.',           h:152, s:58 },
+    { k:'blueprint', name:'บลูพริ้นท์',            h:214, s:62 },
+    { k:'copper',    name:'ทองแดง',               h:20,  s:62 },
+    { k:'volt',      name:'ม่วงไฟฟ้า',             h:262, s:48 },
+    { k:'steel',     name:'เหล็กกล้า',             h:200, s:16 },
+    { k:'auto',      name:'อัตโนมัติ เปลี่ยนตามเวลาของวัน', auto:true }
+  ];
+  const THEME_KEY = 'dwms_theme';
+  let themeState = { k:'msu', mode:'system' };
+  try{ themeState = Object.assign(themeState, JSON.parse(localStorage.getItem(THEME_KEY) || '{}')); }catch(e){}
+  const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function partOfDay(d){ const h = d.getHours(); return h < 5 ? 'กลางคืน' : h < 10 ? 'ยามเช้า' : h < 16 ? 'กลางวัน' : h < 19 ? 'ยามเย็น' : 'กลางคืน'; }
+  function applyTheme(){
+    const root = document.documentElement, t = THEMES.find(x=>x.k===themeState.k) || THEMES[0];
+    const now = new Date();
+    const hs = t.auto ? window.__dwmsHue(now) : { h:t.h, s:t.s };
+    root.style.setProperty('--h', hs.h);
+    root.style.setProperty('--sat', hs.s + '%');
+    const dark = themeState.mode === 'dark' || (themeState.mode === 'system' && mq && mq.matches);
+    root.setAttribute('data-mode', dark ? 'dark' : 'light');
+    document.getElementById('themeName').textContent = t.auto ? t.name + ' (ตอนนี้: ' + partOfDay(now) + ')' : t.name;
+    document.querySelectorAll('#swatches .swatch').forEach(b=> b.setAttribute('aria-pressed', String(b.dataset.k === themeState.k)));
+    document.querySelectorAll('#modes button').forEach(b=> b.setAttribute('aria-pressed', String(b.dataset.mode === themeState.mode)));
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute('content', getComputedStyle(root).getPropertyValue('--paper').trim() || '#fff');
+  }
+  function saveTheme(){ try{ localStorage.setItem(THEME_KEY, JSON.stringify(themeState)); }catch(e){} applyTheme(); }
+  (function initTheme(){
+    const sw = document.getElementById('swatches');
+    sw.innerHTML = THEMES.map(t=> '<button class="swatch' + (t.auto ? ' auto' : '') + '" data-k="' + t.k + '" title="' + escapeHtml(t.name) + '" aria-label="' + escapeHtml(t.name) + '"' +
+      (t.auto ? '' : ' style="background:hsl(' + t.h + ' ' + Math.max(t.s, 20) + '% 40%)"') + '></button>').join('');
+    sw.addEventListener('click', e=>{ const b = e.target.closest('.swatch'); if(b){ themeState.k = b.dataset.k; saveTheme(); } });
+    document.getElementById('modes').addEventListener('click', e=>{ const b = e.target.closest('button'); if(b){ themeState.mode = b.dataset.mode; saveTheme(); } });
+    const btn = document.getElementById('themeBtn'), pop = document.getElementById('themePop');
+    btn.addEventListener('click', e=>{ e.stopPropagation(); const o = pop.classList.toggle('open'); btn.setAttribute('aria-expanded', String(o)); });
+    document.addEventListener('click', e=>{ if(!e.target.closest('.theme-wrap')){ pop.classList.remove('open'); btn.setAttribute('aria-expanded','false'); } });
+    document.addEventListener('keydown', e=>{ if(e.key === 'Escape') pop.classList.remove('open'); });
+    if(mq && mq.addEventListener) mq.addEventListener('change', applyTheme);
+    setInterval(()=>{ if(themeState.k === 'auto') applyTheme(); }, 60000);
+    applyTheme();
+  })();
+
+  /* ---------- ช่องค้นหาด้านบน → ส่งเข้าผู้ช่วยค้นหา ---------- */
+  document.getElementById('heroForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const inp = document.getElementById('heroInput'), q = inp.value.trim();
+    if(!q) { inp.focus(); return; }
+    elChatInput.value = q; inp.value = '';
+    handleSend(); goAssistant();
+  });
+  document.getElementById('heroMic').addEventListener('click', ()=>{ goAssistant(); setTimeout(()=> elMicBtn.click(), 350); });
+  elExamples.addEventListener('click', e=>{ if(e.target.closest('.example-chip')) goAssistant(); });
+
+  /* ---------- สถิติ: ใช้ของเซิร์ฟเวอร์ (มีข้อมูลเพศ) ถ้าไม่มีคำนวณจากรายชื่อในเครื่อง ---------- */
+  function acadRankOf(t){
+    t = t || '';
+    if(t.indexOf('ผู้ช่วยศาสตราจารย์') !== -1 || /^ผศ\./.test(t)) return 'ผศ.';
+    if(t.indexOf('รองศาสตราจารย์') !== -1 || /^รศ\./.test(t)) return 'รศ.';
+    if(t.indexOf('ศาสตราจารย์') !== -1 || /^ศ\./.test(t)) return 'ศ.';
+    if(t.indexOf('อาจารย์') !== -1) return 'อาจารย์';
+    return 'อื่น ๆ';
+  }
+  function localStats(list){
+    const st = { total:list.length, type:{academic:0,support:0,other:0}, gender:{m:0,f:0,u:list.length},
+      genderByType:{academic:{m:0,f:0,u:0},support:{m:0,f:0,u:0},other:{m:0,f:0,u:0}}, phd:0, startYears:[], employment:[], local:true };
+    const g = { acadRank:{}, supportLevel:{}, dept:{}, building:{} };
+    const bump = (b, label, t)=>{ if(!label) return; const o = b[label] || (b[label] = { label, total:0, m:0, f:0, u:0, academic:0, support:0 }); o.total++; o.u++; if(t !== 'other') o[t]++; };
+    list.forEach(r=>{
+      const c = String(r.id||'').charAt(0).toUpperCase(), t = c === 'T' ? 'academic' : c === 'S' ? 'support' : 'other';
+      st.type[t]++; st.genderByType[t].u++;
+      if(t === 'academic'){ bump(g.acadRank, acadRankOf(r.acadTitle), t); if(/ดร\./.test(r.acadTitle||'')) st.phd++; }
+      else if(t === 'support') bump(g.supportLevel, (r.acadTitle || 'ไม่ระบุ').slice(0, 40), t);
+      splitMulti(r.dept).forEach(d=> bump(g.dept, d, t));
+      bump(g.building, r.building || 'ไม่ระบุ', t);
+    });
+    const arr = o=> Object.keys(o).map(k=>o[k]), desc = (a,b)=> b.total - a.total || a.label.localeCompare(b.label,'th');
+    const ORDER = ['ศ.','รศ.','ผศ.','อาจารย์','อื่น ๆ'];
+    st.acadRank = arr(g.acadRank).sort((a,b)=> ORDER.indexOf(a.label) - ORDER.indexOf(b.label));
+    st.supportLevel = arr(g.supportLevel).sort(desc);
+    st.dept = arr(g.dept).sort(desc);
+    st.building = arr(g.building).sort(desc);
+    return st;
+  }
+  function currentStats(){ return STATS && STATS.total ? STATS : localStats(records); }
+
+  /* ---------- กรอบข้อมูลสรุป (title block) ---------- */
+  let countedUp = false;
+  function countUp(el, to){
+    if(countedUp || window.matchMedia('(prefers-reduced-motion: reduce)').matches){ el.textContent = fmtN(to); return; }
+    countedUp = true;
+    const t0 = performance.now(), dur = 900;
+    const step = now=>{ const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtN(Math.round(to * e)); if(k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+  function renderStats(){
+    const st = currentStats(), g = st.gender, n = st.total || records.length, known = g.m + g.f;
+    const ac = st.type.academic, cell = (cls, k, v)=> '<div class="tb-cell ' + cls + '" style="order:3"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+    const legend = known
+      ? '<span><i class="dot" style="background:var(--male)"></i>ชาย ' + fmtN(g.m) + ' (' + pctOf(g.m, known) + '%)</span>' +
+        '<span><i class="dot" style="background:var(--female)"></i>หญิง ' + fmtN(g.f) + ' (' + pctOf(g.f, known) + '%)</span>' +
+        (g.u ? '<span><i class="dot" style="background:var(--unknown)"></i>ยังไม่ระบุ ' + fmtN(g.u) + '</span>' : '')
+      : '<span>ยังไม่มีข้อมูลเพศ ระบบกำลังรวบรวมจากบุคลากร</span>';
+    const rating = ratingStats && ratingStats.count ? '★ ' + ratingStats.avg.toFixed(1) + '<small>(' + ratingStats.count + ')</small>' : '—';
+    elStatRow.innerHTML =
+      '<div class="tb-cell tb-total" style="order:1"><span class="k">บุคลากรทั้งหมด</span><span class="v"><span id="tbTotal">' + fmtN(n) + '</span><small>ท่าน</small></span></div>' +
+      cell('tb-c2', 'สายวิชาการ', fmtN(ac)) +
+      cell('tb-c2', 'สายสนับสนุน', fmtN(st.type.support)) +
+      cell('tb-c2 end', 'คุณวุฒิปริญญาเอก', fmtN(st.phd) + '<small>' + (ac ? pctOf(st.phd, ac) + '%' : '') + '</small>') +
+      '<div class="tb-cell tb-wide" style="order:3"><span class="k">สัดส่วนชาย : หญิง</span>' +
+        '<div class="ratio" role="img" aria-label="ชาย ' + g.m + ' หญิง ' + g.f + ' ไม่ระบุ ' + g.u + '"><i class="m" style="width:' + pctOf(g.m, n) + '%"></i><i class="f" style="width:' + pctOf(g.f, n) + '%"></i></div>' +
+        '<div class="ratio-legend">' + legend + '</div></div>' +
+      cell('tb-c3 tb-last', 'อาคาร', fmtN(getBuildings().length)) +
+      cell('tb-c3 tb-last', 'สาขา / หน่วยงาน', fmtN(getDepts().length)) +
+      cell('tb-c3 tb-last end', 'ความพึงพอใจ', rating);
+    countUp(document.getElementById('tbTotal'), n);
+  }
+
+  /* ---------- ผังอาคาร + ชิปสาขา ---------- */
+  function renderChips(){
+    const buildings = getBuildings();
+    const cnt = b=> records.filter(r=>r.building===b).length;
+    const max = Math.max(1, ...buildings.map(cnt));
+    elBuildingChips.innerHTML = buildings.map(b=>{
+      const c = cnt(b);
+      return '<button class="bldg" data-building="' + escapeHtml(b) + '" aria-label="อาคาร ' + escapeHtml(b) + ' ' + c + ' ท่าน">' +
+        '<span class="fill" style="height:' + Math.round(c / max * 72) + '%"></span>' +
+        '<span class="code">' + escapeHtml(b) + '</span><span class="cnt">' + c + ' ท่าน</span></button>';
+    }).join('');
+    elDeptChipsRow.innerHTML = getDepts().map(d=>
+      '<button class="chip" data-dept="' + escapeHtml(d) + '">' + escapeHtml(deptKeyword(d)) + '<span class="n">' + countInDept(d) + '</span></button>').join('');
+  }
+  elBuildingChips.addEventListener('click', e=>{ const b = e.target.closest('[data-building]'); if(b){ askBuildingList(b.getAttribute('data-building')); goAssistant(); } });
+  elDeptChipsRow.addEventListener('click', e=>{ const b = e.target.closest('[data-dept]'); if(b){ askDeptList(b.getAttribute('data-dept')); goAssistant(); } });
+
+  /* =====================================================================
+     กราฟ SVG (เขียนเอง ไม่พึ่งไลบรารี) — วาดครั้งเดียวเมื่อเลื่อนมาถึง
+     ===================================================================== */
+  const C = { m:'var(--male)', f:'var(--female)', u:'var(--unknown)', a:'var(--accent)', b:'var(--accent-2)', c:'hsl(calc(var(--h) + 180) 45% 52%)', d:'hsl(calc(var(--h) - 60) 50% 50%)' };
+  let INS_SCOPE = 'all';
+  const elCharts = document.getElementById('charts');
+  const SCOPE_TH = { all:'ทั้งหมด', academic:'สายวิชาการ', support:'สายสนับสนุน' };
+
+  /** ความกว้างจริงของพื้นที่กราฟในการ์ดตาม span (วาดที่ 1:1 ตัวหนังสือคมชัดทุกขนาดจอ) */
+  function cw(span){
+    const full = elCharts.clientWidth || 1100, one = window.innerWidth <= 980;
+    return Math.max(260, Math.round((one ? full : (full - 14 * (12 / span - 1)) * span / 12) - 38));
+  }
+  /** สเกลแกนตัวเลขแบบปัดสวย (1, 2, 5, 10, …) */
+  function niceScale(min, max){
+    const span = Math.max(1, max - min), raw = span / 4, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const n = raw / mag, step = Math.max(1, (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag);
+    const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
+    const ticks = []; for(let v = lo; v <= hi + 1e-9; v += step) ticks.push(v);
+    if(ticks.length < 2) ticks.push(lo + step);
+    return { lo, hi: ticks[ticks.length-1], ticks };
+  }
+
+  function svgDonut(segs, centerBig, centerSmall){
+    const R = 70, W = 26, Cc = 2 * Math.PI * R, total = segs.reduce((a,s)=>a+s.v, 0) || 1;
+    let off = 0, id = 'm' + Math.random().toString(36).slice(2,8);
+    const arcs = segs.filter(s=>s.v>0).map(s=>{
+      const len = s.v / total * Cc, out = '<circle r="' + R + '" cx="100" cy="100" fill="none" style="stroke:' + s.c + '" stroke-width="' + W +
+        '" stroke-dasharray="' + len.toFixed(2) + ' ' + Cc.toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" data-tip="' + escapeHtml(s.label + ' ' + fmtN(s.v) + ' ท่าน (' + pctOf(s.v,total) + '%)') + '"/>';
+      off += len; return out;
+    }).join('');
+    return '<svg viewBox="0 0 200 200" role="img" aria-label="' + escapeHtml(segs.map(s=>s.label + ' ' + s.v).join(', ')) + '">' +
+      '<defs><mask id="' + id + '"><circle class="draw" r="' + R + '" cx="100" cy="100" fill="none" stroke="#fff" stroke-width="' + (W+2) + '" stroke-dasharray="' + Cc + '" stroke-dashoffset="' + Cc + '" transform="rotate(-90 100 100)"/></mask></defs>' +
+      '<g transform="rotate(-90 100 100)" mask="url(#' + id + ')">' + arcs + '</g>' +
+      '<text x="100" y="98" text-anchor="middle" style="font-size:30px;font-weight:700;fill:var(--text)">' + centerBig + '</text>' +
+      '<text x="100" y="122" text-anchor="middle" style="font-size:12px">' + centerSmall + '</text></svg>';
+  }
+
+  /** คอลัมน์ซ้อน: rows=[{label, segs:[{v,c,name}]}] */
+  function svgColumns(rows, opt){
+    opt = opt || {};
+    const W = opt.w || 560, H = opt.h || 230, P = { l:34, r:10, t:22, b:34 };
+    const max = Math.max(1, ...rows.map(r=> r.segs.reduce((a,s)=>a+s.v,0)));
+    const sc = niceScale(0, max), nice = sc.hi, iw = W - P.l - P.r, ih = H - P.t - P.b;
+    const bw = Math.min(64, iw / rows.length * 0.62);
+    const maxChars = Math.max(3, Math.floor(iw / rows.length / 9));
+    let grid = '';
+    sc.ticks.forEach(v=>{ const y = P.t + ih - ih * v / nice; grid += '<line class="gridline" x1="' + P.l + '" x2="' + (W-P.r) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (P.l-6) + '" y="' + (y+4) + '" text-anchor="end">' + v + '</text>'; });
+    const cols = rows.map((r, i)=>{
+      const cx = P.l + iw * (i + .5) / rows.length;
+      let y = P.t + ih, parts = '', sum = 0;
+      r.segs.forEach(s=>{ if(!s.v) return; const h = ih * s.v / nice; y -= h; sum += s.v;
+        parts += '<rect x="' + (cx-bw/2) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" style="fill:' + s.c + '" data-tip="' + escapeHtml(r.label + ' · ' + s.name + ' ' + s.v + ' ท่าน') + '"/>'; });
+      return '<g class="grow" style="transition-delay:' + Math.round(i * Math.min(60, 500 / rows.length)) + 'ms">' + parts + '</g>' +
+        (bw >= 14 ? '<text class="fade" x="' + cx + '" y="' + (y - 6) + '" text-anchor="middle" style="fill:var(--text);font-weight:600">' + (sum || '') + '</text>' : '') +
+        (i % Math.ceil(rows.length / Math.max(1, Math.floor(iw / 34))) === 0 ? '<text x="' + cx + '" y="' + (H - 12) + '" text-anchor="middle">' + escapeHtml(r.label.length > maxChars ? r.label.slice(0, maxChars - 1) + '…' : r.label) + '</text>' : '');
+    }).join('');
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + escapeHtml(opt.aria || '') + '">' + grid + '<line class="axis" x1="' + P.l + '" x2="' + (W-P.r) + '" y1="' + (P.t+ih) + '" y2="' + (P.t+ih) + '"/>' + cols + '</svg>';
+  }
+
+  /** กราฟเส้น: labels[], series=[{name,c,values[]}] */
+  function svgLines(labels, series, opt){
+    opt = opt || {};
+    const W = opt.w || 900, H = opt.h || 250, P = { l:40, r:16, t:18, b:34 }, iw = W - P.l - P.r, ih = H - P.t - P.b;
+    const all = series.flatMap(s=>s.values), maxV = Math.max(1, ...all);
+    const sc = niceScale(opt.zero ? 0 : Math.max(0, Math.min(...all) - Math.ceil(maxV * .05)), maxV);
+    const minV = sc.lo, span = Math.max(1, sc.hi - sc.lo);
+    const x = i=> P.l + (labels.length === 1 ? iw/2 : iw * i / (labels.length - 1)), y = v=> P.t + ih - ih * (v - minV) / span;
+    let grid = '';
+    sc.ticks.forEach(v=>{ const yy = y(v); grid += '<line class="gridline" x1="' + P.l + '" x2="' + (W-P.r) + '" y1="' + yy + '" y2="' + yy + '"/><text x="' + (P.l-6) + '" y="' + (yy+4) + '" text-anchor="end">' + v + '</text>'; });
+    const step = Math.ceil(labels.length / Math.max(2, Math.floor(iw / 64)));
+    const xl = labels.map((l,i)=> i % step === 0 || i === labels.length-1 ? '<text x="' + x(i) + '" y="' + (H-12) + '" text-anchor="middle">' + escapeHtml(l) + '</text>' : '').join('');
+    const paths = series.map(s=>{
+      const d = s.values.map((v,i)=> (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+      const area = opt.area && s === series[0] ? '<path class="fade" d="' + d + ' L' + x(s.values.length-1) + ' ' + (P.t+ih) + ' L' + x(0) + ' ' + (P.t+ih) + ' Z" style="fill:' + s.c + ';opacity:.1"/>' : '';
+      const dots = s.values.map((v,i)=> '<circle class="fade" cx="' + x(i) + '" cy="' + y(v) + '" r="4" style="fill:var(--surface);stroke:' + s.c + '" stroke-width="2.5" data-tip="' + escapeHtml(labels[i] + ' · ' + s.name + ' ' + v) + '"/>').join('');
+      return area + '<path class="draw" d="' + d + '" fill="none" style="stroke:' + s.c + '" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>' + dots;
+    }).join('');
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + escapeHtml(opt.aria || '') + '">' + grid + xl + paths + '</svg>';
+  }
+
+  /** แท่งแนวนอนแบบ HTML (คลิกได้): rows=[{label, segs:[{v,c,name}], act}] */
+  function htmlHBars(rows, max){
+    max = max || Math.max(1, ...rows.map(r=> r.segs.reduce((a,s)=>a+s.v,0)));
+    return rows.map(r=>{
+      const sum = r.segs.reduce((a,s)=>a+s.v,0);
+      return '<div class="hbar" role="button" tabindex="0" ' + (r.act || '') + ' title="ดูรายชื่อ ' + escapeHtml(r.label) + '">' +
+        '<span class="lbl">' + escapeHtml(r.label) + '</span><span class="track">' +
+        r.segs.map(s=> s.v ? '<i data-w="' + (s.v / max * 100).toFixed(2) + '" style="background:' + s.c + '" data-tip="' + escapeHtml(r.label + ' · ' + s.name + ' ' + s.v + ' ท่าน') + '"></i>' : '').join('') +
+        '</span><b>' + sum + '</b></div>';
+    }).join('');
+  }
+  const legendHtml = items=> '<div class="legend">' + items.map(i=> '<span><i class="dot" style="background:' + i.c + '"></i>' + i.name + '</span>').join('') + '</div>';
+  const GSEG = (o, name)=> [{ v:o.m||0, c:C.m, name:'ชาย' }, { v:o.f||0, c:C.f, name:'หญิง' }, { v:o.u||0, c:C.u, name:name || 'ยังไม่ระบุเพศ' }];
+
+  function renderInsights(){
+    const st = currentStats(), sc = INS_SCOPE;
+    const gObj = sc === 'all' ? st.gender : st.genderByType[sc];
+    const n = gObj.m + gObj.f + gObj.u, known = gObj.m + gObj.f;
+    const cards = [];
+
+    // 1) สัดส่วนเพศ
+    cards.push('<div class="card anim span-4"><h3>สัดส่วนเพศ</h3><p class="sub">' + SCOPE_TH[sc] + ' ' + fmtN(n) + ' ท่าน</p><div class="chart" style="max-width:230px;margin:0 auto">' +
+      svgDonut([{ v:gObj.m, c:C.m, label:'ชาย' }, { v:gObj.f, c:C.f, label:'หญิง' }, { v:gObj.u, c:C.u, label:'ยังไม่ระบุ' }],
+        known ? pctOf(gObj.f, known) + '%' : '—', known ? 'เป็นผู้หญิง' : 'รอข้อมูลเพศ') + '</div>' +
+      '<div class="kpis"><div class="kpi"><b style="color:var(--male)">' + fmtN(gObj.m) + '</b><span>ชาย' + (known ? ' · ' + pctOf(gObj.m, known) + '%' : '') + '</span></div>' +
+      '<div class="kpi"><b style="color:var(--female)">' + fmtN(gObj.f) + '</b><span>หญิง' + (known ? ' · ' + pctOf(gObj.f, known) + '%' : '') + '</span></div></div>' +
+      (gObj.u ? '<p class="note' + (known < n * .6 ? ' warn' : '') + '">ข้อมูลเพศครบ ' + pctOf(known, n) + '% · ร้อยละคำนวณจากผู้ที่ระบุเพศแล้ว</p>' : '') + '</div>');
+
+    // 2) ตำแหน่งวิชาการ / ระดับสายสนับสนุน
+    if(sc === 'support'){
+      const rows = st.supportLevel.slice(0, 8).map(o=>({ label:o.label, segs:GSEG(o) }));
+      cards.push('<div class="card anim span-8"><h3>ระดับตำแหน่งสายสนับสนุน</h3><p class="sub">จำนวนตามระดับ แยกเพศ</p><div class="chart">' +
+        svgColumns(rows, { w:cw(8), aria:'ระดับตำแหน่งสายสนับสนุน' }) + '</div>' + legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) + '</div>');
+    } else {
+      const rows = st.acadRank.map(o=>({ label:o.label, segs:GSEG(o) }));
+      const ac = st.type.academic;
+      cards.push('<div class="card anim span-8"><h3>ตำแหน่งทางวิชาการ</h3><p class="sub">สายวิชาการ ' + fmtN(ac) + ' ท่าน · ปริญญาเอก ' + fmtN(st.phd) + ' ท่าน (' + pctOf(st.phd, ac) + '%)</p><div class="chart">' +
+        svgColumns(rows, { w:cw(8), aria:'ตำแหน่งทางวิชาการ' }) + '</div>' + legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) + '</div>');
+    }
+
+    // 3) สาขา / หน่วยงาน
+    const depts = st.dept.filter(o=> sc === 'all' || o[sc] > 0).map(o=>({
+      label:o.label, act:'data-askdept="' + escapeHtml(o.label) + '"',
+      segs: sc === 'all' ? GSEG(o) : [{ v:o[sc], c:C.a, name:SCOPE_TH[sc] }]
+    })).sort((a,b)=> b.segs.reduce((s,x)=>s+x.v,0) - a.segs.reduce((s,x)=>s+x.v,0));
+    cards.push('<div class="card anim span-7"><h3>บุคลากรตามสาขา / หน่วยงาน</h3><p class="sub">' + SCOPE_TH[sc] + ' · แตะแถวเพื่อดูรายชื่อ' + (sc === 'all' ? '' : '') + '</p><div class="bars-scroll">' +
+      htmlHBars(depts) + '</div>' + (sc === 'all' ? legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ยังไม่ระบุ'}]) : '') + '</div>');
+
+    // 4) อาคาร
+    const bl = st.building.filter(o=> sc === 'all' || o[sc] > 0).map(o=>({
+      label:o.label, act:'data-askbldg="' + escapeHtml(o.label) + '"',
+      segs: sc === 'all' ? [{ v:o.academic, c:C.a, name:'สายวิชาการ' }, { v:o.support, c:C.b, name:'สายสนับสนุน' }, { v:o.total - o.academic - o.support, c:C.u, name:'อื่น ๆ' }]
+                         : [{ v:o[sc], c:C.a, name:SCOPE_TH[sc] }]
+    }));
+    cards.push('<div class="card anim span-5"><h3>บุคลากรตามอาคาร</h3><p class="sub">ตำแหน่งที่ตั้งห้องทำงาน · แตะเพื่อดูรายชื่อ</p>' + htmlHBars(bl) +
+      (sc === 'all' ? legendHtml([{c:C.a,name:'สายวิชาการ'},{c:C.b,name:'สายสนับสนุน'}]) : '') + '</div>');
+
+    // 5) แนวโน้มรายเดือน
+    const tr = (TREND || []).slice(-24);
+    const ser = sc === 'academic'
+      ? [{ name:'สายวิชาการ', c:C.a, k:'academic' }, { name:'รศ.', c:C.b, k:'assoc' }, { name:'ผศ.', c:C.c, k:'asst' }, { name:'ปริญญาเอก', c:C.d, k:'phd' }]
+      : sc === 'support' ? [{ name:'สายสนับสนุน', c:C.a, k:'support' }]
+      : [{ name:'ทั้งหมด', c:C.a, k:'total' }, { name:'สายวิชาการ', c:C.b, k:'academic' }, { name:'สายสนับสนุน', c:C.c, k:'support' }];
+    let trendBody;
+    if(tr.length >= 2){
+      trendBody = '<div class="chart">' + svgLines(tr.map(o=>monthTh(o.month)), ser.map(s=>({ name:s.name, c:s.c, values:tr.map(o=>o[s.k]||0) })), { w:cw((st.employment||[]).length ? 8 : 12), area:true, aria:'แนวโน้มจำนวนบุคลากรรายเดือน' }) + '</div>' + legendHtml(ser);
+      const a = tr[0], b = tr[tr.length-1], k = ser[0].k, diff = (b[k]||0) - (a[k]||0);
+      trendBody += '<p class="note">' + ser[0].name + ' ' + monthTh(a.month) + ' → ' + monthTh(b.month) + ': ' + (diff > 0 ? 'เพิ่มขึ้น ' + diff : diff < 0 ? 'ลดลง ' + (-diff) : 'คงที่') + (diff ? ' ท่าน' : '') + '</p>';
+    } else {
+      const since = tr.length ? monthTh(tr[0].month) : 'เดือนนี้';
+      trendBody = '<div class="kpis" style="grid-template-columns:repeat(' + ser.length + ',1fr)">' + ser.map(s=> '<div class="kpi"><b style="color:' + s.c + '">' + fmtN(tr.length ? tr[0][s.k] : (s.k === 'total' ? st.total : s.k === 'phd' ? st.phd : st.type[s.k] || 0)) + '</b><span>' + s.name + '</span></div>').join('') + '</div>' +
+        '<p class="note">ระบบเริ่มบันทึกสถิติรายเดือนตั้งแต่ ' + since + ' กราฟเส้นแนวโน้มจะปรากฏเมื่อมีข้อมูลตั้งแต่ 2 เดือนขึ้นไป</p>';
+    }
+    cards.push('<div class="card anim span-' + ((st.employment||[]).length ? 8 : 12) + '"><h3>แนวโน้มจำนวนบุคลากรรายเดือน</h3><p class="sub">บันทึกอัตโนมัติทุกวันจากฐานข้อมูลบุคลากร</p>' + trendBody + '</div>');
+
+    // 6) ประเภทการจ้าง (เมื่อมีข้อมูล)
+    if((st.employment||[]).length){
+      const pal = [C.a, C.b, C.c, C.d, 'hsl(calc(var(--h) + 120) 40% 55%)', C.u];
+      const segs = st.employment.slice(0, 6).map((o,i)=>({ v:o.total, c:pal[i], label:o.label }));
+      const tot = segs.reduce((a,s)=>a+s.v,0);
+      cards.push('<div class="card anim span-4"><h3>ประเภทการจ้าง</h3><p class="sub">จากผู้ที่มีข้อมูล ' + fmtN(tot) + ' ท่าน</p><div class="chart" style="max-width:210px;margin:0 auto">' +
+        svgDonut(segs, fmtN(tot), 'ท่าน') + '</div>' + legendHtml(segs.map(s=>({ c:s.c, name:escapeHtml(s.label) + ' ' + s.v }))) + '</div>');
+    }
+
+    // 7) เริ่มปฏิบัติงานรายปี (ย้อนหลังจากวันที่เริ่มงาน)
+    const yrs = st.startYears || [];
+    if(yrs.length){
+      let cum = 0;
+      const rows = yrs.map(o=>({ label:o.label, segs:GSEG(o, 'ไม่ระบุเพศ') }));
+      const cumVals = yrs.map(o=> cum += o.total);
+      cards.push('<div class="card anim span-12"><h3>บุคลากรเริ่มปฏิบัติงานรายปี (พ.ศ.)</h3><p class="sub">จากผู้ที่มีข้อมูลวันที่เริ่มปฏิบัติงาน ' + fmtN(st.startDateKnown) + ' ท่าน · เส้นสะสมแสดงการเติบโตของคณะ</p>' +
+        '<div class="chart">' + svgColumns(rows, { w:cw(12), h:220, aria:'บุคลากรเริ่มปฏิบัติงานรายปี' }) + '</div>' +
+        (yrs.length >= 2 ? '<div class="chart" style="margin-top:6px">' + svgLines(yrs.map(o=>o.label), [{ name:'จำนวนสะสม', c:C.a, values:cumVals }], { w:cw(12), h:170, zero:true, area:true, aria:'จำนวนสะสม' }) + '</div>' : '') +
+        legendHtml([{c:C.m,name:'ชาย'},{c:C.f,name:'หญิง'},{c:C.u,name:'ไม่ระบุเพศ'}].concat(yrs.length >= 2 ? [{c:C.a,name:'จำนวนสะสม'}] : [])) + '</div>');
+    } else if(!st.local){
+      cards.push('<div class="card span-12"><h3>อายุงานและการเติบโตย้อนหลัง</h3><p class="sub" style="margin:4px 0 0">เมื่อเจ้าหน้าที่บันทึก "วันที่เริ่มปฏิบัติงาน" ในระบบฐานข้อมูลบุคลากร กราฟจำนวนบุคลากรเริ่มงานรายปีและการเติบโตสะสมจะแสดงที่นี่โดยอัตโนมัติ</p></div>');
+    }
+
+    elCharts.innerHTML = cards.join('');
+    lastW = elCharts.clientWidth;
+    document.getElementById('insSub').textContent = st.local
+      ? 'สัดส่วนและการกระจายตัวของบุคลากร (กำลังโหลดข้อมูลล่าสุด)'
+      : 'สัดส่วนและการกระจายตัวของบุคลากร แสดงเป็นตัวเลขรวมเท่านั้น ไม่เปิดเผยข้อมูลรายบุคคล';
+    elCharts.querySelectorAll('path.draw').forEach(p=>{ try{ const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; }catch(e){} });
+    observeCharts();
+  }
+
+  let lastW = 0, rsT = null;
+  window.addEventListener('resize', ()=>{ clearTimeout(rsT); rsT = setTimeout(()=>{ const w = elCharts.clientWidth; if(Math.abs(w - lastW) > 40){ lastW = w; renderInsights(); } }, 250); });
+
+  /* ปุ่มเลือกกลุ่ม */
+  document.getElementById('insScope').addEventListener('click', e=>{
+    const b = e.target.closest('[data-scope]'); if(!b) return;
+    INS_SCOPE = b.dataset.scope;
+    document.querySelectorAll('#insScope button').forEach(x=> x.setAttribute('aria-pressed', String(x === b)));
+    renderInsights();
+  });
+  /* คลิกแถวกราฟ → ให้ผู้ช่วยค้นหาแสดงรายชื่อ */
+  function chartAct(t){
+    const d = t.getAttribute('data-askdept'), bl = t.getAttribute('data-askbldg');
+    if(d){ const known = getDepts().find(x=> canon(x) === canon(d)); askDeptList(known || d); goAssistant(); }
+    else if(bl && bl !== 'ไม่ระบุ'){ askBuildingList(bl); goAssistant(); }
+  }
+  elCharts.addEventListener('click', e=>{ const t = e.target.closest('[data-askdept],[data-askbldg]'); if(t) chartAct(t); });
+  elCharts.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ const t = e.target.closest('[data-askdept],[data-askbldg]'); if(t){ e.preventDefault(); chartAct(t); } } });
+
+  /* แสดงผลเมื่อเลื่อนมาถึง (ครั้งเดียว) */
+  function revealCard(card){
+    card.classList.add('in');
+    card.querySelectorAll('.hbar i[data-w]').forEach(i=> i.style.width = i.dataset.w + '%');
+  }
+  let chartObserver = null;
+  function observeCharts(){
+    const cards = elCharts.querySelectorAll('.card');
+    if(!('IntersectionObserver' in window)){ cards.forEach(revealCard); return; }
+    if(!chartObserver) chartObserver = new IntersectionObserver(es=> es.forEach(en=>{ if(en.isIntersecting){ revealCard(en.target); chartObserver.unobserve(en.target); } }), { threshold:.18 });
+    cards.forEach(c=>{
+      if(elCharts.dataset.seen === '1'){ requestAnimationFrame(()=> requestAnimationFrame(()=> revealCard(c))); }
+      else chartObserver.observe(c);
+    });
+  }
+  new IntersectionObserver((es, ob)=>{ if(es[0].isIntersecting){ elCharts.dataset.seen = '1'; ob.disconnect(); } }, { threshold:.05 }).observe(elCharts);
+
+  /* ป้ายข้อมูลเมื่อชี้ */
+  const tipEl = document.getElementById('chartTip');
+  elCharts.addEventListener('pointermove', e=>{
+    const t = e.target.closest('[data-tip]');
+    if(!t){ tipEl.classList.remove('show'); return; }
+    tipEl.textContent = t.getAttribute('data-tip');
+    tipEl.style.left = e.clientX + 'px'; tipEl.style.top = e.clientY + 'px';
+    tipEl.classList.add('show');
+  });
+  elCharts.addEventListener('pointerleave', ()=> tipEl.classList.remove('show'));
+
+
   /* ================= INIT ================= */
   // 1) ถ้ามีแคชจากการเปิดใช้งานครั้งก่อนในเครื่องนี้ ให้แสดงผลทันทีก่อนเลย
   //    (รวมรูปภาพที่เคยโหลดสำเร็จ) ผู้ใช้ค้นหาได้ทันทีโดยไม่ต้องรอเครือข่าย
   const cached = loadLocalCache();
-  if(cached){ records = cached.records; }
+  if(cached){ records = cached.records; STATS = cached.stats || null; TREND = cached.trend || []; }
   refreshAll();
   addMessage('assistant', '<div class="ans-title">สวัสดีครับ 👋</div><div style="font-size:12.5px; color:var(--text-soft);">ผมคือผู้ช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มมส. ครับ พิมพ์หรือกดไมค์ 🎤 เพื่อถามด้วยเสียงได้เลย เช่น "คณบดีอยู่ห้องไหน" หรือ "EN1 มีใครบ้าง" — ระบบนี้ค้นหาด้วยกฎที่ตั้งไว้ล่วงหน้า ไม่ได้ใช้ AI ครับ</div>');
   setSyncState('', cached ? 'แสดงข้อมูลล่าสุดที่เคยซิงก์ไว้ในเครื่องนี้ — กำลังตรวจสอบข้อมูลใหม่…' : 'แสดงข้อมูลสำรองที่บันทึกไว้ในไฟล์ — กำลังซิงก์ข้อมูลสด…');
 
   // 2) ซิงก์ข้อความ (เร็ว) และรูปภาพ (อาจช้ากว่า) แบบคู่ขนาน — ไม่บล็อกการค้นหาเลย
-  syncAll();
+  syncAll(false);
 
 })();
 </script>
