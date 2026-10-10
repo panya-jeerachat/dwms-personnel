@@ -646,7 +646,8 @@
           <li>ถามตามตำแหน่ง เช่น <b>รองคณบดีฝ่ายวิชาการ</b> หรือ <b>รศ. สาขาไฟฟ้า</b></li>
           <li>สะกดผิดเล็กน้อยก็ยังเจอ เช่น <b>เมคคาทรอนิค</b></li>
           <li>ถ้าไม่มีผลที่ตรงทุกเงื่อนไข ระบบผ่อนเงื่อนไขให้และแจ้งว่าผ่อนข้อใด</li>
-          <li>ระบบอ่านคำตอบด้วยเสียงหลังจากคุณค้นหาครั้งแรก (ข้อกำหนดของเบราว์เซอร์)</li>
+          <li>ระบบอ่านคำตอบด้วยเสียงหลังจากคุณแตะหน้าจอหรือค้นหาครั้งแรก (ข้อกำหนดของเบราว์เซอร์) ทดสอบเสียงได้โดยกดปุ่ม <b>🔊</b> ปิดแล้วเปิดอีกครั้ง</li>
+          <li>ถ้าไม่ได้ยินเสียงบนคอมพิวเตอร์ ให้ใช้ <b>Microsoft Edge</b> ซึ่งมีเสียงภาษาไทยในตัว (Chrome บน Windows ต้องติดตั้งเสียงภาษาไทยเพิ่ม)</li>
         </ul>
       </aside>
     </div>
@@ -1719,28 +1720,75 @@
     this.style.height = Math.min(this.scrollHeight, 100) + 'px';
   });
 
-  /* ================= VOICE OUTPUT (Text-to-Speech) ================= */
-  let thaiVoice = null;
+  /* ================= VOICE OUTPUT (Text-to-Speech) =================
+     ปรับให้ทนทานทุกเบราว์เซอร์:
+      - เลือกเสียงภาษาไทยที่ดีที่สุดในเครื่อง (Edge มีเสียงไทยในตัว / Windows ต้องติดตั้ง / Android-iOS มีในเครื่อง)
+      - ปลดล็อกการอ่านออกเสียงตั้งแต่การแตะครั้งแรก (iPhone/iPad บังคับ)
+      - แบ่งข้อความยาวเป็นช่วงสั้น (Chrome ตัดเสียงเองเมื่อพูดนานเกิน ~15 วินาที)
+      - เว้นจังหวะหลังยกเลิกเสียงเดิม + สั่งให้เครื่องอ่านทำงานต่อ (แก้บัก Chrome เงียบ/ค้าง)
+      - เก็บอ้างอิงประโยคไว้ (กัน Chrome ทิ้งประโยคกลางคันจนเงียบ)
+      - แจ้งผู้ใช้เมื่อเครื่องไม่มีเสียงภาษาไทย แทนการเงียบเฉย ๆ */
+  const TTS_OK = 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+  let thaiVoice = null, voicesLoaded = false, ttsUnlocked = false, ttsQueue = [], noVoiceWarned = false, ttsTimer = null;
+  const VOICE_RANK = [/premwadee|niwat|natural|online/i, /kanya|narisa|pattara|google/i];
   function pickThaiVoice(){
-    if(!('speechSynthesis' in window)) return;
-    const voices = speechSynthesis.getVoices();
-    thaiVoice = voices.find(v=>/^th/i.test(v.lang)) || null;
+    if(!TTS_OK) return;
+    let voices = [];
+    try{ voices = speechSynthesis.getVoices() || []; }catch(e){}
+    if(voices.length) voicesLoaded = true;
+    const th = voices.filter(v=> /^th([-_]|$)/i.test(v.lang || '') || /thai|ไทย/i.test(v.name || ''));
+    let best = null;
+    for(const re of VOICE_RANK){ best = th.find(v=> re.test(v.name || '')); if(best) break; }
+    thaiVoice = best || th[0] || null;
   }
-  if('speechSynthesis' in window){
+  if(TTS_OK){
     pickThaiVoice();
-    speechSynthesis.onvoiceschanged = pickThaiVoice;
+    try{ speechSynthesis.addEventListener('voiceschanged', pickThaiVoice); }catch(e){ speechSynthesis.onvoiceschanged = pickThaiVoice; }
+    setTimeout(pickThaiVoice, 1200);           // บางเบราว์เซอร์โหลดรายชื่อเสียงช้าโดยไม่แจ้งเหตุการณ์
+    setTimeout(pickThaiVoice, 4000);
   }
+  function unlockTTS(){
+    if(ttsUnlocked || !TTS_OK) return;
+    ttsUnlocked = true;
+    try{ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; u.lang = 'th-TH'; speechSynthesis.speak(u); }catch(e){}
+  }
+  ['pointerdown','touchstart','keydown'].forEach(ev=> document.addEventListener(ev, unlockTTS, { capture:true, passive:true }));
+  document.addEventListener('visibilitychange', ()=>{ if(TTS_OK && document.visibilityState === 'visible'){ try{ speechSynthesis.resume(); }catch(e){} } });
+
+  function splitForSpeech(text){
+    const out = []; let rest = String(text).replace(/\s+/g, ' ').trim();
+    while(rest.length > 160){
+      let cut = Math.max(rest.lastIndexOf(' ', 160), rest.lastIndexOf(',', 160), rest.lastIndexOf('·', 160));
+      if(cut < 60) cut = 160;
+      out.push(rest.slice(0, cut).trim()); rest = rest.slice(cut).replace(/^[\s,·]+/, '');
+    }
+    if(rest) out.push(rest);
+    return out;
+  }
+  function voiceNotice(msg){ elVoiceStatus.textContent = msg; clearTimeout(voiceNotice.t); voiceNotice.t = setTimeout(()=>{ if(elVoiceStatus.textContent === msg) elVoiceStatus.textContent = ''; }, 12000); }
   function speak(text){
-    if(!ttsEnabled || !text) return;
-    if(!('speechSynthesis' in window)) return;
+    if(!ttsEnabled || !text || !TTS_OK) return;
+    if(!thaiVoice) pickThaiVoice();
+    if(voicesLoaded && !thaiVoice && !noVoiceWarned){
+      noVoiceWarned = true;
+      voiceNotice('🔈 เครื่องนี้ยังไม่มีเสียงอ่านภาษาไทย จึงอาจไม่ได้ยินเสียงตอบ — เปิดด้วย Microsoft Edge (มีเสียงไทยในตัว) หรือเพิ่มเสียงภาษาไทยในการตั้งค่าเครื่อง (Windows: การตั้งค่า → เวลาและภาษา → คำพูด)');
+    }
     try{
+      clearTimeout(ttsTimer);
       speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'th-TH';
-      if(thaiVoice) u.voice = thaiVoice;
-      u.rate = 1.0;
-      u.pitch = 1.0;
-      speechSynthesis.speak(u);
+      ttsQueue = splitForSpeech(text).map(t=>{
+        const u = new SpeechSynthesisUtterance(t);
+        u.lang = 'th-TH'; if(thaiVoice) u.voice = thaiVoice;
+        u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+        u.onerror = e=>{
+          if(e && e.error === 'not-allowed') voiceNotice('🔈 แตะหน้าจอหรือกดปุ่มใดก็ได้หนึ่งครั้ง เบราว์เซอร์จึงจะอนุญาตให้อ่านออกเสียง');
+        };
+        return u;
+      });
+      ttsTimer = setTimeout(()=>{            // เว้นจังหวะหลัง cancel() กันเสียงหายใน Chrome
+        try{ speechSynthesis.resume(); }catch(e){}
+        ttsQueue.forEach(u=> speechSynthesis.speak(u));
+      }, 60);
     }catch(e){ /* เงียบไว้ ไม่รบกวนผู้ใช้ */ }
   }
   elMuteBtn.addEventListener('click', ()=>{
@@ -1748,8 +1796,10 @@
     elMuteBtn.textContent = ttsEnabled ? '🔊' : '🔇';
     elMuteBtn.classList.toggle('muted', !ttsEnabled);
     elMuteBtn.title = ttsEnabled ? 'ปิดเสียงตอบ' : 'เปิดเสียงตอบ';
-    if(!ttsEnabled && 'speechSynthesis' in window) speechSynthesis.cancel();
+    if(!ttsEnabled && TTS_OK){ clearTimeout(ttsTimer); speechSynthesis.cancel(); }
+    if(ttsEnabled) speak('เปิดเสียงตอบแล้วครับ');      // ได้ยินทันที = ทดสอบเสียงไปในตัว
   });
+  if(!TTS_OK){ elMuteBtn.disabled = true; elMuteBtn.title = 'เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง'; }
 
   /* ================= VOICE INPUT (Speech Recognition) ================= */
   const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
