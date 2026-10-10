@@ -1028,7 +1028,7 @@
       return '<div class="'+cls+'" style="background:'+bg+';" data-fallback="1">' +
         '<img src="'+escapeHtml(photo)+'" alt="" loading="lazy" decoding="async" width="96" height="96" ' +
         'style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;" ' +
-        'onerror="this.parentElement.textContent=\''+init+'\'; this.remove();">' +
+        'onerror="this.parentElement.textContent=\''+init+'\'; this.remove(); window.__dwmsPhotoFail && window.__dwmsPhotoFail();">' +
         '</div>';
     }
     return '<div class="'+cls+'" style="background:'+avatarColor(r.name)+';">'+escapeHtml(initials(r.name))+'</div>';
@@ -1770,18 +1770,38 @@
     return out;
   }
   function voiceNotice(msg){ elVoiceStatus.textContent = msg; clearTimeout(voiceNotice.t); voiceNotice.t = setTimeout(()=>{ if(elVoiceStatus.textContent === msg) elVoiceStatus.textContent = ''; }, 12000); }
-  /** iPhone/iPad: วิธีเดิมทุกบรรทัด (หยุดเสียงเก่า → พูดทันทีในจังหวะเดียวกัน · เสียงไทยตัวแรก · ไม่แบ่งข้อความ) */
+  /**
+   * iPhone/iPad (iOS 27 ทดสอบโดยผู้ใช้กับระบบที่มีเสียงตอบได้จริง):
+   *  - ทุกครั้งที่สั่งพูด จำข้อความไว้ (pendingSpeech) เผื่อ iOS บล็อกเพราะยังไม่มีการแตะ
+   *  - แตะหน้าจอครั้งแรก (ตรงไหนก็ได้) → พูดข้อความที่จำไว้ "ภายในการแตะครั้งนั้น" = ปลดล็อกเครื่องอ่านของ iOS
+   *    หลังจากนั้นคำตอบทุกข้อพูดได้ตามปกติ
+   *  - หาเสียงไทย ณ ตอนพูด (Safari โหลดรายชื่อเสียงช้า) · ข้อความยาวเกิน 600 ตัวอักษรตัดท้าย
+   */
+  let pendingSpeech = null, iosUnlocked = false;
   function speakIOS(text){
+    pendingSpeech = text;
     try{
       speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
+      const MAX = 600;
+      const say = text.length > MAX ? text.slice(0, MAX) + ' ดูรายละเอียดเพิ่มเติมในข้อความบนหน้าจอ' : text;
+      const u = new SpeechSynthesisUtterance(say);
       u.lang = 'th-TH';
-      if(thaiVoice) u.voice = thaiVoice;
+      const v = (speechSynthesis.getVoices() || []).find(x=> x.lang && x.lang.toLowerCase().indexOf('th') === 0);
+      if(v) u.voice = v;
       u.rate = 1.0;
-      u.pitch = 1.0;
-      ttsQueue = [u];                                     // เก็บอ้างอิงไว้ไม่ให้ถูกเก็บกวาดกลางคัน
+      ttsQueue = [u];
       speechSynthesis.speak(u);
     }catch(e){}
+  }
+  function iosUnlockOnce(){
+    if(iosUnlocked) return;
+    iosUnlocked = true;
+    if(pendingSpeech && ttsEnabled) speakIOS(pendingSpeech);
+  }
+  if(TTS_OK && IS_IOS){
+    document.addEventListener('pointerdown', iosUnlockOnce, { once:true, capture:true });
+    document.addEventListener('keydown', iosUnlockOnce, { once:true, capture:true });
+    document.addEventListener('touchstart', iosUnlockOnce, { once:true, capture:true, passive:true });
   }
   function speak(text){
     if(!ttsEnabled || !text || !TTS_OK) return;
@@ -1947,13 +1967,13 @@
    *  - ใช้ JSONP สำรอง เฉพาะเมื่อ fetch ล้มเหลวจริง (เช่น ส่วนขยายเบราว์เซอร์บล็อก) หรือเงียบเกิน 25 วินาที
    *  - ถือว่าล้มเหลวเมื่อทุกวิธีล้มเหลวแล้วเท่านั้น
    */
-  function fetchDirectory(force){
+  function fetchDirectory(force, img){
     return new Promise((resolve, reject)=>{
       let settled = false, fetchDead = false, jsonpDead = false, jsonpStarted = false, lastErr = null;
       const done = (ok, v)=>{ if(settled) return; settled = true; ok ? resolve(v) : reject(v); };
       const valid = j=> j && Array.isArray(j.records) && j.records.length > 0;
       const sep = API_URL.indexOf('?') !== -1 ? '&' : '?';
-      const base = API_URL + sep + '_ts=' + Date.now() + (force ? '&refresh=1' : '');
+      const base = API_URL + sep + '_ts=' + Date.now() + (force ? '&refresh=1' : '') + (img ? '&img=1' : '');
       const failOne = (which, err)=>{
         lastErr = err || lastErr;
         if(which === 'fetch') fetchDead = true; else jsonpDead = true;
@@ -1981,8 +2001,20 @@
   }
 
   const RETRY_DELAYS = [3000, 8000, 20000, 60000];
+  /* รูปที่ยังฝังในชีตใช้ลิงก์ชั่วคราวของ Google — ถ้าพบรูปโหลดไม่ได้ ขอลิงก์ใหม่จากระบบให้เอง (ครั้งเดียวต่อการเปิดหน้า) */
+  let photoFailSeen = false, photoRefreshDone = false, photoFailTimer = null;
+  window.__dwmsPhotoFail = function(){
+    if(photoRefreshDone || photoFailSeen) return;
+    photoFailSeen = true;
+    clearTimeout(photoFailTimer);
+    photoFailTimer = setTimeout(function wait(){
+      if(syncing){ photoFailTimer = setTimeout(wait, 1500); return; }
+      photoRefreshDone = true;
+      syncAll(true, true, true);
+    }, 1200);
+  };
   let failCount = 0, retryTimer = null, slowTimer = null, staleTries = 0;
-  function syncAll(force, manual){
+  function syncAll(force, manual, img){
     if(!API_URL || syncing) return;
     if(manual){ failCount = 0; clearTimeout(retryTimer); }
     syncing = true;
@@ -1990,7 +2022,7 @@
     setSyncState('loading', failCount ? 'กำลังเชื่อมต่อใหม่ (ครั้งที่ ' + (failCount + 1) + ')…' : 'กำลังอัปเดตข้อมูลล่าสุด…');
     clearTimeout(slowTimer);
     slowTimer = setTimeout(()=> setSyncState('loading', 'ระบบกำลังเตรียมข้อมูลล่าสุด อาจใช้เวลาสักครู่ — ค้นหาได้ตามปกติระหว่างรอ'), 6000);
-    fetchDirectory(force).then(res=>{
+    fetchDirectory(force, img).then(res=>{
       records = res.records.map(r=>({
         id: String(r.id||''), acadTitle: r.acadTitle||'', name: r.name||'', position: r.position||'',
         dept: r.dept||'', building: r.building||'', floor: String(r.floor||''), room: String(r.room||''),
@@ -2009,6 +2041,7 @@
       syncNote.textContent = !BACKEND_VERSION
         ? 'ระบบหลังบ้านยังทำงานด้วยโค้ดเวอร์ชันเดิม (ปุ่มเข้าสู่ระบบจะยังใช้ไม่ได้) — ผู้ดูแล: รันฟังก์ชัน diagnose ในหน้า Apps Script เพื่อดูจุดที่ต้องแก้'
         : '';
+      photoFailSeen = false;
       if(res.stale){ if(++staleTries <= 3){ clearTimeout(retryTimer); retryTimer = setTimeout(()=> syncAll(false), 20000); } }  // ได้ชุดสำรอง → ขอชุดสดอีกครั้งในอีกครู่
       else staleTries = 0;
     }).catch(err=>{
@@ -2736,6 +2769,7 @@
   const cached = loadLocalCache();
   if(cached){ records = cached.records; STATS = cached.stats || null; TREND = cached.trend || []; }
   refreshAll();
+  if(IS_IOS) speak('สวัสดีครับ ผมคือผู้ช่วยค้นหาข้อมูลบุคลากร คณะวิศวกรรมศาสตร์ ถามชื่อ ห้อง หรือสาขาได้เลยครับ');
   addMessage('assistant', '<div class="ans-title">สวัสดีครับ 👋</div><div style="font-size:12.5px; color:var(--text-soft);">ผมคือผู้ช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มมส. ครับ พิมพ์หรือกดไมค์ 🎤 เพื่อถามด้วยเสียงได้เลย เช่น "คณบดีอยู่ห้องไหน" หรือ "EN1 มีใครบ้าง" — ระบบนี้ค้นหาด้วยกฎที่ตั้งไว้ล่วงหน้า ไม่ได้ใช้ AI ครับ</div>');
   setSyncState('', cached ? 'แสดงข้อมูลล่าสุดที่เคยซิงก์ไว้ในเครื่องนี้ — กำลังตรวจสอบข้อมูลใหม่…' : 'แสดงข้อมูลสำรองที่บันทึกไว้ในไฟล์ — กำลังซิงก์ข้อมูลสด…');
 
