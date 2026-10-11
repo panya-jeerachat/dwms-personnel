@@ -1728,10 +1728,14 @@
       - เว้นจังหวะหลังยกเลิกเสียงเดิม + สั่งให้เครื่องอ่านทำงานต่อ (แก้บัก Chrome เงียบ/ค้าง)
       - เก็บอ้างอิงประโยคไว้ (กัน Chrome ทิ้งประโยคกลางคันจนเงียบ)
       - แจ้งผู้ใช้เมื่อเครื่องไม่มีเสียงภาษาไทย แทนการเงียบเฉย ๆ */
-  const TTS_OK = 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+  // เงื่อนไขเดียวกับต้นฉบับและระบบภาระงาน DWMS ที่มีเสียงบน iPhone จริง (ห้ามเพิ่มการตรวจอื่นที่อาจตัดเสียงทิ้งบนบางเครื่อง)
+  const TTS_OK = 'speechSynthesis' in window;
   /* iPhone / iPad (ทุกเบราว์เซอร์บน iOS ใช้ WebKit เดียวกัน) — ใช้วิธีเดิมที่พิสูจน์แล้วว่าใช้ได้บน iPhone
      เพราะ WebKit: (1) สั่งพูดหลังหยุดเสียงที่กำลังพูดอยู่ เสียงใหม่จะหาย (2) เสียงคุณภาพสูงที่ยังไม่ดาวน์โหลดจะเงียบ */
   const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  /* เลือกวิธีพูดตาม "จอสัมผัส" ไม่ใช่ชื่ออุปกรณ์ — โทรศัพท์/แท็บเล็ตทุกเครื่องมีจอสัมผัสแน่นอน
+     จึงได้วิธีของมือถือเสมอ แม้เบราว์เซอร์จะรายงานชื่ออุปกรณ์แปลกไป (เช่น โหมดเว็บไซต์เดสก์ท็อป) */
+  const MOBILE_TTS = IS_IOS || (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window) || /Android|Mobile/i.test(navigator.userAgent);
   let thaiVoice = null, voicesLoaded = false, ttsUnlocked = false, ttsQueue = [], noVoiceWarned = false, ttsTimer = null;
   const VOICE_RANK = [/premwadee|niwat|natural|online/i, /kanya|narisa|pattara|google/i];
   function pickThaiVoice(){
@@ -1740,7 +1744,7 @@
     try{ voices = speechSynthesis.getVoices() || []; }catch(e){}
     if(voices.length) voicesLoaded = true;
     const th = voices.filter(v=> /^th([-_]|$)/i.test(v.lang || '') || /thai|ไทย/i.test(v.name || ''));
-    if(IS_IOS){ thaiVoice = th[0] || null; return; }     // iOS: เสียงไทยตัวแรก (เหมือนเดิม)
+    if(MOBILE_TTS){ thaiVoice = th[0] || null; return; }  // มือถือ: เสียงไทยตัวแรก (เหมือนต้นฉบับ)
     let best = null;
     for(const re of VOICE_RANK){ best = th.find(v=> re.test(v.name || '')); if(best) break; }
     thaiVoice = best || th[0] || null;
@@ -1752,12 +1756,12 @@
     setTimeout(pickThaiVoice, 4000);
   }
   function unlockTTS(){
-    if(ttsUnlocked || !TTS_OK || IS_IOS) return;      // iOS ไม่ใช้ เพราะทำให้เสียงคำตอบแรกหาย
+    if(ttsUnlocked || !TTS_OK || MOBILE_TTS) return;  // มือถือไม่ใช้ (ใช้การพูดซ้ำข้อความจริงแทน)
     ttsUnlocked = true;
     try{ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; u.lang = 'th-TH'; speechSynthesis.speak(u); }catch(e){}
   }
   ['pointerdown','touchstart','keydown'].forEach(ev=> document.addEventListener(ev, unlockTTS, { capture:true, passive:true }));
-  document.addEventListener('visibilitychange', ()=>{ if(TTS_OK && !IS_IOS && document.visibilityState === 'visible'){ try{ speechSynthesis.resume(); }catch(e){} } });
+  document.addEventListener('visibilitychange', ()=>{ if(TTS_OK && !MOBILE_TTS && document.visibilityState === 'visible'){ try{ speechSynthesis.resume(); }catch(e){} } });
 
   function splitForSpeech(text){
     const out = []; let rest = String(text).replace(/\s+/g, ' ').trim();
@@ -1768,6 +1772,40 @@
     }
     if(rest) out.push(rest);
     return out;
+  }
+  /* โหมดตรวจเสียง: เปิดหน้าเว็บโดยต่อท้ายลิงก์ด้วย ?voicedebug=1 จะแสดงสถานะการพูดจริงบนจอ (ใช้หาสาเหตุบนเครื่องจริง) */
+  const TTS_DEBUG = /[?&]voicedebug=1/.test(location.search);
+  let dbgBox = null;
+  function dbg(msg){
+    if(!TTS_DEBUG) return;
+    if(!dbgBox){
+      dbgBox = document.createElement('div');
+      dbgBox.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:3000;max-height:42vh;overflow:auto;background:#111;color:#9f9;font:12px/1.5 monospace;padding:8px 10px;border-radius:10px;white-space:pre-wrap;opacity:.93';
+      document.body.appendChild(dbgBox);
+    }
+    const t = new Date().toTimeString().slice(0, 8);
+    dbgBox.textContent += t + '  ' + msg + '\n'; dbgBox.scrollTop = 1e9;
+  }
+  if(TTS_DEBUG){
+    setTimeout(()=>{
+      let n = 0, th = 0; try{ const v = speechSynthesis.getVoices() || []; n = v.length; th = v.filter(x=> /^th/i.test(x.lang || '')).length; }catch(e){}
+      dbg('UA: ' + navigator.userAgent);
+      dbg('speechSynthesis: ' + ('speechSynthesis' in window) + ' | typeof Utterance: ' + typeof window.SpeechSynthesisUtterance +
+          ' | จอสัมผัส: ' + (navigator.maxTouchPoints || 0) + ' | ทางที่ใช้: ' + (MOBILE_TTS ? 'มือถือ' : 'คอมพิวเตอร์') + ' | เสียงทั้งหมด ' + n + ' (ไทย ' + th + ')');
+    }, 1500);
+    if(TTS_OK){
+      const realSpeak = speechSynthesis.speak.bind(speechSynthesis);
+      try{
+        speechSynthesis.speak = function(u){
+          dbg('speak → ' + (u.voice ? u.voice.name : '(เสียงตามภาษา ' + u.lang + ')') + ' : ' + String(u.text).slice(0, 40));
+          const oe = u.onerror;
+          u.onstart = ()=> dbg('▶ เริ่มพูดแล้ว');
+          u.onend = ()=> dbg('■ พูดจบ');
+          u.onerror = e=>{ dbg('✕ ข้อผิดพลาด: ' + (e && e.error)); if(oe) oe(e); };
+          return realSpeak(u);
+        };
+      }catch(e){ dbg('ติดตามคำสั่งพูดไม่ได้: ' + e.message); }
+    }
   }
   function voiceNotice(msg){ elVoiceStatus.textContent = msg; clearTimeout(voiceNotice.t); voiceNotice.t = setTimeout(()=>{ if(elVoiceStatus.textContent === msg) elVoiceStatus.textContent = ''; }, 12000); }
   /**
@@ -1798,7 +1836,7 @@
     iosUnlocked = true;
     if(pendingSpeech && ttsEnabled) speakIOS(pendingSpeech);
   }
-  if(TTS_OK && IS_IOS){
+  if(TTS_OK && MOBILE_TTS){
     document.addEventListener('pointerdown', iosUnlockOnce, { once:true, capture:true });
     document.addEventListener('keydown', iosUnlockOnce, { once:true, capture:true });
     document.addEventListener('touchstart', iosUnlockOnce, { once:true, capture:true, passive:true });
@@ -1806,7 +1844,7 @@
   function speak(text){
     if(!ttsEnabled || !text || !TTS_OK) return;
     if(!thaiVoice) pickThaiVoice();
-    if(IS_IOS) return speakIOS(text);
+    if(MOBILE_TTS) return speakIOS(text);
     if(voicesLoaded && !thaiVoice && !noVoiceWarned){
       noVoiceWarned = true;
       voiceNotice(IS_IOS
@@ -2769,7 +2807,7 @@
   const cached = loadLocalCache();
   if(cached){ records = cached.records; STATS = cached.stats || null; TREND = cached.trend || []; }
   refreshAll();
-  if(IS_IOS) speak('สวัสดีครับ ผมคือผู้ช่วยค้นหาข้อมูลบุคลากร คณะวิศวกรรมศาสตร์ ถามชื่อ ห้อง หรือสาขาได้เลยครับ');
+  if(MOBILE_TTS) speak('สวัสดีครับ ผมคือผู้ช่วยค้นหาข้อมูลบุคลากร คณะวิศวกรรมศาสตร์ ถามชื่อ ห้อง หรือสาขาได้เลยครับ');
   addMessage('assistant', '<div class="ans-title">สวัสดีครับ 👋</div><div style="font-size:12.5px; color:var(--text-soft);">ผมคือผู้ช่วยค้นหาข้อมูลบุคลากรคณะวิศวกรรมศาสตร์ มมส. ครับ พิมพ์หรือกดไมค์ 🎤 เพื่อถามด้วยเสียงได้เลย เช่น "คณบดีอยู่ห้องไหน" หรือ "EN1 มีใครบ้าง" — ระบบนี้ค้นหาด้วยกฎที่ตั้งไว้ล่วงหน้า ไม่ได้ใช้ AI ครับ</div>');
   setSyncState('', cached ? 'แสดงข้อมูลล่าสุดที่เคยซิงก์ไว้ในเครื่องนี้ — กำลังตรวจสอบข้อมูลใหม่…' : 'แสดงข้อมูลสำรองที่บันทึกไว้ในไฟล์ — กำลังซิงก์ข้อมูลสด…');
 
