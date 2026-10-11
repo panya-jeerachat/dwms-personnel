@@ -227,6 +227,12 @@ td.calc{padding:6px 10px;color:var(--soft);font-size:13px;white-space:nowrap;bac
 .rt-row .track{height:12px;background:var(--mint);border-radius:6px;overflow:hidden}
 .rt-row i{display:block;height:100%;background:#C9822B;border-radius:6px}
 .rt-row:hover span{color:var(--leaf-d);text-decoration:underline}
+.rules-tbl td{padding:6px 8px;vertical-align:middle}
+.rules-tbl input.input,.rules-tbl select.input{padding:7px 9px}
+.rules-tbl tr.def td{background:var(--mint-2)}
+.rules-tbl .cnt{color:var(--soft);font-size:12.5px;white-space:nowrap}
+.chg{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;font-size:13px;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;background:#fff}
+.chg b{white-space:nowrap}
 .progress{height:10px;background:var(--mint);border-radius:5px;overflow:hidden;margin:10px 0}
 .progress i{display:block;height:100%;background:var(--leaf);width:0;transition:width .3s}
 .loglist{max-height:320px;overflow:auto;font-size:13px;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;background:var(--mint-2)}
@@ -412,6 +418,7 @@ var FORM = [
 
 var EMP_DEFAULTS = ['ข้าราชการ','พนักงานมหาวิทยาลัย','พนักงานมหาวิทยาลัย (เงินรายได้)','ลูกจ้างประจำ','ลูกจ้างชั่วคราว','พนักงานราชการ'];
 var ICONS = {
+  rules:'<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
   grid:'<rect x="3.5" y="4" width="17" height="16" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M3.5 9.5h17M3.5 15h17M9.5 4v16" stroke="currentColor" stroke-width="1.8"/>',
   gender:'<circle cx="9" cy="10" r="4.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12.3 6.8L17 2m0 0h-3.6M17 2v3.6M9 14.5V22m-3-3h6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
   dash:'<path d="M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 4v4h6V4z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/>',
@@ -428,6 +435,7 @@ var VIEWS = {
   people:  { t:'บุคลากร', role:'editor' },
   grid:    { t:'แก้ไขแบบตาราง', role:'editor' },
   gender:  { t:'เติมข้อมูลเพศ', role:'editor' },
+  rules:   { t:'เกณฑ์เกษียณ', role:'editor' },
   me:      { t:'ข้อมูลของฉัน', role:'user' },
   password:{ t:'เปลี่ยนรหัสผ่าน', role:'user' },
   users:   { t:'บัญชีผู้ใช้', role:'admin' },
@@ -476,20 +484,20 @@ function thDate(s){ var d = ymdOf(s); return d ? d.d + ' ' + TH_M[d.m - 1] + ' '
 function todayYmd(){ var t = new Date(); return { y:t.getFullYear(), m:t.getMonth() + 1, d:t.getDate() }; }
 function monthsBetween(a, b){ return (b.y - a.y) * 12 + (b.m - a.m) - (b.d < a.d ? 1 : 0); }
 function ymText(mo){ if(mo === '' || mo == null) return ''; var y = Math.floor(Math.abs(mo) / 12), m = Math.abs(mo) % 12; return (y ? y + ' ปี ' : '') + (m || !y ? m + ' เดือน' : '').trim(); }
-function retireRuleOf(emp){
+function retireRuleOf(emp, rules){
   emp = String(emp || ''); var best = null;
-  (CFG.retireRules || [{ match:'', age:60, fiscal:true }]).forEach(function(r){
+  (rules || CFG.retireRules || [{ match:'', age:60, fiscal:true }]).forEach(function(r){
     if((r.match === '' || emp.indexOf(r.match) !== -1) && (!best || String(r.match).length > String(best.match).length)) best = r;
   });
   best = best || { match:'', age:60, fiscal:true };
   return { age:best.age, fiscal:best.fiscal !== false, label:(best.match || 'ค่าเริ่มต้น') + ' · ' + best.age + ' ปี' + (best.fiscal !== false ? ' สิ้นปีงบประมาณ' : ' ณ วันครบอายุ') };
 }
-function hrCalc(r){
+function hrCalc(r, rules){
   var t = todayYmd(), out = { age:'', retireDate:'', retireFY:'', retireMonthsLeft:'', retired:false, serviceMonths:'', retireRule:'' };
   var b = ymdOf(r.birthDate);
   if(b){
     out.age = Math.floor(monthsBetween(b, t) / 12);
-    var rule = retireRuleOf(r.employmentType); out.retireRule = rule.label;
+    var rule = retireRuleOf(r.employmentType, rules); out.retireRule = rule.label;
     var dn = new Date(Date.UTC(b.y + rule.age, b.m - 1, b.d)); dn.setUTCDate(dn.getUTCDate() - 1);
     var y = dn.getUTCFullYear(), m = dn.getUTCMonth() + 1, d = dn.getUTCDate(), fy = m >= 10 ? y + 1 : y;
     var rd = rule.fiscal ? { y:fy, m:9, d:30 } : { y:y, m:m, d:d };
@@ -658,7 +666,7 @@ function go(v){
   VIEW = v;
   $('viewTitle').textContent = VIEWS[v].t;
   Array.prototype.forEach.call($('nav').children, function(b){ b.classList.toggle('on', b.getAttribute('data-go') === v); });
-  var fn = { dash:viewDash, people:viewPeople, grid:viewGrid, gender:viewGender, me:viewMe, password:viewPassword, users:viewUsers, migrate:viewMigrate, logs:viewLogs, system:viewSystem }[v];
+  var fn = { dash:viewDash, people:viewPeople, grid:viewGrid, gender:viewGender, rules:viewRules, me:viewMe, password:viewPassword, users:viewUsers, migrate:viewMigrate, logs:viewLogs, system:viewSystem }[v];
   fn($('view'));
   window.scrollTo(0, 0);
 }
@@ -1235,6 +1243,105 @@ document.addEventListener('keydown', function(e){
 });
 window.addEventListener('beforeunload', function(e){ if(gridPendingCount()){ e.preventDefault(); e.returnValue = ''; } });
 
+/* ================= เกณฑ์เกษียณ (เก็บในชีต "เกณฑ์เกษียณ") ================= */
+var RULES = { draft:null, types:[], canEdit:false };
+function rulesClone(list){ return (list || []).map(function(r){ return { match:r.match || '', age:r.age, fiscal:r.fiscal !== false, note:r.note || '', updatedAt:r.updatedAt || '', updatedBy:r.updatedBy || '' }; }); }
+function viewRules(el){
+  el.innerHTML = '<div class="panel"><div class="empty">กำลังโหลดเกณฑ์…</div></div>';
+  call('getRetireRules').then(function(d){
+    RULES.draft = rulesClone(d.rules); RULES.types = d.types; RULES.canEdit = d.canEdit;
+    drawRules(el);
+  }).catch(function(e){ el.innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; });
+}
+function ruleKeyOf(emp, rules){ var r = retireRuleOf(emp, rules); return r; }
+/** แถวใหม่ที่ยังไม่ได้พิมพ์ชื่อ ไม่นำไปคำนวณ */
+function rulesForCalc(rules){ return rules.filter(function(r){ return !(r.fresh && !String(r.match).trim()); }).map(function(r){ return r.fresh ? Object.assign({}, r, { match:String(r.match).trim() }) : r; }); }
+function bestMatchOf(emp, rules){
+  emp = String(emp || ''); var best = null;
+  rules.forEach(function(r){
+    if(r.fresh && !String(r.match).trim()) return;
+    var m = String(r.match).trim();
+    if((m === '' || emp.indexOf(m) !== -1) && (!best || m.length > String(best.match).trim().length)) best = r;
+  });
+  return best;
+}
+function drawRules(el){
+  var R = RULES.draft, dis = RULES.canEdit ? '' : ' disabled';
+  var typeList = RULES.types.filter(function(t){ return t.type; }).map(function(t){ return t.type; });
+  var countFor = function(rule){ var n = 0; PERSONS.forEach(function(p){ if(bestMatchOf(p.employmentType, R) === rule) n++; }); return n; };
+  var rows = R.map(function(r, i){
+    var isDef = r.match === '' && !r.fresh;
+    return '<tr class="' + (isDef ? 'def' : '') + '">' +
+      '<td>' + (isDef ? '<b>ค่าเริ่มต้น</b><br><small class="muted">ประเภทอื่น / ยังไม่ระบุประเภทการจ้าง</small>'
+        : '<input class="input" data-ri="' + i + '" data-rk="match" value="' + esc(r.match) + '" list="rdl-types" placeholder="เช่น พนักงานมหาวิทยาลัย"' + dis + '>') + '</td>' +
+      '<td style="width:110px"><input class="input" type="number" min="40" max="80" step="1" data-ri="' + i + '" data-rk="age" value="' + esc(r.age) + '"' + dis + '></td>' +
+      '<td style="width:215px"><select class="input" data-ri="' + i + '" data-rk="fiscal"' + dis + '><option value="1"' + (r.fiscal ? ' selected' : '') + '>สิ้นปีงบประมาณ (30 ก.ย.)</option><option value="0"' + (!r.fiscal ? ' selected' : '') + '>วันครบอายุ</option></select></td>' +
+      '<td><input class="input" data-ri="' + i + '" data-rk="note" value="' + esc(r.note) + '" placeholder="เช่น อ้างอิงประกาศ/ระเบียบ"' + dis + '></td>' +
+      '<td class="cnt">' + countFor(r) + ' คน' + (r.updatedBy ? '<br><small class="muted">' + esc(r.updatedBy) + '</small>' : '') + '</td>' +
+      '<td style="width:60px">' + (isDef || !RULES.canEdit ? '' : '<button class="btn sm danger" data-rdel="' + i + '" title="ลบเกณฑ์นี้">ลบ</button>') + '</td></tr>';
+  }).join('');
+  // ประเภทการจ้างที่ยังไม่มีเกณฑ์เฉพาะ (ตกไปใช้ค่าเริ่มต้น)
+  var uncovered = RULES.types.filter(function(t){ var b = bestMatchOf(t.type, R); return t.type && b && b.match === '' && !b.fresh; });
+  // ผลกระทบเมื่อเทียบกับเกณฑ์ที่ใช้อยู่
+  var changes = [];
+  PERSONS.forEach(function(p){
+    if(!p.birthDate) return;
+    var a = hrCalc(p, CFG.retireRules), b = hrCalc(p, rulesForCalc(R));
+    if(a.retireDate !== b.retireDate) changes.push({ p:p, a:a, b:b });
+  });
+  var dirty = JSON.stringify(rulesClone(CFG.retireRules).map(function(r){ return [r.match, r.age, r.fiscal, r.note]; })) !== JSON.stringify(R.map(function(r){ return [String(r.match).trim(), Number(r.age), r.fiscal, String(r.note).trim()]; }));
+  el.innerHTML =
+    '<div class="panel"><h3>เกณฑ์เกษียณตามประเภทการจ้าง</h3>' +
+      '<p class="desc">ระบบเลือกเกณฑ์จากช่อง "ประเภทการจ้าง" ของบุคลากร โดยตรวจว่ามีข้อความในคอลัมน์แรกอยู่หรือไม่ (ข้อความยาวกว่าได้ก่อน เช่น "พนักงานมหาวิทยาลัย (เงินรายได้)" ใช้เกณฑ์ "พนักงานมหาวิทยาลัย" หากไม่ได้ตั้งแยก) · เกณฑ์ทั้งหมดบันทึกในชีต <b>"เกณฑ์เกษียณ"</b> และผลคำนวณบันทึกในคอลัมน์ <b>[คำนวณ]</b> ของชีตบุคลากร ระบบอื่นอ่านไปใช้ได้ทันที' +
+      (RULES.canEdit ? '' : ' · <b>เฉพาะผู้ดูแลระบบแก้ไขได้</b>') + '</p>' +
+      '<div class="tbl-wrap"><table class="rules-tbl"><thead><tr><th>ประเภทการจ้าง</th><th>อายุเกษียณ (ปี)</th><th>วิธีนับ</th><th>หมายเหตุ</th><th>ใช้กับ</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<datalist id="rdl-types">' + typeList.concat(EMP_DEFAULTS).filter(function(v, i, a){ return a.indexOf(v) === i; }).map(function(v){ return '<option value="' + esc(v) + '">'; }).join('') + '</datalist>' +
+      (RULES.canEdit ? '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="rAdd">+ เพิ่มเกณฑ์</button><span style="flex:1"></span>' +
+        '<button class="btn" id="rUndo"' + (dirty ? '' : ' disabled') + '>ยกเลิกการแก้ไข</button><button class="btn primary" id="rSave"' + (dirty ? '' : ' disabled') + '>บันทึกเกณฑ์' + (changes.length ? ' (ปีเกษียณเปลี่ยน ' + changes.length + ' คน)' : '') + '</button></div>' : '') +
+    '</div>' +
+    (uncovered.length ? '<div class="panel"><h3>ประเภทการจ้างที่ยังไม่มีเกณฑ์เฉพาะ</h3><p class="desc">ตอนนี้ใช้ค่าเริ่มต้น ' + (R.filter(function(r){ return r.match === ''; })[0] || {}).age + ' ปี' + (RULES.canEdit ? ' · กดเพื่อเพิ่มเกณฑ์ของประเภทนั้น' : '') + '</p><div style="display:flex;gap:8px;flex-wrap:wrap">' +
+      uncovered.map(function(t){ return RULES.canEdit ? '<button class="btn sm" data-radd="' + esc(t.type) + '">+ ' + esc(t.type) + ' <span class="muted">(' + t.count + ' คน)</span></button>' : '<span class="tag grey">' + esc(t.type) + ' (' + t.count + ')</span>'; }).join('') + '</div></div>' : '') +
+    '<div class="panel"><h3>ผลกระทบของการแก้ไข</h3>' +
+      (changes.length ? '<p class="desc">ถ้าบันทึก วันเกษียณของ ' + changes.length + ' คนจะเปลี่ยน:</p><div class="chg">' + changes.slice(0, 50).map(function(c){
+        return '<span>' + esc(fullName(c.p)) + ' <small class="muted">' + esc(c.p.employmentType || 'ไม่ระบุประเภทการจ้าง') + '</small></span><b>' + thDate(c.a.retireDate) + ' → ' + thDate(c.b.retireDate) + '</b>'; }).join('') + '</div>'
+        : '<p class="desc" style="margin:0">' + (dirty ? 'การแก้ไขนี้ไม่ทำให้วันเกษียณของใครเปลี่ยน (คำนวณเฉพาะผู้ที่มีวันเกิดในระบบ ' + PERSONS.filter(function(p){ return p.birthDate; }).length + ' คน)' : 'ยังไม่มีการแก้ไข') + '</p>') +
+    '</div>';
+  if(!RULES.canEdit) return;
+  el.querySelectorAll('[data-ri]').forEach(function(inp){
+    inp.addEventListener(inp.tagName === 'SELECT' ? 'change' : 'change', function(){
+      var r = RULES.draft[+inp.getAttribute('data-ri')], k = inp.getAttribute('data-rk');
+      r[k] = k === 'fiscal' ? inp.value === '1' : k === 'age' ? Number(inp.value) : inp.value;
+      drawRules(el);
+    });
+  });
+  el.querySelectorAll('[data-rdel]').forEach(function(b){ b.onclick = function(){ RULES.draft.splice(+b.getAttribute('data-rdel'), 1); drawRules(el); }; });
+  el.querySelectorAll('[data-radd]').forEach(function(b){ b.onclick = function(){ addRule(el, b.getAttribute('data-radd')); }; });
+  $('rAdd').onclick = function(){ addRule(el, ''); };
+  $('rUndo').onclick = function(){ RULES.draft = rulesClone(CFG.retireRules); drawRules(el); };
+  $('rSave').onclick = function(){
+    var bad = RULES.draft.filter(function(r){ return r.fresh && !String(r.match).trim(); });
+    if(bad.length){ toast('กรอกชื่อประเภทการจ้างให้ครบทุกแถว', true); return; }
+    askConfirm('บันทึกเกณฑ์เกษียณ?', 'ระบบจะบันทึกลงชีต "เกณฑ์เกษียณ" และคำนวณวันเกษียณของบุคลากรทุกคนใหม่' + (changes.length ? ' (เปลี่ยน ' + changes.length + ' คน)' : ''), 'บันทึก').then(function(y){
+      if(!y) return;
+      busy('กำลังบันทึกและคำนวณใหม่…');
+      call('saveRetireRules', { rules:RULES.draft.map(function(r){ return { match:String(r.match).trim(), age:Number(r.age), fiscal:r.fiscal, note:r.note }; }) }).then(function(res){
+        CFG.retireRules = res.rules; RULES.draft = rulesClone(res.rules);
+        (res.persons || []).forEach(upsertPerson);
+        toast('บันทึกเกณฑ์แล้ว · อัปเดตชีตบุคลากร ' + res.changedCells + ' ช่อง');
+        drawRules(el);
+      }).catch(function(e){ toast(e.message, true); }).finally(function(){ busy(''); });
+    });
+  };
+}
+function addRule(el, type){
+  var defIdx = RULES.draft.findIndex(function(r){ return r.match === ''; });
+  var def = RULES.draft[defIdx] || { age:60, fiscal:true };
+  RULES.draft.splice(defIdx < 0 ? RULES.draft.length : defIdx, 0, { match:type || '', fresh:true, age:def.age, fiscal:def.fiscal, note:'', updatedAt:'', updatedBy:'' });
+  drawRules(el);
+  var inputs = el.querySelectorAll('[data-rk="match"]'); var last = inputs[inputs.length - 1];
+  if(last && !type) last.focus();
+}
+
 /* ================= เติมข้อมูลเพศแบบกลุ่ม ================= */
 var GPEND = {};
 function guessGender(p){
@@ -1459,7 +1566,7 @@ function runMigration(list){
 var ACT_TH = { 'login':'เข้าสู่ระบบ', 'login-fail':'เข้าระบบไม่สำเร็จ', 'forgot':'ขอรหัสผ่านใหม่', 'person-add':'เพิ่มบุคลากร', 'person-edit':'แก้ไขข้อมูล',
   'person-delete':'ลบบุคลากร', 'photo-set':'เปลี่ยนรูป', 'photo-remove':'ลบรูป', 'password-change':'เปลี่ยนรหัสผ่าน', 'user-edit':'แก้ไขบัญชี',
   'user-add':'เพิ่มบัญชี', 'user-reset':'คืนรหัสเริ่มต้น', 'user-delete':'ลบบัญชี', 'user-sync':'สร้างบัญชีอัตโนมัติ', 'backup':'สำรองไฟล์',
-  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'person-bulk':'แก้ไขแบบตาราง', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
+  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'person-bulk':'แก้ไขแบบตาราง', 'retire-rules':'แก้เกณฑ์เกษียณ', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
 function viewLogs(el){
   el.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>การกระทำ</th><th>เป้าหมาย</th><th class="hide-sm">รายละเอียด</th></tr></thead><tbody id="ltb"><tr><td colspan="5"><div class="empty">กำลังโหลด…</div></td></tr></tbody></table></div>';
   call('logs').then(function(rows){
