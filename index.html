@@ -1794,7 +1794,8 @@
       let n = 0, th = 0; try{ const v = speechSynthesis.getVoices() || []; n = v.length; th = v.filter(x=> /^th/i.test(x.lang || '')).length; }catch(e){}
       dbg('UA: ' + navigator.userAgent);
       dbg('speechSynthesis: ' + ('speechSynthesis' in window) + ' | typeof Utterance: ' + typeof window.SpeechSynthesisUtterance +
-          ' | จอสัมผัส: ' + (navigator.maxTouchPoints || 0) + ' | ทางที่ใช้: ' + (MOBILE_TTS ? 'มือถือ' : 'คอมพิวเตอร์') + ' | เสียงทั้งหมด ' + n + ' (ไทย ' + th + ')');
+          ' | จอสัมผัส: ' + (navigator.maxTouchPoints || 0) + ' | ทางที่ใช้: ' + (MOBILE_TTS ? 'มือถือ' : 'คอมพิวเตอร์') + ' | เสียงทั้งหมด ' + n + ' (ไทย ' + th + ')' +
+          ' | audioSession: ' + (typeof audioSessionInfo !== 'undefined' ? audioSessionInfo : '-'));
     }, 1500);
     if(TTS_OK){
       const realSpeak = speechSynthesis.speak.bind(speechSynthesis);
@@ -1819,8 +1820,29 @@
    *  - หาเสียงไทย ณ ตอนพูด (Safari โหลดรายชื่อเสียงช้า) · ข้อความยาวเกิน 600 ตัวอักษรตัดท้าย
    */
   let pendingSpeech = null, mobileAudioReady = false;
+  /* ให้เสียงพูดออกลำโพงแม้ iPhone เปิดโหมดเงียบ (สวิตช์เงียบ/ปุ่ม Action)
+     1) ตั้งค่าเสียงของหน้าเว็บเป็น "เล่นสื่อ" (Audio Session API ของ Safari 17 ขึ้นไป)
+     2) เล่นเสียงเงียบสั้น ๆ ขณะแตะ เพื่อสลับช่องเสียงของ Safari ไปเป็นช่องเล่นสื่อก่อนเริ่มพูด */
+  let audioSessionInfo = 'ไม่รองรับ';
+  if(MOBILE_TTS){
+    try{ if(navigator.audioSession){ navigator.audioSession.type = 'playback'; audioSessionInfo = navigator.audioSession.type; } }catch(e){ audioSessionInfo = 'ตั้งค่าไม่ได้'; }
+  }
+  let kickAudio = null, kickInfo = 'ยังไม่ได้เล่น';
+  function kickPlaybackSession(){
+    if(!MOBILE_TTS) return;
+    try{
+      if(!kickAudio){
+        kickAudio = new Audio('data:audio/wav;base64,UklGRvQHAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YdAHAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==');
+        kickAudio.setAttribute('playsinline', ''); kickAudio.preload = 'auto';
+      }
+      kickAudio.currentTime = 0;
+      const pr = kickAudio.play();
+      if(pr && pr.then) pr.then(()=>{ kickInfo = 'เล่นได้'; dbg('ช่องเสียงเล่นสื่อ: เปิดแล้ว'); }, err=>{ kickInfo = 'ถูกปฏิเสธ (' + (err && err.name) + ')'; dbg('ช่องเสียงเล่นสื่อ: ' + kickInfo); });
+    }catch(e){ kickInfo = 'ผิดพลาด ' + e.message; }
+  }
   function speakIOS(text){
     pendingSpeech = text;
+    kickPlaybackSession();
     try{
       if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();   // หยุดเฉพาะเมื่อมีเสียงค้าง
       const MAX = 600;
