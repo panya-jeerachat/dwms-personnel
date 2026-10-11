@@ -217,6 +217,16 @@ td.cc{text-align:center}
 .gname{display:flex;align-items:center;gap:8px;min-width:230px;max-width:300px}
 .gname b{display:block;font-weight:600;white-space:normal;line-height:1.3}
 .gname small{color:var(--soft)}
+.hrbox{display:flex;flex-wrap:wrap;gap:6px;margin:12px 22px 0;padding:10px 12px;border:1px dashed var(--line-2);border-radius:var(--r-sm);background:var(--mint-2);font-size:13px}
+.hrbox .hk{color:var(--soft)}
+.hrbox b{font-weight:600}
+.hrbox .sep{color:var(--line-2)}
+.hrbox small{flex-basis:100%;color:var(--faint);font-size:12px}
+td.calc{padding:6px 10px;color:var(--soft);font-size:13px;white-space:nowrap;background:var(--paper)}
+.rt-row{display:grid;grid-template-columns:90px minmax(0,1fr) 34px;gap:10px;align-items:center;font-size:13px;margin:6px 0;cursor:pointer}
+.rt-row .track{height:12px;background:var(--mint);border-radius:6px;overflow:hidden}
+.rt-row i{display:block;height:100%;background:#C9822B;border-radius:6px}
+.rt-row:hover span{color:var(--leaf-d);text-decoration:underline}
 .progress{height:10px;background:var(--mint);border-radius:5px;overflow:hidden;margin:10px 0}
 .progress i{display:block;height:100%;background:var(--leaf);width:0;transition:width .3s}
 .loglist{max-height:320px;overflow:auto;font-size:13px;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;background:var(--mint-2)}
@@ -392,7 +402,8 @@ var FORM = [
   { k:'status', l:'สถานะ', list:'status' },
   { k:'gender', l:'เพศ', opts:[['','ไม่ระบุ'],['ชาย','ชาย'],['หญิง','หญิง']] },
   { k:'employmentType', l:'ประเภทการจ้าง', list:'employmentType' },
-  { k:'startDate', l:'วันที่เริ่มปฏิบัติงาน', type:'date', hint:'ใช้คำนวณสถิติอายุงานและแนวโน้มรายปี' },
+  { k:'startDate', l:'วันที่เริ่มปฏิบัติงาน', type:'date', hint:'ใช้คำนวณอายุงานและแนวโน้มรายปี' },
+  { k:'birthDate', l:'วัน/เดือน/ปีเกิด', type:'date', hint:'ใช้คำนวณอายุและปีเกษียณ · ข้อมูลส่วนบุคคล ไม่แสดงบนหน้าเว็บสาธารณะ' },
   { k:'email', l:'อีเมล', type:'email', full:true, hint:'ใช้เป็นชื่อผู้ใช้เข้าระบบของบุคลากรท่านนี้' },
   { k:'phone', l:'โทรศัพท์', full:true },
   { k:'note', l:'หมายเหตุ', area:true, full:true },
@@ -458,6 +469,47 @@ function avatar(p, size){
 }
 function genderTag(g){ return g === 'ชาย' ? '<span class="gtag m" title="ชาย">ช</span>' : g === 'หญิง' ? '<span class="gtag f" title="หญิง">ญ</span>' : ''; }
 function pct(a, b){ return b ? Math.round(a / b * 100) : 0; }
+/* ----- คำนวณอายุ / เกษียณ / อายุงาน (ตรงกับ Code.gs ใช้แสดงตัวอย่างทันทีขณะกรอก) ----- */
+var TH_M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function ymdOf(s){ var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '')); return m ? { y:+m[1], m:+m[2], d:+m[3] } : null; }
+function thDate(s){ var d = ymdOf(s); return d ? d.d + ' ' + TH_M[d.m - 1] + ' ' + (d.y + 543) : ''; }
+function todayYmd(){ var t = new Date(); return { y:t.getFullYear(), m:t.getMonth() + 1, d:t.getDate() }; }
+function monthsBetween(a, b){ return (b.y - a.y) * 12 + (b.m - a.m) - (b.d < a.d ? 1 : 0); }
+function ymText(mo){ if(mo === '' || mo == null) return ''; var y = Math.floor(Math.abs(mo) / 12), m = Math.abs(mo) % 12; return (y ? y + ' ปี ' : '') + (m || !y ? m + ' เดือน' : '').trim(); }
+function retireRuleOf(emp){
+  emp = String(emp || ''); var best = null;
+  (CFG.retireRules || [{ match:'', age:60, fiscal:true }]).forEach(function(r){
+    if((r.match === '' || emp.indexOf(r.match) !== -1) && (!best || String(r.match).length > String(best.match).length)) best = r;
+  });
+  best = best || { match:'', age:60, fiscal:true };
+  return { age:best.age, fiscal:best.fiscal !== false, label:(best.match || 'ค่าเริ่มต้น') + ' · ' + best.age + ' ปี' + (best.fiscal !== false ? ' สิ้นปีงบประมาณ' : ' ณ วันครบอายุ') };
+}
+function hrCalc(r){
+  var t = todayYmd(), out = { age:'', retireDate:'', retireFY:'', retireMonthsLeft:'', retired:false, serviceMonths:'', retireRule:'' };
+  var b = ymdOf(r.birthDate);
+  if(b){
+    out.age = Math.floor(monthsBetween(b, t) / 12);
+    var rule = retireRuleOf(r.employmentType); out.retireRule = rule.label;
+    var dn = new Date(Date.UTC(b.y + rule.age, b.m - 1, b.d)); dn.setUTCDate(dn.getUTCDate() - 1);
+    var y = dn.getUTCFullYear(), m = dn.getUTCMonth() + 1, d = dn.getUTCDate(), fy = m >= 10 ? y + 1 : y;
+    var rd = rule.fiscal ? { y:fy, m:9, d:30 } : { y:y, m:m, d:d };
+    out.retireDate = rd.y + '-' + ('0' + rd.m).slice(-2) + '-' + ('0' + rd.d).slice(-2);
+    out.retireFY = fy + 543; out.retireMonthsLeft = monthsBetween(t, rd);
+    out.retired = (rd.y * 10000 + rd.m * 100 + rd.d) < (t.y * 10000 + t.m * 100 + t.d);
+  }
+  var st = ymdOf(r.startDate); if(st) out.serviceMonths = Math.max(0, monthsBetween(st, t));
+  return out;
+}
+function curFY(){ var t = todayYmd(); return (t.m >= 10 ? t.y + 1 : t.y) + 543; }
+function hrBoxHtml(r){
+  var h = hrCalc(r), parts = [];
+  if(h.age !== '') parts.push('<span class="hk">อายุ</span> <b>' + h.age + ' ปี</b>');
+  if(h.retireDate) parts.push(h.retired ? '<span class="tag grey">เกษียณแล้ว ' + thDate(h.retireDate) + '</span>'
+    : '<span class="hk">เกษียณ</span> <b>' + thDate(h.retireDate) + '</b> <span class="hk">(ปีงบ ' + h.retireFY + ' · อีก ' + ymText(h.retireMonthsLeft) + ')</span>');
+  if(h.serviceMonths !== '') parts.push('<span class="hk">อายุงาน</span> <b>' + ymText(h.serviceMonths) + '</b>');
+  if(!parts.length) return '<span class="hk">กรอกวันเกิดและวันที่เริ่มปฏิบัติงาน ระบบจะคำนวณอายุ ปีเกษียณ และอายุงานให้อัตโนมัติ</span>';
+  return parts.join(' <span class="sep">|</span> ') + (h.retireRule ? '<small>กติกาเกษียณ: ' + esc(h.retireRule) + ' (ตามประเภทการจ้าง)</small>' : '');
+}
 function photoTag(p){
   if(p.photoType === 'server') return '';
   if(p.photoType === 'sheet') return '<span class="tag warn">รูปยังอยู่ในชีต</span>';
@@ -641,8 +693,18 @@ function viewDash(el){
     ['เพศ', n - gu], ['รูปบนเซิร์ฟเวอร์', onServer], ['อีเมล', n - noEmail],
     ['ห้องทำงาน', P.filter(function(p){ return p.room; }).length],
     ['ประเภทการจ้าง', P.filter(function(p){ return p.employmentType; }).length],
-    ['วันที่เริ่มปฏิบัติงาน', P.filter(function(p){ return p.startDate; }).length]
+    ['วันที่เริ่มปฏิบัติงาน', P.filter(function(p){ return p.startDate; }).length],
+    ['วัน/เดือน/ปีเกิด', P.filter(function(p){ return p.birthDate; }).length]
   ];
+  var fy0 = curFY(), rtYears = [0,1,2,3,4].map(function(i){ return fy0 + i; });
+  var rtList = P.filter(function(p){ return p.retireFY && !p.retired && p.retireFY <= fy0 + 4; }).sort(function(a, b){ return String(a.retireDate).localeCompare(String(b.retireDate)); });
+  var rtMax = Math.max(1, ...rtYears.map(function(y){ return rtList.filter(function(p){ return p.retireFY === y; }).length; }));
+  var rtHtml = '<div class="panel"><h3>เกษียณใน 5 ปีงบประมาณข้างหน้า</h3><p class="desc">คำนวณจากวันเกิดและประเภทการจ้าง · มีวันเกิดแล้ว ' + P.filter(function(p){ return p.birthDate; }).length + ' จาก ' + n + ' ท่าน</p>' +
+    rtYears.map(function(y){ var c = rtList.filter(function(p){ return p.retireFY === y; }).length;
+      return '<div class="rt-row" data-rtfy="' + y + '"><span>ปีงบ ' + y + '</span><div class="track"><i style="width:' + Math.round(c / rtMax * 100) + '%"></i></div><b>' + c + '</b></div>'; }).join('') +
+    (rtList.length ? '<div class="todo" style="margin-top:8px">' + rtList.slice(0, 8).map(function(p){
+      return '<button data-edit="' + esc(p.id) + '">' + avatar(p, 'sm') + '<span>' + esc(fullName(p)) + '</span><span class="tags"><span class="tag warn">' + thDate(p.retireDate) + '</span></span></button>'; }).join('') + '</div>' : '') +
+    '</div>';
 
   el.innerHTML =
     (pending && can('admin') ? '<div class="banner" style="background:var(--info-bg);color:var(--info);border-color:#C9DCF0"><span>มีรูป ' + pending + ' รายการที่ยังเก็บในชีต/ลิงก์ภายนอก ซึ่งทำให้หน้าเว็บโหลดช้า ย้ายไปเซิร์ฟเวอร์คณะได้ในคลิกเดียว</span><button class="btn sm" data-go="migrate">ย้ายรูปภาพ</button></div>' : '') +
@@ -664,7 +726,7 @@ function viewDash(el){
           return '<button data-edit="' + esc(p.id) + '">' + avatar(p, 'sm') + '<span>' + esc(fullName(p)) + '</span><span class="tags">' + tags.join('') + '</span></button>';
         }).join('') : '<div class="empty">ข้อมูลครบถ้วนทุกท่าน</div>') +
       '</div></div>' +
-      '<div><div class="panel"><h3>ความครบถ้วนของข้อมูล HR</h3><p class="desc">ยิ่งครบ กราฟสถิติบนหน้าเว็บยิ่งแม่นยำ</p>' +
+      '<div>' + rtHtml + '<div class="panel"><h3>ความครบถ้วนของข้อมูล HR</h3><p class="desc">ยิ่งครบ กราฟสถิติบนหน้าเว็บยิ่งแม่นยำ</p>' +
         meters.map(function(m){ var v = pct(m[1], n); return '<div class="meter"><span>' + m[0] + '</span><div class="track"><i class="' + (v < 60 ? 'low' : '') + '" style="width:' + v + '%"></i></div><b>' + v + '%</b></div>'; }).join('') +
         (gu ? '<div style="margin-top:10px"><button class="btn sm" data-go="gender">เติมข้อมูลเพศ ' + gu + ' ท่าน</button></div>' : '') +
       '</div>' +
@@ -683,17 +745,39 @@ function viewPeople(el){
       '<select class="input" id="fd"><option value="">ทุกสาขา/หน่วยงาน</option>' + opt(OPT.dept || [], FILTER.dept) + '</select>' +
       '<select class="input" id="fb"><option value="">ทุกอาคาร</option>' + opt(OPT.building || [], FILTER.building) + '</select>' +
       '<select class="input" id="ft"><option value="">ทุกสายงาน</option><option value="T"' + (FILTER.type === 'T' ? ' selected' : '') + '>สายวิชาการ</option><option value="S"' + (FILTER.type === 'S' ? ' selected' : '') + '>สายสนับสนุน</option></select>' +
+      '<select class="input" id="fr"><option value="">ทุกช่วงอายุ</option><option value="fy">เกษียณปีงบนี้ (' + curFY() + ')</option><option value="5">เกษียณภายใน 5 ปีงบ</option><option value="done">เกษียณแล้ว</option><option value="-">ยังไม่มีวันเกิด</option></select>' +
       '<select class="input" id="fg"><option value="">ทุกเพศ</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option><option value="-">ยังไม่ระบุเพศ</option></select>' +
       '<select class="input" id="fp"><option value="">รูปทั้งหมด</option><option value="has">มีรูปแล้ว</option><option value="none">ไม่มีรูป</option><option value="pending">รูปยังไม่ย้าย</option></select>' +
+      '<button class="btn" id="csvBtn" title="ส่งออกรายชื่อตามตัวกรองเป็นไฟล์ CSV (เปิดด้วย Excel ได้)">⬇ ส่งออก CSV</button>' +
       '<button class="btn primary" id="addBtn">+ เพิ่มบุคลากร</button>' +
     '</div>' +
     '<div class="tbl-wrap"><table><thead><tr><th>บุคลากร</th><th class="hide-sm">สาขา/หน่วยงาน</th><th class="hide-sm">ห้องทำงาน</th><th class="hide-sm">อีเมล</th><th>สถานะ</th></tr></thead><tbody id="ptb"></tbody></table></div>' +
     '<p class="count" id="pcount" style="margin-top:8px"></p>';
-  $('fp').value = FILTER.photo; $('fg').value = FILTER.gender || '';
-  var upd = function(){ FILTER = { q:$('fq').value, dept:$('fd').value, building:$('fb').value, type:$('ft').value, photo:$('fp').value, gender:$('fg').value }; drawPeople(); };
-  $('fq').oninput = upd; ['fd','fb','ft','fp','fg'].forEach(function(id){ $(id).onchange = upd; });
+  $('fp').value = FILTER.photo; $('fg').value = FILTER.gender || ''; $('fr').value = FILTER.retire || '';
+  var upd = function(){ FILTER = { q:$('fq').value, dept:$('fd').value, building:$('fb').value, type:$('ft').value, photo:$('fp').value, gender:$('fg').value, retire:$('fr').value }; drawPeople(); };
+  $('fq').oninput = upd; ['fd','fb','ft','fp','fg','fr'].forEach(function(id){ $(id).onchange = upd; });
+  $('csvBtn').onclick = exportCsv;
   $('addBtn').onclick = function(){ openDrawer(null); };
   drawPeople();
+}
+var CURRENT_PEOPLE = [];
+/** ส่งออก CSV (UTF-8 + BOM ให้ Excel อ่านภาษาไทยได้) ตามตัวกรองที่แสดงอยู่ */
+function exportCsv(){
+  var cols = [['id','รหัส'],['acadTitle','ตำแหน่งทางวิชาการ/ระดับ'],['name','ชื่อ - นามสกุล'],['position','ตำแหน่ง'],['dept','หน่วยงาน/สาขา'],
+    ['building','อาคาร'],['floor','ชั้น'],['room','ห้อง'],['email','อีเมล'],['phone','โทรศัพท์'],['gender','เพศ'],['status','สถานะ'],
+    ['employmentType','ประเภทการจ้าง'],['startDate','วันที่เริ่มปฏิบัติงาน'],['birthDate','วัน/เดือน/ปีเกิด'],['age','อายุ (ปี)'],
+    ['retireDate','วันที่เกษียณ'],['retireFY','ปีงบที่เกษียณ (พ.ศ.)'],['serviceYears','อายุงาน (ปี)'],['note','หมายเหตุ']];
+  var q = function(v){ v = v == null ? '' : String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  var rows = CURRENT_PEOPLE.map(function(p){
+    var o = Object.assign({}, p, { serviceYears: p.serviceMonths === '' || p.serviceMonths == null ? '' : (p.serviceMonths / 12).toFixed(1) });
+    return cols.map(function(c){ return q(o[c[0]]); }).join(',');
+  });
+  var csv = '\ufeff' + cols.map(function(c){ return q(c[1]); }).join(',') + '\r\n' + rows.join('\r\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = 'บุคลากร-วิศวกรรมศาสตร์-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast('ส่งออก ' + rows.length + ' รายการแล้ว (มีข้อมูลส่วนบุคคล กรุณาเก็บรักษาตาม PDPA)');
 }
 function drawPeople(){
   var q = FILTER.q.trim().toLowerCase().replace(/\s+/g, '');
@@ -701,6 +785,10 @@ function drawPeople(){
     if(FILTER.dept && (p.dept || '').indexOf(FILTER.dept) === -1) return false;
     if(FILTER.building && p.building !== FILTER.building) return false;
     if(FILTER.type && String(p.id).charAt(0).toUpperCase() !== FILTER.type) return false;
+    if(FILTER.retire === '-' && p.birthDate) return false;
+    if(FILTER.retire === 'fy' && !(p.retireFY === curFY() && !p.retired)) return false;
+    if(FILTER.retire === '5' && !(p.retireFY && !p.retired && p.retireFY <= curFY() + 4)) return false;
+    if(FILTER.retire === 'done' && !p.retired) return false;
     if(FILTER.gender === '-' && p.gender) return false;
     if(FILTER.gender && FILTER.gender !== '-' && p.gender !== FILTER.gender) return false;
     if(FILTER.photo === 'has' && !p.photo) return false;
@@ -719,11 +807,15 @@ function drawPeople(){
       '<td class="hide-sm">' + (esc(loc(p)) || '<span class="muted">—</span>') + '</td>' +
       '<td class="hide-sm">' + (esc(p.email) || '<span class="tag danger">ไม่มีอีเมล</span>') + '</td>' +
       '<td>' + (p.status ? '<span class="tag' + (p.status.indexOf('ปกติ') === -1 ? ' warn' : '') + '">' + esc(p.status) + '</span> ' : '') +
-        (p.visible === false ? '<span class="tag grey">ซ่อน</span> ' : '') + photoTag(p) + '</td></tr>';
+        (p.visible === false ? '<span class="tag grey">ซ่อน</span> ' : '') +
+        (p.retired ? '<span class="tag grey">เกษียณแล้ว</span> ' : (p.retireFY && p.retireFY <= curFY() + 4 ? '<span class="tag warn">เกษียณปีงบ ' + p.retireFY + '</span> ' : '')) + photoTag(p) + '</td></tr>';
   }).join('') : '<tr><td colspan="5"><div class="empty">ไม่พบบุคลากรที่ตรงกับเงื่อนไข ลองล้างคำค้นหรือตัวกรอง</div></td></tr>';
+  CURRENT_PEOPLE = list;
   $('pcount').textContent = 'แสดง ' + list.length + ' จาก ' + PERSONS.length + ' ท่าน';
 }
 document.addEventListener('click', function(e){
+  var r = e.target.closest('[data-rtfy]');
+  if(r){ FILTER = { q:'', dept:'', building:'', type:'', photo:'', gender:'', retire: Number(r.getAttribute('data-rtfy')) === curFY() ? 'fy' : '5' }; go('people'); return; }
   var t = e.target.closest('[data-edit]');
   if(t) openDrawer(t.getAttribute('data-edit'));
 });
@@ -764,6 +856,7 @@ function openDrawer(id){
       '<div class="acts">' + (isNew ? '<span class="tag grey">บันทึกข้อมูลก่อน จึงเพิ่มรูปได้</span>' :
         '<button class="btn sm" id="phBtn">' + (p.photo ? 'เปลี่ยนรูป' : 'เพิ่มรูป') + '</button>' +
         (p.photo || p.photoType ? '<button class="btn sm danger" id="phDel">ลบรูป</button>' : '') + photoTag(p)) + '</div></div>' +
+    '<div class="hrbox" id="hrBox">' + hrBoxHtml(p) + '</div>' +
     '<form class="dr-body" id="drForm"><div class="grid2">' +
       (isNew ? '<div class="field full"><label>สายงาน</label><select class="input" name="idPrefix"><option value="T">สายวิชาการ (รหัส T…)</option><option value="S">สายสนับสนุน (รหัส S…)</option></select></div>' : '') +
       fields + '</div>' + lists +
@@ -781,6 +874,11 @@ function openDrawer(id){
   if($('drDel')) $('drDel').onclick = function(){ deletePerson(p); };
   if($('phBtn')) $('phBtn').onclick = function(){ pickPhoto(p.id); };
   if($('phDel')) $('phDel').onclick = function(){ removePhoto(p); };
+  $('drForm').addEventListener('input', function(e){
+    if(!/^(birthDate|employmentType|startDate)$/.test(e.target.name || '')) return;
+    var f = $('drForm').elements;
+    $('hrBox').innerHTML = hrBoxHtml({ birthDate:f.birthDate.value, employmentType:f.employmentType.value, startDate:f.startDate.value });
+  });
   var first = $('drawer').querySelector('input:not([disabled]),select');
   if(first) first.focus();
 }
@@ -977,6 +1075,7 @@ var GF = {
   status:{ l:'สถานะ', list:'status', w:130 },
   employmentType:{ l:'ประเภทการจ้าง', list:'employmentType', w:200 },
   startDate:{ l:'วันที่เริ่มปฏิบัติงาน', type:'date', w:160 },
+  birthDate:{ l:'วัน/เดือน/ปีเกิด', type:'date', w:160 },
   visible:{ l:'แสดงบนเว็บ', check:true, w:90 },
   note:{ l:'หมายเหตุ', w:260 }
 };
@@ -984,9 +1083,9 @@ var GGROUPS = [
   { k:'loc', l:'ที่ตั้งห้องทำงาน', f:['building','floor','room'] },
   { k:'pos', l:'ชื่อและตำแหน่ง', f:['acadTitle','name','position','dept'] },
   { k:'contact', l:'ช่องทางติดต่อ', f:['email','phone'] },
-  { k:'hr', l:'ข้อมูล HR', f:['gender','employmentType','startDate','status'] },
+  { k:'hr', l:'ข้อมูล HR', f:['gender','birthDate','employmentType','startDate','status'] },
   { k:'pub', l:'การแสดงผล', f:['visible','note'] },
-  { k:'all', l:'ทุกช่อง', f:['acadTitle','name','position','dept','building','floor','room','email','phone','gender','status','employmentType','startDate','visible','note'] }
+  { k:'all', l:'ทุกช่อง', f:['acadTitle','name','position','dept','building','floor','room','email','phone','gender','birthDate','status','employmentType','startDate','visible','note'] }
 ];
 var GRID = { group:'loc', pend:{}, sel:{}, err:{}, q:'', dept:'', building:'', type:'', blank:'' };
 function gridPendingCount(){ var n = 0; Object.keys(GRID.pend).forEach(function(id){ n += Object.keys(GRID.pend[id]).length; }); return n; }
@@ -1044,7 +1143,8 @@ function drawGrid(){
   var fields = gGroup().f, list = gList();
   var allSel = list.length && list.every(function(p){ return GRID.sel[p.id]; });
   var head = '<thead><tr><th class="stk1"><input type="checkbox" id="gAll"' + (allSel ? ' checked' : '') + ' title="เลือกทั้งหมดที่แสดงอยู่" style="width:17px;height:17px;accent-color:var(--leaf)"></th><th class="stk2">บุคลากร (' + list.length + ')</th>' +
-    fields.map(function(f){ return '<th style="min-width:' + GF[f].w + 'px">' + GF[f].l + '</th>'; }).join('') + '</tr></thead>';
+    fields.map(function(f){ return '<th style="min-width:' + GF[f].w + 'px">' + GF[f].l + '</th>'; }).join('') +
+    (fields.indexOf('birthDate') !== -1 ? '<th style="min-width:190px">อายุ / ปีเกษียณ (คำนวณ)</th>' : '') + '</tr></thead>';
   var body = list.map(function(p){
     var cells = fields.map(function(f){
       var pe = GRID.pend[p.id], dirty = pe && pe.hasOwnProperty(f), er = GRID.err[p.id] && GRID.err[p.id][f];
@@ -1052,10 +1152,16 @@ function drawGrid(){
         gInput(f, gVal(p, f), 'data-id="' + esc(p.id) + '" data-f="' + f + '"') + '</td>';
     }).join('');
     return '<tr data-row="' + esc(p.id) + '" class="' + (GRID.sel[p.id] ? 'sel' : '') + '"><td class="stk1"><input type="checkbox" data-sel="' + esc(p.id) + '"' + (GRID.sel[p.id] ? ' checked' : '') + ' style="width:17px;height:17px;accent-color:var(--leaf)"></td>' +
-      '<td class="pc stk2"><div class="gname">' + avatar(p, 'sm') + '<div><b>' + esc(fullName(p)) + '</b><small>' + esc(p.id) + '</small></div></div></td>' + cells + '</tr>';
+      '<td class="pc stk2"><div class="gname">' + avatar(p, 'sm') + '<div><b>' + esc(fullName(p)) + '</b><small>' + esc(p.id) + '</small></div></div></td>' + cells +
+      (fields.indexOf('birthDate') !== -1 ? '<td class="calc" data-calc="' + esc(p.id) + '">' + gridCalcText(p) + '</td>' : '') + '</tr>';
   }).join('') || '<tr><td colspan="' + (fields.length + 2) + '"><div class="empty">ไม่พบบุคลากรตามเงื่อนไข</div></td></tr>';
   $('gTable').innerHTML = head + '<tbody>' + body + '</tbody>';
   drawBulk(); drawSaveBar();
+}
+function gridCalcText(p){
+  var h = hrCalc({ birthDate:gVal(p, 'birthDate'), employmentType:gVal(p, 'employmentType'), startDate:gVal(p, 'startDate') });
+  if(h.age === '') return '<span class="muted">—</span>';
+  return h.age + ' ปี · ' + (h.retired ? 'เกษียณแล้ว' : 'เกษียณปีงบ ' + h.retireFY);
 }
 function drawBulk(){
   var ids = Object.keys(GRID.sel), fields = gGroup().f;
@@ -1103,6 +1209,10 @@ document.addEventListener('input', function(e){
   gSet(id, f, t.type === 'checkbox' ? t.checked : t.value);
   var td = t.closest('td'), pe = GRID.pend[id];
   td.classList.toggle('dirty', !!(pe && pe.hasOwnProperty(f))); td.classList.remove('err'); td.removeAttribute('title');
+  if(/^(birthDate|employmentType|startDate)$/.test(f)){
+    var cc = t.closest('tr').querySelector('[data-calc]'), pp = PERSONS.filter(function(x){ return x.id === id; })[0];
+    if(cc && pp) cc.innerHTML = gridCalcText(pp);
+  }
   drawSaveBar();
 });
 document.addEventListener('change', function(e){
@@ -1198,6 +1308,9 @@ function viewMe(el){
       '<span>โทรศัพท์</span><span>' + (esc(p.phone) || '—') + '</span><span></span>' +
       '<span>สถานะ</span><span>' + (esc(p.status) || '—') + '</span><span></span>' +
       '<span>เพศ</span><span>' + (esc(p.gender) || 'ยังไม่ระบุ') + ' <small class="muted">(ไม่แสดงรายบุคคลบนหน้าเว็บ)</small></span><span></span>' +
+      '<span>วัน/เดือน/ปีเกิด</span><span>' + (p.birthDate ? thDate(p.birthDate) + ' · อายุ ' + p.age + ' ปี' : 'ยังไม่ได้กรอก — กด "แก้ไขข้อมูลของฉัน"') + ' <small class="muted">(ข้อมูลส่วนบุคคล เห็นเฉพาะคุณและงานบุคคล)</small></span><span></span>' +
+      (p.retireDate ? '<span>เกษียณ</span><span>' + thDate(p.retireDate) + ' (ปีงบ ' + p.retireFY + ')' + (p.retired ? '' : ' · อีก ' + ymText(p.retireMonthsLeft)) + '</span><span></span>' : '') +
+      (p.serviceMonths !== '' && p.serviceMonths != null ? '<span>อายุงาน</span><span>' + ymText(p.serviceMonths) + '</span><span></span>' : '') +
       '<span>หมายเหตุ</span><span>' + (esc(p.note) || '—') + '</span><span></span></div></div>';
   $('mePhoto').onclick = function(){ pickPhoto(p.id); };
 }
