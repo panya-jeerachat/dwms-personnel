@@ -484,6 +484,15 @@
   .emp-row{display:grid; grid-template-columns:auto minmax(0,1fr) auto 40px; gap:8px; align-items:center; font-size:13px; border:1px solid transparent; border-radius:8px; padding:5px 8px;}
   .emp-row small{color:var(--text-faint); text-align:right;}
   .trend-kpis{grid-template-columns:repeat(auto-fit,minmax(110px,1fr)) !important;}
+  .blood-wrap{display:flex; gap:28px; align-items:center; flex-wrap:wrap;}
+  .blood-wrap .chart{flex:0 0 190px;}
+  .blood-list{flex:1; min-width:260px; display:flex; flex-direction:column; gap:10px;}
+  .blood-row{display:grid; grid-template-columns:52px minmax(130px,auto) minmax(0,1fr); gap:12px; align-items:center; font-size:14px;}
+  .blood-row .bg{display:inline-grid; place-items:center; height:34px; border-radius:9px; color:#fff; font-weight:700; font-size:16px;}
+  .blood-row .bt{height:12px; border-radius:6px; background:var(--surface-alt); overflow:hidden;}
+  .blood-row .bt i{display:block; height:100%; border-radius:6px;}
+  .blood-rh{margin-top:4px; font-size:13px; color:var(--text-soft); border-top:1px dashed var(--border); padding-top:10px;}
+  @media (max-width:560px){ .blood-row{grid-template-columns:44px minmax(0,1fr); } .blood-row .bt{grid-column:1 / -1;} }
   .ins-overlay{position:fixed; inset:0; z-index:950; display:none; align-items:center; justify-content:center; padding:18px;
     background:hsl(var(--h) 20% 8% / .5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);}
   .ins-overlay.open{display:flex;}
@@ -2622,6 +2631,27 @@
         svgDonut(segs, fmtN(tot), 'ท่าน') + '</div><div class="emp-list">' + segs.map(sg=> '<div class="emp-row"' + insAttr(sg.ins) + '><i class="dot" style="background:' + sg.c + '"></i><span>' + escapeHtml(sg.label) + '</span><b>' + sg.v + '</b><small>' + pctOf(sg.v, tot) + '%</small></div>').join('') + '</div></div></div>');
     } else {
       cards.push('<div class="card span-6"><h3>ประเภทการจ้าง</h3><p class="sub">ข้าราชการ · พนักงานมหาวิทยาลัย · ลูกจ้าง ฯลฯ</p><p class="note" style="margin-top:20px">ยังไม่มีข้อมูลประเภทการจ้างในระบบ เมื่อเจ้าหน้าที่บันทึกผ่านเมนู "แก้ไขแบบตาราง → ข้อมูล HR" กราฟจะแสดงที่นี่โดยอัตโนมัติ</p></div>');
+    }
+
+    // 6.5) หมู่โลหิต (ทั้งคณะ · สถิติรวม ไม่ระบุตัวบุคคล · กดดูรายชื่อไม่ได้)
+    const bld = st.blood;
+    if(bld && sc === 'all'){
+      const BC = { A:'var(--c1)', B:'var(--c2)', AB:'var(--c4)', O:'var(--c5)' };
+      const cov = bld.total ? Math.round(bld.recorded / bld.total * 100) : 0;
+      if(!bld.shown){
+        cards.push('<div class="card span-12"><h3>หมู่โลหิตของบุคลากร</h3><p class="sub">ทั้งคณะ · สถิติรวม ไม่ระบุตัวบุคคล</p>' +
+          '<p class="note" style="margin-top:14px">กำลังรวบรวมข้อมูล (บันทึกแล้ว ' + fmtN(bld.recorded) + ' ท่าน) · จะแสดงสัดส่วนเมื่อบันทึกครบอย่างน้อย ' + bld.minRecorded + ' ท่าน เพื่อไม่ให้ระบุตัวบุคคลได้</p></div>');
+      } else {
+        const segs = bld.groups.filter(g=> g.pct).map(g=>({ v:g.pct, c:BC[g.label], label:'หมู่ ' + g.label }));
+        const valTxt = g=> g.lt ? 'น้อยกว่า ' + bld.small + ' ท่าน' : g.n !== null ? fmtN(g.n) + ' ท่าน · ' + g.pct + '%' : (g.pct ? '≈ ' + g.pct + '%' : '—');
+        const rh = bld.rhNeg ? (bld.rhNeg.lt ? 'น้อยกว่า ' + bld.small + ' ท่าน' : fmtN(bld.rhNeg.n) + ' ท่าน') : '—';
+        cards.push('<div class="card anim span-12"><h3>หมู่โลหิตของบุคลากร</h3><p class="sub">ทั้งคณะ · จากผู้ที่บันทึกแล้ว ' + fmtN(bld.recorded) + ' จาก ' + fmtN(bld.total) + ' ท่าน (' + cov + '%)</p>' +
+          '<div class="blood-wrap"><div class="chart" style="max-width:200px">' + svgDonut(segs, fmtN(bld.recorded), 'ท่านที่บันทึก') + '</div>' +
+          '<div class="blood-list">' + bld.groups.map(g=> '<div class="blood-row"><span class="bg" style="background:' + BC[g.label] + '">' + g.label + '</span><span class="bv">' + valTxt(g) + '</span>' +
+            '<span class="bt"><i style="width:' + (g.pct || (g.lt ? 3 : 0)) + '%;background:' + BC[g.label] + (g.lt ? ';opacity:.35' : '') + '"></i></span></div>').join('') +
+          '<div class="blood-rh">Rh− (หมู่โลหิตหายาก) ทั้งคณะ: <b>' + rh + '</b></div></div></div>' +
+          '<p class="note">แสดงเป็นสถิติรวมทั้งคณะเท่านั้น ไม่เปิดเผยรายชื่อ · กลุ่มที่มีน้อยกว่า ' + bld.small + ' ท่านแสดงเป็นช่วง' + (bld.approx ? ' และหมู่อื่นแสดงเป็นร้อยละโดยประมาณ' : '') + ' เพื่อปกป้องข้อมูลส่วนบุคคล</p></div>');
+      }
     }
 
     // 7) แนวโน้มรายเดือน
