@@ -1703,12 +1703,15 @@
 
     const typingMsg = addMessage('assistant', '<div class="typing"><span></span><span></span><span></span></div>');
 
+    // มือถือ (iPhone/iPad): iOS อนุญาตให้เริ่มพูดได้เฉพาะ "ภายใน" การแตะ → คิดคำตอบและสั่งพูดทันทีตอนนี้
+    // คอมพิวเตอร์: ทำแบบเดิม (พูดหลังแสดงข้อความ)
+    const res = buildResponse(text);
+    if(MOBILE_TTS) speak(res.speak);
     setTimeout(()=>{
       typingMsg.remove();
-      const res = buildResponse(text);
       const msgEl = addMessage('assistant', res.html);
       if(res.ids && res.ids.length){ lastPersonMsgEl = msgEl; lastPersonIds = res.ids; }
-      speak(res.speak);
+      if(!MOBILE_TTS) speak(res.speak);
     }, 220);
   }
   elSendBtn.addEventListener('click', handleSend);
@@ -1798,9 +1801,9 @@
       try{
         speechSynthesis.speak = function(u){
           dbg('speak → ' + (u.voice ? u.voice.name : '(เสียงตามภาษา ' + u.lang + ')') + ' : ' + String(u.text).slice(0, 40));
-          const oe = u.onerror;
-          u.onstart = ()=> dbg('▶ เริ่มพูดแล้ว');
-          u.onend = ()=> dbg('■ พูดจบ');
+          const oe = u.onerror, os = u.onstart, on = u.onend;
+          u.onstart = e=>{ dbg('▶ เริ่มพูดแล้ว'); if(os) os(e); };
+          u.onend = e=>{ dbg('■ พูดจบ'); if(on) on(e); };
           u.onerror = e=>{ dbg('✕ ข้อผิดพลาด: ' + (e && e.error)); if(oe) oe(e); };
           return realSpeak(u);
         };
@@ -1815,11 +1818,11 @@
    *    หลังจากนั้นคำตอบทุกข้อพูดได้ตามปกติ
    *  - หาเสียงไทย ณ ตอนพูด (Safari โหลดรายชื่อเสียงช้า) · ข้อความยาวเกิน 600 ตัวอักษรตัดท้าย
    */
-  let pendingSpeech = null, iosUnlocked = false;
+  let pendingSpeech = null, mobileAudioReady = false;
   function speakIOS(text){
     pendingSpeech = text;
     try{
-      speechSynthesis.cancel();
+      if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();   // หยุดเฉพาะเมื่อมีเสียงค้าง
       const MAX = 600;
       const say = text.length > MAX ? text.slice(0, MAX) + ' ดูรายละเอียดเพิ่มเติมในข้อความบนหน้าจอ' : text;
       const u = new SpeechSynthesisUtterance(say);
@@ -1827,19 +1830,27 @@
       const v = (speechSynthesis.getVoices() || []).find(x=> x.lang && x.lang.toLowerCase().indexOf('th') === 0);
       if(v) u.voice = v;
       u.rate = 1.0;
+      u.onstart = ()=>{ mobileAudioReady = true; pendingSpeech = null; };   // ยืนยันว่า iOS ยอมให้พูดแล้วจริง
       ttsQueue = [u];
       speechSynthesis.speak(u);
     }catch(e){}
   }
-  function iosUnlockOnce(){
-    if(iosUnlocked) return;
-    iosUnlocked = true;
-    if(pendingSpeech && ttsEnabled) speakIOS(pendingSpeech);
+  /* แตะจริง (ไม่ใช่การปัดเลื่อน) แต่ละครั้ง: ถ้ายังไม่เคยพูดสำเร็จ ให้พูดข้อความที่ค้างไว้ภายในการแตะนั้น
+     — ไม่จำกัดครั้งเดียว (เดิมการปัดเลื่อนครั้งแรกใช้สิทธิ์ไปโดยไม่สำเร็จ แล้วไม่ลองอีก)
+     — ข้ามเมื่อแตะปุ่มที่จะพูดคำตอบเอง หรือปุ่มไมโครโฟน (กันเสียงทับกัน/ไมค์ได้ยินเสียงตัวเอง) */
+  const SELF_SPEAKING = '.example-chip, #sendBtn, #heroForm button, #micBtn, #heroMic, #muteBtn, [data-dept], [data-building], .chip, .bldg';
+  function mobileUnlock(e){
+    if(mobileAudioReady || !pendingSpeech || !ttsEnabled) return;
+    if(e && e.target && e.target.closest && e.target.closest(SELF_SPEAKING)) return;
+    // แตะ 1 ครั้งเกิดทั้ง touchend และ click: ถ้าครั้งแรกสำเร็จ (กำลังพูดอยู่) ไม่ต้องพูดซ้ำ
+    // ถ้าครั้งแรกถูกบล็อก (ไม่ได้พูด) ให้ลองอีกครั้งตอน click
+    try{ if(speechSynthesis.speaking || speechSynthesis.pending) return; }catch(err){}
+    speakIOS(pendingSpeech);
   }
   if(TTS_OK && MOBILE_TTS){
-    document.addEventListener('pointerdown', iosUnlockOnce, { once:true, capture:true });
-    document.addEventListener('keydown', iosUnlockOnce, { once:true, capture:true });
-    document.addEventListener('touchstart', iosUnlockOnce, { once:true, capture:true, passive:true });
+    document.addEventListener('touchend', mobileUnlock, { capture:true, passive:true });
+    document.addEventListener('click', mobileUnlock, true);
+    document.addEventListener('keydown', mobileUnlock, true);
   }
   function speak(text){
     if(!ttsEnabled || !text || !TTS_OK) return;
