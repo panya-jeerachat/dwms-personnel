@@ -233,6 +233,15 @@ td.calc{padding:6px 10px;color:var(--soft);font-size:13px;white-space:nowrap;bac
 .rules-tbl .cnt{color:var(--soft);font-size:12.5px;white-space:nowrap}
 .chg{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;font-size:13px;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;background:#fff}
 .chg b{white-space:nowrap}
+.btiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.btile{border:1.5px solid var(--line);border-radius:var(--r);background:#fff;padding:12px 14px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.btile:hover{border-color:#C24A44}
+.btile.on{border-color:#C24A44;background:#FDF1F0}
+.btile b{display:block;font-size:26px;line-height:1.1;color:#B3302A}
+.btile span{font-size:12.5px;color:var(--soft)}
+.btile.none b{color:var(--soft)}
+.bgtag{display:inline-block;min-width:54px;text-align:center;font-weight:700;font-size:13px;color:#fff;background:#C24A44;border-radius:6px;padding:2px 8px}
+@media (max-width:900px){ .btiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
 .progress{height:10px;background:var(--mint);border-radius:5px;overflow:hidden;margin:10px 0}
 .progress i{display:block;height:100%;background:var(--leaf);width:0;transition:width .3s}
 .loglist{max-height:320px;overflow:auto;font-size:13px;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;background:var(--mint-2)}
@@ -410,6 +419,8 @@ var FORM = [
   { k:'employmentType', l:'ประเภทการจ้าง', list:'employmentType' },
   { k:'startDate', l:'วันที่เริ่มปฏิบัติงาน', type:'date', hint:'ใช้คำนวณอายุงานและแนวโน้มรายปี' },
   { k:'birthDate', l:'วัน/เดือน/ปีเกิด', type:'date', hint:'ใช้คำนวณอายุและปีเกษียณ · ข้อมูลส่วนบุคคล ไม่แสดงบนหน้าเว็บสาธารณะ' },
+  { k:'bloodGroup', l:'หมู่โลหิต', opts:[['','— ไม่ระบุ —'],['A','A'],['B','B'],['AB','AB'],['O','O']] },
+  { k:'bloodRh', l:'Rh', opts:[['','— ไม่ระบุ —'],['Rh+','Rh+ (บวก)'],['Rh-','Rh− (ลบ)']] },
   { k:'email', l:'อีเมล', type:'email', full:true, hint:'ใช้เป็นชื่อผู้ใช้เข้าระบบของบุคลากรท่านนี้' },
   { k:'phone', l:'โทรศัพท์', full:true },
   { k:'note', l:'หมายเหตุ', area:true, full:true },
@@ -418,6 +429,7 @@ var FORM = [
 
 var EMP_DEFAULTS = ['ข้าราชการ','พนักงานมหาวิทยาลัย','พนักงานมหาวิทยาลัย (เงินรายได้)','ลูกจ้างประจำ','ลูกจ้างชั่วคราว','พนักงานราชการ'];
 var ICONS = {
+  blood:'<path d="M12 3.5c3 4 6 7.3 6 10.5a6 6 0 01-12 0c0-3.2 3-6.5 6-10.5z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/>',
   rules:'<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
   grid:'<rect x="3.5" y="4" width="17" height="16" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M3.5 9.5h17M3.5 15h17M9.5 4v16" stroke="currentColor" stroke-width="1.8"/>',
   gender:'<circle cx="9" cy="10" r="4.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12.3 6.8L17 2m0 0h-3.6M17 2v3.6M9 14.5V22m-3-3h6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
@@ -436,6 +448,7 @@ var VIEWS = {
   grid:    { t:'แก้ไขแบบตาราง', role:'editor' },
   gender:  { t:'เติมข้อมูลเพศ', role:'editor' },
   rules:   { t:'เกณฑ์เกษียณ', role:'editor' },
+  blood:   { t:'ค้นหาหมู่โลหิต', role:'editor' },
   me:      { t:'ข้อมูลของฉัน', role:'user' },
   password:{ t:'เปลี่ยนรหัสผ่าน', role:'user' },
   users:   { t:'บัญชีผู้ใช้', role:'admin' },
@@ -666,7 +679,7 @@ function go(v){
   VIEW = v;
   $('viewTitle').textContent = VIEWS[v].t;
   Array.prototype.forEach.call($('nav').children, function(b){ b.classList.toggle('on', b.getAttribute('data-go') === v); });
-  var fn = { dash:viewDash, people:viewPeople, grid:viewGrid, gender:viewGender, rules:viewRules, me:viewMe, password:viewPassword, users:viewUsers, migrate:viewMigrate, logs:viewLogs, system:viewSystem }[v];
+  var fn = { dash:viewDash, people:viewPeople, grid:viewGrid, gender:viewGender, rules:viewRules, blood:viewBlood, me:viewMe, password:viewPassword, users:viewUsers, migrate:viewMigrate, logs:viewLogs, system:viewSystem }[v];
   fn($('view'));
   window.scrollTo(0, 0);
 }
@@ -702,7 +715,8 @@ function viewDash(el){
     ['ห้องทำงาน', P.filter(function(p){ return p.room; }).length],
     ['ประเภทการจ้าง', P.filter(function(p){ return p.employmentType; }).length],
     ['วันที่เริ่มปฏิบัติงาน', P.filter(function(p){ return p.startDate; }).length],
-    ['วัน/เดือน/ปีเกิด', P.filter(function(p){ return p.birthDate; }).length]
+    ['วัน/เดือน/ปีเกิด', P.filter(function(p){ return p.birthDate; }).length],
+    ['หมู่โลหิต', P.filter(function(p){ return p.bloodGroup; }).length]
   ];
   var fy0 = curFY(), rtYears = [0,1,2,3,4].map(function(i){ return fy0 + i; });
   var rtList = P.filter(function(p){ return p.retireFY && !p.retired && p.retireFY <= fy0 + 4; }).sort(function(a, b){ return String(a.retireDate).localeCompare(String(b.retireDate)); });
@@ -774,7 +788,7 @@ function exportCsv(){
   var cols = [['id','รหัส'],['acadTitle','ตำแหน่งทางวิชาการ/ระดับ'],['name','ชื่อ - นามสกุล'],['position','ตำแหน่ง'],['dept','หน่วยงาน/สาขา'],
     ['building','อาคาร'],['floor','ชั้น'],['room','ห้อง'],['email','อีเมล'],['phone','โทรศัพท์'],['gender','เพศ'],['status','สถานะ'],
     ['employmentType','ประเภทการจ้าง'],['startDate','วันที่เริ่มปฏิบัติงาน'],['birthDate','วัน/เดือน/ปีเกิด'],['age','อายุ (ปี)'],
-    ['retireDate','วันที่เกษียณ'],['retireFY','ปีงบที่เกษียณ (พ.ศ.)'],['serviceYears','อายุงาน (ปี)'],['note','หมายเหตุ']];
+    ['retireDate','วันที่เกษียณ'],['retireFY','ปีงบที่เกษียณ (พ.ศ.)'],['serviceYears','อายุงาน (ปี)'],['bloodGroup','หมู่โลหิต'],['bloodRh','Rh'],['note','หมายเหตุ']];
   var q = function(v){ v = v == null ? '' : String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
   var rows = CURRENT_PEOPLE.map(function(p){
     var o = Object.assign({}, p, { serviceYears: p.serviceMonths === '' || p.serviceMonths == null ? '' : (p.serviceMonths / 12).toFixed(1) });
@@ -1084,6 +1098,8 @@ var GF = {
   employmentType:{ l:'ประเภทการจ้าง', list:'employmentType', w:200 },
   startDate:{ l:'วันที่เริ่มปฏิบัติงาน', type:'date', w:160 },
   birthDate:{ l:'วัน/เดือน/ปีเกิด', type:'date', w:160 },
+  bloodGroup:{ l:'หมู่โลหิต', opts:[['','— ไม่ระบุ —'],['A','A'],['B','B'],['AB','AB'],['O','O']], w:130 },
+  bloodRh:{ l:'Rh', opts:[['','— ไม่ระบุ —'],['Rh+','Rh+ (บวก)'],['Rh-','Rh− (ลบ)']], w:130 },
   visible:{ l:'แสดงบนเว็บ', check:true, w:90 },
   note:{ l:'หมายเหตุ', w:260 }
 };
@@ -1092,8 +1108,9 @@ var GGROUPS = [
   { k:'pos', l:'ชื่อและตำแหน่ง', f:['acadTitle','name','position','dept'] },
   { k:'contact', l:'ช่องทางติดต่อ', f:['email','phone'] },
   { k:'hr', l:'ข้อมูล HR', f:['gender','birthDate','employmentType','startDate','status'] },
+  { k:'blood', l:'หมู่โลหิต', f:['bloodGroup','bloodRh'] },
   { k:'pub', l:'การแสดงผล', f:['visible','note'] },
-  { k:'all', l:'ทุกช่อง', f:['acadTitle','name','position','dept','building','floor','room','email','phone','gender','birthDate','status','employmentType','startDate','visible','note'] }
+  { k:'all', l:'ทุกช่อง', f:['acadTitle','name','position','dept','building','floor','room','email','phone','gender','birthDate','bloodGroup','bloodRh','status','employmentType','startDate','visible','note'] }
 ];
 var GRID = { group:'loc', pend:{}, sel:{}, err:{}, q:'', dept:'', building:'', type:'', blank:'' };
 function gridPendingCount(){ var n = 0; Object.keys(GRID.pend).forEach(function(id){ n += Object.keys(GRID.pend[id]).length; }); return n; }
@@ -1340,6 +1357,82 @@ function addRule(el, type){
   drawRules(el);
   var inputs = el.querySelectorAll('[data-rk="match"]'); var last = inputs[inputs.length - 1];
   if(last && !type) last.focus();
+}
+
+/* ================= ค้นหาหมู่โลหิต (กรณีเร่งด่วน) ================= */
+var BLOOD = { g:'', rh:'', q:'', sel:{} };
+function bloodText(p){ return p.bloodGroup ? p.bloodGroup + (p.bloodRh ? ' ' + p.bloodRh.replace('-', '−') : '') : ''; }
+function bloodList(){
+  var q = BLOOD.q.trim().toLowerCase().replace(/\s+/g, '');
+  return PERSONS.filter(function(p){
+    if(!p.bloodGroup) return false;
+    if(BLOOD.g && p.bloodGroup !== BLOOD.g) return false;
+    if(BLOOD.rh && p.bloodRh !== BLOOD.rh) return false;
+    if(q && (p.id + p.name + p.dept + p.position).toLowerCase().replace(/\s+/g, '').indexOf(q) === -1) return false;
+    return true;
+  }).sort(function(a, b){ return a.name.localeCompare(b.name, 'th'); });
+}
+function viewBlood(el){
+  var cnt = function(g, rh){ return PERSONS.filter(function(p){ return p.bloodGroup === g && (!rh || p.bloodRh === rh); }).length; };
+  var none = PERSONS.filter(function(p){ return !p.bloodGroup; }).length;
+  el.innerHTML =
+    '<div class="panel" style="margin-bottom:12px"><h3>ค้นหาบุคลากรตามหมู่โลหิต</h3><p class="desc" style="margin:0">ใช้กรณีต้องการขอความอนุเคราะห์บริจาคโลหิตเร่งด่วน · เลือกหมู่โลหิตแล้วคัดลอกรายชื่อ/เบอร์โทร หรือร่างอีเมลได้ทันที · ข้อมูลสุขภาพเป็นข้อมูลอ่อนไหว ใช้เฉพาะเพื่อการนี้เท่านั้น</p></div>' +
+    '<div class="btiles">' + ['A','B','AB','O'].map(function(g){
+      return '<button class="btile' + (BLOOD.g === g ? ' on' : '') + '" data-bg="' + g + '"><b>' + g + '</b><span>' + cnt(g) + ' คน · Rh+ ' + cnt(g, 'Rh+') + ' · Rh− ' + cnt(g, 'Rh-') + '</span></button>';
+    }).join('') + '<button class="btile none" data-go="grid" data-bgset="1"><b>' + none + '</b><span>ยังไม่บันทึกหมู่โลหิต → บันทึก</span></button></div>' +
+    '<div class="toolbar"><select class="input" id="bG"><option value="">ทุกหมู่</option>' + ['A','B','AB','O'].map(function(g){ return '<option' + (BLOOD.g === g ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select>' +
+      '<select class="input" id="bR"><option value="">Rh ทั้งหมด</option><option value="Rh+"' + (BLOOD.rh === 'Rh+' ? ' selected' : '') + '>Rh+ (บวก)</option><option value="Rh-"' + (BLOOD.rh === 'Rh-' ? ' selected' : '') + '>Rh− (ลบ)</option></select>' +
+      '<input class="input search" id="bQ" placeholder="ค้นหาชื่อ หรือสาขา" value="' + esc(BLOOD.q) + '">' +
+      '<button class="btn" id="bCopy">คัดลอกรายชื่อ + เบอร์</button><button class="btn" id="bMail">ร่างอีเมล</button><button class="btn" id="bCsv">⬇ CSV</button></div>' +
+    '<div class="tbl-wrap"><table><thead><tr><th style="width:40px"><input type="checkbox" id="bAll" style="width:17px;height:17px;accent-color:var(--leaf)"></th><th>บุคลากร</th><th>หมู่โลหิต</th><th>โทรศัพท์</th><th class="hide-sm">อีเมล</th><th class="hide-sm">ห้องทำงาน</th></tr></thead><tbody id="bBody"></tbody></table></div>' +
+    '<p class="count" id="bCount" style="margin-top:8px"></p>';
+  el.querySelectorAll('[data-bg]').forEach(function(b){ b.onclick = function(){ BLOOD.g = BLOOD.g === b.getAttribute('data-bg') ? '' : b.getAttribute('data-bg'); BLOOD.sel = {}; viewBlood(el); }; });
+  var bgset = el.querySelector('[data-bgset]'); if(bgset) bgset.addEventListener('click', function(){ GRID.group = 'blood'; GRID.blank = 'bloodGroup'; });
+  $('bG').onchange = function(){ BLOOD.g = this.value; BLOOD.sel = {}; viewBlood(el); };
+  $('bR').onchange = function(){ BLOOD.rh = this.value; BLOOD.sel = {}; viewBlood(el); };
+  $('bQ').oninput = function(){ BLOOD.q = this.value; drawBlood(); };
+  $('bAll').onchange = function(){ var on = this.checked; bloodList().forEach(function(p){ if(on) BLOOD.sel[p.id] = 1; else delete BLOOD.sel[p.id]; }); drawBlood(); };
+  $('bCopy').onclick = function(){
+    var list = bloodPicked();
+    var txt = list.map(function(p, i){ return (i + 1) + '. ' + fullName(p) + ' (' + bloodText(p) + ')' + (p.phone ? ' โทร ' + p.phone : '') + (p.email ? ' ' + p.email : ''); }).join('\n');
+    copyText(txt, 'คัดลอก ' + list.length + ' รายชื่อแล้ว');
+  };
+  $('bMail').onclick = function(){
+    var list = bloodPicked().filter(function(p){ return p.email; });
+    if(!list.length){ toast('ไม่มีอีเมลในรายชื่อที่เลือก', true); return; }
+    var need = BLOOD.g ? BLOOD.g + (BLOOD.rh ? ' ' + BLOOD.rh : '') : '';
+    var subject = 'ขอความอนุเคราะห์บริจาคโลหิตเร่งด่วน' + (need ? ' หมู่ ' + need : '');
+    var body = 'เรียน บุคลากรคณะวิศวกรรมศาสตร์\n\nขณะนี้มีความต้องการโลหิต' + (need ? 'หมู่ ' + need : '') + ' เป็นการเร่งด่วน\nผู้ป่วย/โรงพยาบาล: \nจำนวนที่ต้องการ: \nติดต่อผู้ประสานงาน: \n\nขอขอบพระคุณในความอนุเคราะห์\n';
+    var bcc = list.map(function(p){ return p.email; }).join(',');
+    var url = 'mailto:?bcc=' + encodeURIComponent(bcc) + '&subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    if(url.length > 1900){
+      copyText(bcc, 'อีเมล ' + list.length + ' รายการคัดลอกแล้ว — วางในช่อง BCC ของอีเมลที่เปิดขึ้น');
+      url = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    }
+    window.open(url, '_blank');
+  };
+  $('bCsv').onclick = function(){ CURRENT_PEOPLE = bloodPicked(); exportCsv(); };
+  drawBlood();
+}
+function bloodPicked(){ var list = bloodList(), sel = list.filter(function(p){ return BLOOD.sel[p.id]; }); return sel.length ? sel : list; }
+function drawBlood(){
+  var list = bloodList();
+  $('bBody').innerHTML = list.map(function(p){
+    return '<tr><td><input type="checkbox" data-bsel="' + esc(p.id) + '"' + (BLOOD.sel[p.id] ? ' checked' : '') + ' style="width:17px;height:17px;accent-color:var(--leaf)"></td>' +
+      '<td><div class="pcell" style="min-width:200px">' + avatar(p, 'sm') + '<div><b>' + esc(fullName(p)) + '</b><small>' + esc(p.dept || p.position || '') + '</small></div></div></td>' +
+      '<td><span class="bgtag">' + esc(bloodText(p)) + '</span></td>' +
+      '<td>' + (p.phone ? '<a href="tel:' + esc(p.phone.replace(/[^\d+]/g, '')) + '">' + esc(p.phone) + '</a>' : '<span class="muted">—</span>') + '</td>' +
+      '<td class="hide-sm">' + (p.email ? '<a href="mailto:' + esc(p.email) + '">' + esc(p.email) + '</a>' : '<span class="muted">—</span>') + '</td>' +
+      '<td class="hide-sm">' + (esc(loc(p)) || '<span class="muted">—</span>') + '</td></tr>';
+  }).join('') || '<tr><td colspan="6"><div class="empty">ไม่พบบุคลากรตามหมู่โลหิตที่เลือก</div></td></tr>';
+  var n = Object.keys(BLOOD.sel).filter(function(id){ return list.some(function(p){ return p.id === id; }); }).length;
+  $('bCount').textContent = 'พบ ' + list.length + ' คน' + (n ? ' · เลือกไว้ ' + n + ' คน (ปุ่มด้านบนใช้เฉพาะที่เลือก)' : ' · ปุ่มด้านบนใช้กับทุกคนในรายการ');
+  $('bBody').querySelectorAll('[data-bsel]').forEach(function(c){ c.onchange = function(){ if(c.checked) BLOOD.sel[c.getAttribute('data-bsel')] = 1; else delete BLOOD.sel[c.getAttribute('data-bsel')]; drawBlood(); }; });
+}
+function copyText(v, msg){
+  (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function(){ toast(msg); }, function(){
+    var t = document.createElement('textarea'); t.value = v; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); toast(msg);
+  });
 }
 
 /* ================= เติมข้อมูลเพศแบบกลุ่ม ================= */
