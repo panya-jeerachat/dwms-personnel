@@ -375,7 +375,7 @@
   .anim.in .fade{opacity:1;}
   .anim.in .draw{stroke-dashoffset:0 !important;}
   .tip{
-    position:fixed; z-index:200; pointer-events:none; background:var(--text); color:var(--paper);
+    position:fixed; z-index:1200; pointer-events:none; background:var(--text); color:var(--paper);
     font-size:12.5px; padding:6px 10px; border-radius:8px; white-space:nowrap; opacity:0; transition:opacity .12s;
     transform:translate(-50%, calc(-100% - 10px));
   }
@@ -2651,8 +2651,7 @@
     // 6) ประเภทการจ้าง
     const emp = st.employment || [];
     if(emp.length){
-      const pal = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)'];
-      const segs = emp.slice(0, 6).map((o,i)=>({ v:o.total, c:pal[i], label:o.label, ins:'emp|' + o.label }));
+      const segs = emp.map((o,i)=>({ v:o.total, c:PAL[i % PAL.length], label:o.label, ins:'emp|' + o.label }));   // แสดงทุกประเภทการจ้าง
       const tot = segs.reduce((a,s)=>a+s.v,0);
       cards.push('<div class="card anim span-6"><h3>ประเภทการจ้าง</h3><p class="sub">จากผู้ที่มีข้อมูล ' + fmtN(tot) + ' ท่าน · ทั้งคณะ</p><div class="emp-wrap"><div class="chart" style="max-width:190px">' +
         svgDonut(segs, fmtN(tot), 'ท่าน') + '</div><div class="emp-list">' + segs.map(sg=> '<div class="emp-row"' + insAttr(sg.ins) + '><i class="dot" style="background:' + sg.c + '"></i><span>' + escapeHtml(sg.label) + '</span><b>' + sg.v + '</b><small>' + pctOf(sg.v, tot) + '%</small></div>').join('') + '</div></div></div>');
@@ -2822,9 +2821,15 @@
       if(kind !== 'role') secs += insBreak('บทบาท', countBy(list, roleOf, ROLE_ORDER, k=> ROLE_C[k] || C.u, 'role'), list.length);
       if(kind !== 'bldg') secs += insBreak('อาคาร', countBy(list, r=> r.building || 'ไม่ระบุ', null, bldgColor, 'bldg'), list.length);
       if(kind !== 'dept'){
-        const dm = {}; list.forEach(r=> splitMulti(r.dept).forEach(x=> dm[x] = (dm[x] || 0) + 1));
-        const items = Object.keys(dm).sort((a,b)=> dm[b] - dm[a]).slice(0, 8).map(x=>({ label:x, v:dm[x], c:colorOf(x), ins:'dept|' + x }));
-        if(items.length > 1) secs += '<div class="ins-sec"><h4>สาขา / หน่วยงาน</h4><div class="ins-leg">' + items.map(it=> '<span class="ins-chip"' + insAttr(it.ins) + '><i class="dot" style="background:' + it.c + '"></i>' + escapeHtml(it.label) + ' <b>' + it.v + '</b></span>').join('') + '</div></div>';
+        // แสดงทุกสาขา/หน่วยงาน (ไม่ตัดอันดับ) · บางท่านสังกัดมากกว่า 1 หน่วยงาน จึงนับรวมได้มากกว่าจำนวนคน
+        // ใช้วิธีนับเดียวกับชิปสาขาและการค้นหา (hasDept = สาขาหลัก + สาขาที่เกี่ยวข้อง) ตัวเลขจึงตรงกันทุกจุด
+        const dm = {};
+        getDepts().forEach(d=>{ const n = list.filter(r=> hasDept(r, d)).length; if(n) dm[d] = n; });
+        const multi = list.filter(r=> new Set(deptsOf(r).map(canon)).size > 1).length;
+        const keys = Object.keys(dm).sort((a,b)=> dm[b] - dm[a] || a.localeCompare(b, 'th'));
+        if(keys.length) secs += '<div class="ins-sec"><h4>สาขา / หน่วยงาน (' + keys.length + ' หน่วยงาน)</h4><div class="ins-leg">' +
+          keys.map(x=> '<span class="ins-chip"' + insAttr('dept|' + x) + ' data-tip="' + escapeHtml(x + ': ' + dm[x] + ' ท่าน (' + pctOf(dm[x], list.length) + '% ของกลุ่มนี้) — คลิกดูรายละเอียด') + '"><i class="dot" style="background:' + colorOf(x) + '"></i>' + escapeHtml(x) + ' <b>' + dm[x] + '</b> <small>' + pctOf(dm[x], list.length) + '%</small></span>').join('') + '</div>' +
+          (multi ? '<p class="note" style="margin-top:6px">' + multi + ' ท่านสังกัดหรือเกี่ยวข้องมากกว่า 1 หน่วยงาน จึงถูกนับในทุกหน่วยงาน (นับแบบเดียวกับชิปสาขาบนหน้าเว็บ)</p>' : '') + '</div>';
       }
       if(d.g) secs += genderSec(d.g);
       const people = '<div class="ins-sec"><div class="ins-ph"><h4>รายชื่อ ' + fmtN(list.length) + ' ท่าน</h4>' + (list.length > 8 ? '<input class="ins-q" id="insQ" placeholder="กรองรายชื่อ…" aria-label="กรองรายชื่อ">' : '') + '</div>' +
@@ -2928,14 +2933,17 @@
 
   /* ป้ายข้อมูลเมื่อชี้ */
   const tipEl = document.getElementById('chartTip');
-  elCharts.addEventListener('pointermove', e=>{
+  const tipMove = e=>{
     const t = e.target.closest('[data-tip]');
     if(!t){ tipEl.classList.remove('show'); return; }
     tipEl.textContent = t.getAttribute('data-tip');
     tipEl.style.left = e.clientX + 'px'; tipEl.style.top = e.clientY + 'px';
     tipEl.classList.add('show');
+  };
+  [elCharts, document.getElementById('insOverlay')].forEach(el=>{     // กราฟ + ป๊อปอัปรายละเอียด
+    el.addEventListener('pointermove', tipMove);
+    el.addEventListener('pointerleave', ()=> tipEl.classList.remove('show'));
   });
-  elCharts.addEventListener('pointerleave', ()=> tipEl.classList.remove('show'));
 
 
   /* ================= INIT ================= */
