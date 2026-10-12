@@ -683,6 +683,8 @@ function go(v){
   fn($('view'));
   window.scrollTo(0, 0);
 }
+/** บุคลากรที่ยังปฏิบัติงาน (ไม่รวมผู้พ้นสภาพ) — ใช้กับทุกหน้าที่นับ/ค้นหา */
+function activeP(){ return PERSONS.filter(function(p){ return !p.separated; }); }
 function myPerson(){ return ME && ME.personId ? PERSONS.filter(function(p){ return p.id === ME.personId; })[0] : null; }
 function upsertPerson(p){
   var i = PERSONS.findIndex(function(x){ return x.id === p.id; });
@@ -695,7 +697,19 @@ function upsertPerson(p){
 
 /* ================= ภาพรวม ================= */
 function viewDash(el){
-  var P = PERSONS, n = P.length;
+  setTimeout(function(){
+    if($('sepLink')) $('sepLink').onclick = function(e){ e.preventDefault(); FILTER = { q:'', dept:'', building:'', type:'', photo:'', gender:'', retire:'', state:'sep' }; go('people'); };
+    if($('rnsView')) $('rnsView').onclick = function(){ FILTER = { q:'', dept:'', building:'', type:'', photo:'', gender:'', retire:'done', state:'' }; go('people'); };
+    if($('rnsAll')) $('rnsAll').onclick = function(){
+      var list = activeP().filter(function(p){ return p.retired; });
+      askConfirm('ตั้งพ้นสภาพ (เกษียณอายุ) ' + list.length + ' ท่าน?', 'ใช้วันที่เกษียณที่คำนวณได้เป็นวันที่พ้นสภาพ · ข้อมูลยังเก็บเป็นประวัติ แต่จะไม่นับ/ค้นหาไม่เจอบนหน้าเว็บ และปิดบัญชีเข้าระบบ · หากมีผู้ได้รับการจ้างต่อ ให้ตรวจรายชื่อก่อน', 'ตั้งพ้นสภาพ', true).then(function(y){
+        if(!y) return;
+        doSeparate(list.map(function(p){ return { id:p.id, reason:'เกษียณอายุ', date:p.retireDate }; }), function(){ go('dash'); });
+      });
+    };
+  }, 0);
+  var P = activeP(), n = P.length, sepN = PERSONS.length - n;
+  var retiredNotSep = P.filter(function(p){ return p.retired; });
   var cT = P.filter(function(p){ return /^T/i.test(p.id); }).length;
   var cS = P.filter(function(p){ return /^S/i.test(p.id); }).length;
   var onServer = P.filter(function(p){ return p.photoType === 'server'; }).length;
@@ -729,9 +743,12 @@ function viewDash(el){
     '</div>';
 
   el.innerHTML =
+    (retiredNotSep.length ? '<div class="banner" style="background:#FBF1DE"><span>ถึงวันเกษียณแล้วตามการคำนวณ แต่ยังไม่ได้ตั้งพ้นสภาพ ' + retiredNotSep.length + ' ท่าน: ' +
+      retiredNotSep.slice(0, 4).map(function(p){ return esc(p.name); }).join(', ') + (retiredNotSep.length > 4 ? ' …' : '') + ' — หากไม่ได้จ้างต่อ ควรตั้งพ้นสภาพ</span>' +
+      '<span style="display:flex;gap:6px"><button class="btn sm" id="rnsView">ตรวจรายชื่อ</button><button class="btn sm" id="rnsAll">ตั้งพ้นสภาพ (เกษียณอายุ) ทั้งหมด</button></span></div>' : '') +
     (pending && can('admin') ? '<div class="banner" style="background:var(--info-bg);color:var(--info);border-color:#C9DCF0"><span>มีรูป ' + pending + ' รายการที่ยังเก็บในชีต/ลิงก์ภายนอก ซึ่งทำให้หน้าเว็บโหลดช้า ย้ายไปเซิร์ฟเวอร์คณะได้ในคลิกเดียว</span><button class="btn sm" data-go="migrate">ย้ายรูปภาพ</button></div>' : '') +
     '<div class="stats">' +
-      '<div class="stat"><b>' + n + '</b><span>บุคลากรทั้งหมด</span></div>' +
+      '<div class="stat"><b>' + n + '</b><span>บุคลากรที่ปฏิบัติงาน' + (sepN ? ' · <a href="#" id="sepLink">พ้นสภาพแล้ว ' + sepN + '</a>' : '') + '</span></div>' +
       '<div class="stat"><b>' + cT + ' / ' + cS + '</b><span>สายวิชาการ / สายสนับสนุน</span></div>' +
       '<div class="stat"><b>' + gm + ' / ' + gf + '</b><span>ชาย / หญิง' + (gu ? ' · ยังไม่ระบุ ' + gu : '') + '</span>' +
         '<div class="split" title="ชาย ' + gm + ' หญิง ' + gf + ' ไม่ระบุ ' + gu + '"><i style="width:' + pct(gm,n) + '%;background:#2F6FB0"></i><i style="width:' + pct(gf,n) + '%;background:#B5487A"></i></div></div>' +
@@ -767,6 +784,7 @@ function viewPeople(el){
       '<select class="input" id="fd"><option value="">ทุกสาขา/หน่วยงาน</option>' + opt(OPT.dept || [], FILTER.dept) + '</select>' +
       '<select class="input" id="fb"><option value="">ทุกอาคาร</option>' + opt(OPT.building || [], FILTER.building) + '</select>' +
       '<select class="input" id="ft"><option value="">ทุกสายงาน</option><option value="T"' + (FILTER.type === 'T' ? ' selected' : '') + '>สายวิชาการ</option><option value="S"' + (FILTER.type === 'S' ? ' selected' : '') + '>สายสนับสนุน</option></select>' +
+      '<select class="input" id="fs"><option value="">ปฏิบัติงานอยู่</option><option value="sep">พ้นสภาพแล้ว (ประวัติ)</option><option value="all">ทั้งหมด</option></select>' +
       '<select class="input" id="fr"><option value="">ทุกช่วงอายุ</option><option value="fy">เกษียณปีงบนี้ (' + curFY() + ')</option><option value="5">เกษียณภายใน 5 ปีงบ</option><option value="done">เกษียณแล้ว</option><option value="-">ยังไม่มีวันเกิด</option></select>' +
       '<select class="input" id="fg"><option value="">ทุกเพศ</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option><option value="-">ยังไม่ระบุเพศ</option></select>' +
       '<select class="input" id="fp"><option value="">รูปทั้งหมด</option><option value="has">มีรูปแล้ว</option><option value="none">ไม่มีรูป</option><option value="pending">รูปยังไม่ย้าย</option></select>' +
@@ -775,9 +793,9 @@ function viewPeople(el){
     '</div>' +
     '<div class="tbl-wrap"><table><thead><tr><th>บุคลากร</th><th class="hide-sm">สาขา/หน่วยงาน</th><th class="hide-sm">ห้องทำงาน</th><th class="hide-sm">อีเมล</th><th>สถานะ</th></tr></thead><tbody id="ptb"></tbody></table></div>' +
     '<p class="count" id="pcount" style="margin-top:8px"></p>';
-  $('fp').value = FILTER.photo; $('fg').value = FILTER.gender || ''; $('fr').value = FILTER.retire || '';
-  var upd = function(){ FILTER = { q:$('fq').value, dept:$('fd').value, building:$('fb').value, type:$('ft').value, photo:$('fp').value, gender:$('fg').value, retire:$('fr').value }; drawPeople(); };
-  $('fq').oninput = upd; ['fd','fb','ft','fp','fg','fr'].forEach(function(id){ $(id).onchange = upd; });
+  $('fp').value = FILTER.photo; $('fg').value = FILTER.gender || ''; $('fr').value = FILTER.retire || ''; $('fs').value = FILTER.state || '';
+  var upd = function(){ FILTER = { q:$('fq').value, dept:$('fd').value, building:$('fb').value, type:$('ft').value, photo:$('fp').value, gender:$('fg').value, retire:$('fr').value, state:$('fs').value }; drawPeople(); };
+  $('fq').oninput = upd; ['fd','fb','ft','fp','fg','fr','fs'].forEach(function(id){ $(id).onchange = upd; });
   $('csvBtn').onclick = exportCsv;
   $('addBtn').onclick = function(){ openDrawer(null); };
   drawPeople();
@@ -807,6 +825,8 @@ function drawPeople(){
     if(FILTER.dept && (p.dept || '').indexOf(FILTER.dept) === -1) return false;
     if(FILTER.building && p.building !== FILTER.building) return false;
     if(FILTER.type && String(p.id).charAt(0).toUpperCase() !== FILTER.type) return false;
+    if((FILTER.state || '') === '' && p.separated) return false;
+    if(FILTER.state === 'sep' && !p.separated) return false;
     if(FILTER.retire === '-' && p.birthDate) return false;
     if(FILTER.retire === 'fy' && !(p.retireFY === curFY() && !p.retired)) return false;
     if(FILTER.retire === '5' && !(p.retireFY && !p.retired && p.retireFY <= curFY() + 4)) return false;
@@ -828,12 +848,14 @@ function drawPeople(){
       '<td class="hide-sm">' + (esc(p.dept) || '<span class="muted">—</span>') + '</td>' +
       '<td class="hide-sm">' + (esc(loc(p)) || '<span class="muted">—</span>') + '</td>' +
       '<td class="hide-sm">' + (esc(p.email) || '<span class="tag danger">ไม่มีอีเมล</span>') + '</td>' +
-      '<td>' + (p.status ? '<span class="tag' + (p.status.indexOf('ปกติ') === -1 ? ' warn' : '') + '">' + esc(p.status) + '</span> ' : '') +
+      '<td>' + (p.separated ? '<span class="tag danger">พ้นสภาพ: ' + esc(p.status) + (p.separationDate ? ' ' + thDate(p.separationDate) : '') + '</span> '
+        : (p.status ? '<span class="tag' + (p.status.indexOf('ปกติ') === -1 ? ' warn' : '') + '">' + esc(p.status) + '</span> ' : '')) +
         (p.visible === false ? '<span class="tag grey">ซ่อน</span> ' : '') +
         (p.retired ? '<span class="tag grey">เกษียณแล้ว</span> ' : (p.retireFY && p.retireFY <= curFY() + 4 ? '<span class="tag warn">เกษียณปีงบ ' + p.retireFY + '</span> ' : '')) + photoTag(p) + '</td></tr>';
   }).join('') : '<tr><td colspan="5"><div class="empty">ไม่พบบุคลากรที่ตรงกับเงื่อนไข ลองล้างคำค้นหรือตัวกรอง</div></td></tr>';
   CURRENT_PEOPLE = list;
-  $('pcount').textContent = 'แสดง ' + list.length + ' จาก ' + PERSONS.length + ' ท่าน';
+  var sepN = PERSONS.filter(function(p){ return p.separated; }).length;
+  $('pcount').textContent = 'แสดง ' + list.length + ' ท่าน · ปฏิบัติงาน ' + (PERSONS.length - sepN) + ' ท่าน' + (sepN ? ' · พ้นสภาพแล้ว ' + sepN + ' ท่าน (ไม่นับในสถิติ)' : '');
 }
 document.addEventListener('click', function(e){
   var r = e.target.closest('[data-rtfy]');
@@ -878,6 +900,9 @@ function openDrawer(id){
       '<div class="acts">' + (isNew ? '<span class="tag grey">บันทึกข้อมูลก่อน จึงเพิ่มรูปได้</span>' :
         '<button class="btn sm" id="phBtn">' + (p.photo ? 'เปลี่ยนรูป' : 'เพิ่มรูป') + '</button>' +
         (p.photo || p.photoType ? '<button class="btn sm danger" id="phDel">ลบรูป</button>' : '') + photoTag(p)) + '</div></div>' +
+    (p.separated ? '<div class="hrbox" style="background:var(--danger-bg);border-color:#E9C4C1;color:var(--danger)"><b>พ้นสภาพแล้ว: ' + esc(p.status) + (p.separationDate ? ' เมื่อ ' + thDate(p.separationDate) : '') + '</b>' +
+      '<small style="color:var(--danger)">เก็บเป็นประวัติ · ไม่นับในสถิติ · ค้นหาไม่เจอบนหน้าเว็บ · บัญชีเข้าระบบถูกปิด</small>' +
+      (can('editor') ? '<button class="btn sm" id="drRestore" style="margin-top:6px">คืนสถานะ (กลับเข้าปฏิบัติงาน)</button>' : '') + '</div>' : '') +
     '<div class="hrbox" id="hrBox">' + hrBoxHtml(p) + '</div>' +
     '<form class="dr-body" id="drForm"><div class="grid2">' +
       (isNew ? '<div class="field full"><label>สายงาน</label><select class="input" name="idPrefix"><option value="T">สายวิชาการ (รหัส T…)</option><option value="S">สายสนับสนุน (รหัส S…)</option></select></div>' : '') +
@@ -885,7 +910,7 @@ function openDrawer(id){
       (!can('editor') ? '<p class="stamp">ช่องที่เป็นสีเทา แก้ไขได้โดยเจ้าหน้าที่งานบุคคล หากข้อมูลไม่ถูกต้องกรุณาแจ้งผู้ดูแลระบบ</p>' : '') +
       (p.updatedAt ? '<p class="stamp">แก้ไขล่าสุด ' + esc(p.updatedAt) + (p.updatedBy ? ' โดย ' + esc(p.updatedBy) : '') + '</p>' : '') +
     '</form>' +
-    '<div class="dr-foot">' + (!isNew && can('editor') ? '<button class="btn danger" id="drDel">ลบบุคลากร</button>' : '') +
+    '<div class="dr-foot">' + (!isNew && can('editor') ? '<button class="btn danger" id="drDel" title="ลบถาวร (ไม่เก็บประวัติ) — ใช้เมื่อบันทึกผิดเท่านั้น">ลบ</button>' + (!p.separated ? '<button class="btn" id="drSep">พ้นสภาพ…</button>' : '') : '') +
       '<span class="sp"></span><button class="btn" id="drCancel">ยกเลิก</button><button class="btn primary" id="drSave">' + (isNew ? 'เพิ่มบุคลากร' : 'บันทึกการแก้ไข') + '</button></div>';
 
   $('drawer').hidden = false; $('scrim').hidden = false;
@@ -894,6 +919,15 @@ function openDrawer(id){
   $('drSave').onclick = savePerson;
   $('drForm').onsubmit = function(e){ e.preventDefault(); savePerson(); };
   if($('drDel')) $('drDel').onclick = function(){ deletePerson(p); };
+  if($('drSep')) $('drSep').onclick = function(){ separateDialog(p); };
+  if($('drRestore')) $('drRestore').onclick = function(){
+    askConfirm('คืนสถานะ ' + fullName(p) + '?', 'สถานะจะกลับเป็น "ปกติ" · แสดงบนหน้าเว็บและนับในสถิติอีกครั้ง · เปิดบัญชีเข้าระบบ', 'คืนสถานะ').then(function(y){
+      if(!y) return;
+      busy('กำลังคืนสถานะ…');
+      call('restorePerson', { id:p.id }).then(function(r){ upsertPerson(r.person); toast('คืนสถานะแล้ว' + (r.account ? ' · ' + r.account : '')); openDrawer(p.id); refreshAfterChange(); })
+        .catch(function(e){ toast(e.message, true); }).finally(function(){ busy(''); });
+    });
+  };
   if($('phBtn')) $('phBtn').onclick = function(){ pickPhoto(p.id); };
   if($('phDel')) $('phDel').onclick = function(){ removePhoto(p); };
   $('drForm').addEventListener('input', function(e){
@@ -903,6 +937,33 @@ function openDrawer(id){
   });
   var first = $('drawer').querySelector('input:not([disabled]),select');
   if(first) first.focus();
+}
+/** หน้าต่างพ้นสภาพ: เลือกเหตุผล + วันที่ */
+function separateDialog(p){
+  var reasons = (CFG.separationReasons || ['ลาออก','เกษียณอายุ','โอนย้าย','หมดสัญญาจ้าง','เสียชีวิต','ให้ออก','พ้นสภาพ']);
+  var t = todayYmd(), today = t.y + '-' + ('0' + t.m).slice(-2) + '-' + ('0' + t.d).slice(-2);
+  var box = document.createElement('div'); box.className = 'modal';
+  box.innerHTML = '<div class="modal-box"><h3>พ้นสภาพ: ' + esc(fullName(p)) + '</h3>' +
+    '<p>ข้อมูลยังเก็บไว้เป็นประวัติในระบบ แต่จะไม่นับในสถิติ ค้นหาไม่เจอบนหน้าเว็บ และปิดบัญชีเข้าระบบ · คืนสถานะได้ภายหลัง</p>' +
+    '<div class="field"><label>เหตุผล</label><select class="input" id="spR">' + reasons.map(function(r){ return '<option' + (p.retired && r === 'เกษียณอายุ' ? ' selected' : '') + '>' + esc(r) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="field" style="margin-top:10px"><label>วันที่พ้นสภาพ</label><input class="input" type="date" id="spD" value="' + (p.retired && p.retireDate ? p.retireDate : today) + '"></div>' +
+    '<div class="modal-acts"><button class="btn" id="spC">ยกเลิก</button><button class="btn danger" id="spOk">ยืนยันพ้นสภาพ</button></div></div>';
+  document.body.appendChild(box);
+  $('spC').onclick = function(){ box.remove(); };
+  $('spOk').onclick = function(){
+    var it = { id:p.id, reason:$('spR').value, date:$('spD').value };
+    box.remove();
+    doSeparate([it], function(){ closeDrawer(); });
+  };
+}
+function doSeparate(items, after){
+  busy('กำลังบันทึกพ้นสภาพ ' + items.length + ' ท่าน…');
+  call('separatePersons', { items:items }).then(function(r){
+    (r.persons || []).forEach(upsertPerson);
+    toast('พ้นสภาพแล้ว ' + r.updated + ' ท่าน' + (r.accounts.length ? ' · ปิดบัญชี ' + r.accounts.length + ' บัญชี' : '') + (r.errors.length ? ' · ไม่สำเร็จ ' + r.errors.length : ''), r.errors.length);
+    if(after) after();
+    refreshAfterChange();
+  }).catch(function(e){ toast(e.message, true); }).finally(function(){ busy(''); });
 }
 function closeDrawer(){ $('drawer').hidden = true; $('scrim').hidden = true; document.body.style.overflow = ''; EDIT_ID = null; }
 $('scrim').onclick = closeDrawer;
@@ -1127,6 +1188,7 @@ function gSet(id, f, v){
 function gList(){
   var q = GRID.q.trim().toLowerCase().replace(/\s+/g, '');
   return PERSONS.filter(function(p){
+    if(p.separated) return false;
     if(GRID.dept && (p.dept || '').indexOf(GRID.dept) === -1) return false;
     if(GRID.building && p.building !== GRID.building) return false;
     if(GRID.type && String(p.id).charAt(0).toUpperCase() !== GRID.type) return false;
@@ -1285,7 +1347,7 @@ function bestMatchOf(emp, rules){
 function drawRules(el){
   var R = RULES.draft, dis = RULES.canEdit ? '' : ' disabled';
   var typeList = RULES.types.filter(function(t){ return t.type; }).map(function(t){ return t.type; });
-  var countFor = function(rule){ var n = 0; PERSONS.forEach(function(p){ if(bestMatchOf(p.employmentType, R) === rule) n++; }); return n; };
+  var countFor = function(rule){ var n = 0; activeP().forEach(function(p){ if(bestMatchOf(p.employmentType, R) === rule) n++; }); return n; };
   var rows = R.map(function(r, i){
     var isDef = r.match === '' && !r.fresh;
     return '<tr class="' + (isDef ? 'def' : '') + '">' +
@@ -1301,7 +1363,7 @@ function drawRules(el){
   var uncovered = RULES.types.filter(function(t){ var b = bestMatchOf(t.type, R); return t.type && b && b.match === '' && !b.fresh; });
   // ผลกระทบเมื่อเทียบกับเกณฑ์ที่ใช้อยู่
   var changes = [];
-  PERSONS.forEach(function(p){
+  activeP().forEach(function(p){
     if(!p.birthDate) return;
     var a = hrCalc(p, CFG.retireRules), b = hrCalc(p, rulesForCalc(R));
     if(a.retireDate !== b.retireDate) changes.push({ p:p, a:a, b:b });
@@ -1321,7 +1383,7 @@ function drawRules(el){
     '<div class="panel"><h3>ผลกระทบของการแก้ไข</h3>' +
       (changes.length ? '<p class="desc">ถ้าบันทึก วันเกษียณของ ' + changes.length + ' คนจะเปลี่ยน:</p><div class="chg">' + changes.slice(0, 50).map(function(c){
         return '<span>' + esc(fullName(c.p)) + ' <small class="muted">' + esc(c.p.employmentType || 'ไม่ระบุประเภทการจ้าง') + '</small></span><b>' + thDate(c.a.retireDate) + ' → ' + thDate(c.b.retireDate) + '</b>'; }).join('') + '</div>'
-        : '<p class="desc" style="margin:0">' + (dirty ? 'การแก้ไขนี้ไม่ทำให้วันเกษียณของใครเปลี่ยน (คำนวณเฉพาะผู้ที่มีวันเกิดในระบบ ' + PERSONS.filter(function(p){ return p.birthDate; }).length + ' คน)' : 'ยังไม่มีการแก้ไข') + '</p>') +
+        : '<p class="desc" style="margin:0">' + (dirty ? 'การแก้ไขนี้ไม่ทำให้วันเกษียณของใครเปลี่ยน (คำนวณเฉพาะผู้ที่มีวันเกิดในระบบ ' + activeP().filter(function(p){ return p.birthDate; }).length + ' คน)' : 'ยังไม่มีการแก้ไข') + '</p>') +
     '</div>';
   if(!RULES.canEdit) return;
   el.querySelectorAll('[data-ri]').forEach(function(inp){
@@ -1365,7 +1427,7 @@ function bloodText(p){ return p.bloodGroup ? p.bloodGroup + (p.bloodRh ? ' ' + p
 function bloodList(){
   var q = BLOOD.q.trim().toLowerCase().replace(/\s+/g, '');
   return PERSONS.filter(function(p){
-    if(!p.bloodGroup) return false;
+    if(p.separated || !p.bloodGroup) return false;
     if(BLOOD.g && p.bloodGroup !== BLOOD.g) return false;
     if(BLOOD.rh && p.bloodRh !== BLOOD.rh) return false;
     if(q && (p.id + p.name + p.dept + p.position).toLowerCase().replace(/\s+/g, '').indexOf(q) === -1) return false;
@@ -1373,8 +1435,9 @@ function bloodList(){
   }).sort(function(a, b){ return a.name.localeCompare(b.name, 'th'); });
 }
 function viewBlood(el){
-  var cnt = function(g, rh){ return PERSONS.filter(function(p){ return p.bloodGroup === g && (!rh || p.bloodRh === rh); }).length; };
-  var none = PERSONS.filter(function(p){ return !p.bloodGroup; }).length;
+  var AP = activeP();
+  var cnt = function(g, rh){ return AP.filter(function(p){ return p.bloodGroup === g && (!rh || p.bloodRh === rh); }).length; };
+  var none = AP.filter(function(p){ return !p.bloodGroup; }).length;
   el.innerHTML =
     '<div class="panel" style="margin-bottom:12px"><h3>ค้นหาบุคลากรตามหมู่โลหิต</h3><p class="desc" style="margin:0">ใช้กรณีต้องการขอความอนุเคราะห์บริจาคโลหิตเร่งด่วน · เลือกหมู่โลหิตแล้วคัดลอกรายชื่อ/เบอร์โทร หรือร่างอีเมลได้ทันที · ข้อมูลสุขภาพเป็นข้อมูลอ่อนไหว ใช้เฉพาะเพื่อการนี้เท่านั้น</p></div>' +
     '<div class="btiles">' + ['A','B','AB','O'].map(function(g){
@@ -1454,7 +1517,7 @@ function viewGender(el){
   $('gf').onchange = drawGender; $('gq').oninput = drawGender;
   $('gSug').onclick = function(){
     var n = 0;
-    PERSONS.forEach(function(p){ var g = guessGender(p); if(g && !p.gender && !GPEND[p.id]){ GPEND[p.id] = g; n++; } });
+    activeP().forEach(function(p){ var g = guessGender(p); if(g && !p.gender && !GPEND[p.id]){ GPEND[p.id] = g; n++; } });
     toast(n ? 'เลือกให้ ' + n + ' รายการจากคำนำหน้าชื่อ ตรวจสอบแล้วกดบันทึก' : 'ไม่พบคำนำหน้าชื่อ (นาย/นาง/นางสาว) ในรายการที่ยังไม่ระบุ');
     drawGender();
   };
@@ -1471,6 +1534,7 @@ function viewGender(el){
 function drawGender(){
   var only = $('gf').value === '-', q = ($('gq').value || '').toLowerCase().replace(/\s+/g, '');
   var list = PERSONS.filter(function(p){
+    if(p.separated) return false;
     if(only && p.gender && !GPEND[p.id]) return false;
     return !q || (p.id + p.name + p.acadTitle).toLowerCase().replace(/\s+/g, '').indexOf(q) !== -1;
   });
@@ -1659,7 +1723,7 @@ function runMigration(list){
 var ACT_TH = { 'login':'เข้าสู่ระบบ', 'login-fail':'เข้าระบบไม่สำเร็จ', 'forgot':'ขอรหัสผ่านใหม่', 'person-add':'เพิ่มบุคลากร', 'person-edit':'แก้ไขข้อมูล',
   'person-delete':'ลบบุคลากร', 'photo-set':'เปลี่ยนรูป', 'photo-remove':'ลบรูป', 'password-change':'เปลี่ยนรหัสผ่าน', 'user-edit':'แก้ไขบัญชี',
   'user-add':'เพิ่มบัญชี', 'user-reset':'คืนรหัสเริ่มต้น', 'user-delete':'ลบบัญชี', 'user-sync':'สร้างบัญชีอัตโนมัติ', 'backup':'สำรองไฟล์',
-  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'person-bulk':'แก้ไขแบบตาราง', 'retire-rules':'แก้เกณฑ์เกษียณ', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
+  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'person-bulk':'แก้ไขแบบตาราง', 'retire-rules':'แก้เกณฑ์เกษียณ', 'person-separate':'พ้นสภาพ', 'person-restore':'คืนสถานะ', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
 function viewLogs(el){
   el.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>การกระทำ</th><th>เป้าหมาย</th><th class="hide-sm">รายละเอียด</th></tr></thead><tbody id="ltb"><tr><td colspan="5"><div class="empty">กำลังโหลด…</div></td></tr></tbody></table></div>';
   call('logs').then(function(rows){
