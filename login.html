@@ -245,6 +245,9 @@ td.calc{padding:6px 10px;color:var(--soft);font-size:13px;white-space:nowrap;bac
 .mv-tbl th,.mv-tbl td{text-align:right;white-space:nowrap}
 .mv-tbl th:first-child,.mv-tbl td:first-child{text-align:left}
 .mv-tbl td.pos{color:var(--leaf-d);font-weight:600}
+.mv-tbl tr.mv-click{cursor:pointer}
+.mv-tbl tr.mv-click:hover td{background:var(--mint-2)}
+.tag.blink{outline:2px dashed #E9A3A0;outline-offset:1px}
 .mv-tbl td.neg{color:var(--danger);font-weight:600}
 .mv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
 .mv-kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
@@ -423,7 +426,9 @@ var FORM = [
   { k:'building', l:'อาคาร', list:'building' },
   { k:'floor', l:'ชั้น' },
   { k:'room', l:'ห้อง' },
-  { k:'status', l:'สถานะ', list:'status' },
+  { k:'status', l:'สถานะ', list:'status', hint:'ลาออก / เกษียณอายุ / โอนย้าย / หมดสัญญาจ้าง / เสียชีวิต / ให้ออก / พ้นสภาพ = ไม่นับและค้นหาไม่เจอ' },
+  { k:'separationDate', l:'วันที่พ้นสภาพ', type:'date', hint:'วันสุดท้ายที่ปฏิบัติงาน · ใช้จัดปีงบในสถิติเข้า–ออก' },
+  { k:'separationNote', l:'รายละเอียดการพ้นสภาพ', hint:'เช่น โอนไปสังกัด… / เลขที่คำสั่ง…' },
   { k:'gender', l:'เพศ', opts:[['','ไม่ระบุ'],['ชาย','ชาย'],['หญิง','หญิง']] },
   { k:'employmentType', l:'ประเภทการจ้าง', list:'employmentType' },
   { k:'startDate', l:'วันที่เริ่มปฏิบัติงาน', type:'date', hint:'ใช้คำนวณอายุงานและแนวโน้มรายปี' },
@@ -699,7 +704,12 @@ function go(v){
 function activeP(){ return PERSONS.filter(function(p){ return !p.separated; }); }
 var WARN_DAYS = 90;
 function contractSoon(p){ return !p.separated && p.contractDaysLeft !== '' && p.contractDaysLeft != null && p.contractDaysLeft <= WARN_DAYS; }
-function sepText(p){ return (p.sepReason || p.status || 'พ้นสภาพ') + (p.sepDate ? ' ' + thDate(p.sepDate) : ''); }
+var SEP_SRC = { recorded:'', contract:'ใช้วันสิ้นสุดสัญญาจ้าง', log:'จากประวัติการเข้า-ออก', approx:'โดยประมาณจากวันที่แก้ไขล่าสุด — ควรระบุวันที่พ้นสภาพ' };
+function sepText(p){ return (p.sepReason || p.status || 'พ้นสภาพ') + (p.sepDate ? ' ' + thDate(p.sepDate) + (p.sepDateSource === 'approx' ? ' (ประมาณ)' : '') : ' (ไม่มีวันที่)'); }
+function sepTip(p){
+  return ['พ้นสภาพ: ' + (p.sepReason || p.status), 'วันที่: ' + (p.sepDate ? thDate(p.sepDate) : 'ไม่ระบุ') + (SEP_SRC[p.sepDateSource] ? ' (' + SEP_SRC[p.sepDateSource] + ')' : ''),
+          p.contractEnd ? 'สัญญาจ้างสิ้นสุด: ' + thDate(p.contractEnd) : '', p.separationNote ? 'รายละเอียด: ' + p.separationNote : '', p.startDate ? 'เริ่มปฏิบัติงาน: ' + thDate(p.startDate) : ''].filter(Boolean).join('\n');
+}
 function myPerson(){ return ME && ME.personId ? PERSONS.filter(function(p){ return p.id === ME.personId; })[0] : null; }
 function upsertPerson(p){
   var i = PERSONS.findIndex(function(x){ return x.id === p.id; });
@@ -868,7 +878,7 @@ function drawPeople(){
       '<td class="hide-sm">' + (esc(p.dept) || '<span class="muted">—</span>') + '</td>' +
       '<td class="hide-sm">' + (esc(loc(p)) || '<span class="muted">—</span>') + '</td>' +
       '<td class="hide-sm">' + (esc(p.email) || '<span class="tag danger">ไม่มีอีเมล</span>') + '</td>' +
-      '<td>' + (contractSoon(p) ? '<span class="tag warn">สัญญาสิ้นสุด ' + thDate(p.contractEnd) + '</span> ' : '') + (p.separated ? '<span class="tag danger">พ้นสภาพ: ' + esc(sepText(p)) + '</span> '
+      '<td>' + (contractSoon(p) ? '<span class="tag warn">สัญญาสิ้นสุด ' + thDate(p.contractEnd) + '</span> ' : '') + (p.separated ? '<span class="tag danger' + (p.sepDateSource === 'approx' || !p.sepDate ? ' blink' : '') + '" title="' + esc(sepTip(p)) + '">พ้นสภาพ: ' + esc(sepText(p)) + '</span> '
         : (p.status ? '<span class="tag' + (p.status.indexOf('ปกติ') === -1 ? ' warn' : '') + '">' + esc(p.status) + '</span> ' : '')) +
         (p.visible === false ? '<span class="tag grey">ซ่อน</span> ' : '') +
         (p.retired ? '<span class="tag grey">เกษียณแล้ว</span> ' : (p.retireFY && p.retireFY <= curFY() + 4 ? '<span class="tag warn">เกษียณปีงบ ' + p.retireFY + '</span> ' : '')) + photoTag(p) + '</td></tr>';
@@ -922,6 +932,7 @@ function openDrawer(id){
         (p.photo || p.photoType ? '<button class="btn sm danger" id="phDel">ลบรูป</button>' : '') + photoTag(p)) + '</div></div>' +
     (p.separated ? '<div class="hrbox" style="background:var(--danger-bg);border-color:#E9C4C1;color:var(--danger)"><b>พ้นสภาพแล้ว: ' + esc(sepText(p)) + '</b>' +
       (p.separationNote ? '<small style="color:var(--danger)">รายละเอียด: ' + esc(p.separationNote) + '</small>' : '') +
+      (SEP_SRC[p.sepDateSource] ? '<small style="color:var(--danger)">วันที่' + SEP_SRC[p.sepDateSource] + (p.sepDateSource !== 'recorded' && p.sepDateSource !== 'contract' ? ' — แก้ได้ที่ช่อง "วันที่พ้นสภาพ" ด้านล่าง' : '') + '</small>' : '') +
       '<small style="color:var(--danger)">เก็บเป็นประวัติ · ไม่นับในสถิติ · ค้นหาไม่เจอบนหน้าเว็บ · บัญชีเข้าระบบถูกปิด</small>' +
       (can('editor') ? (p.sepReason === 'หมดสัญญาจ้าง' ? '<button class="btn sm" id="drRenew" style="margin-top:6px">ต่อสัญญา (กลับเข้าปฏิบัติงาน)…</button>' : '<button class="btn sm" id="drRestore" style="margin-top:6px">คืนสถานะ (กลับเข้าปฏิบัติงาน)</button>') : '') + '</div>'
      : (p.contractEnd ? '<div class="hrbox" style="' + (contractSoon(p) ? 'background:#FBF1DE;border-color:#EBCB95' : '') + '"><span class="hk">สัญญาจ้างสิ้นสุด</span> <b>' + thDate(p.contractEnd) + '</b> <span class="hk">(อีก ' + p.contractDaysLeft + ' วัน)</span>' +
@@ -1478,6 +1489,39 @@ function viewMove(el){
   el.innerHTML = '<div class="panel"><div class="empty">กำลังคำนวณรายงาน…</div></div>';
   call('movementReport').then(function(d){ MOVE.data = d; drawMove(el); }).catch(function(e){ el.innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; });
 }
+/** รายชื่อผู้เข้าใหม่/พ้นสภาพ ของปีงบ (หรือเหตุผล) — เฉพาะหน้าผู้ดูแล ใช้ตรวจทานตัวเลขก่อนส่งรายงาน */
+function mvPeopleModal(fyBE, reason){
+  var Y = MOVE.data.years, sc = MOVE.scope;
+  var inScope = function(p){ return sc === 'all' || (sc === 'academic' ? /^T/i.test(p.id) : /^S/i.test(p.id)); };
+  var range = function(fy){ var ce = fy - 543, y = Y.filter(function(x){ return x.fy === fy; })[0]; return [(ce - 1) + '-09-30', y ? y.end : ce + '-09-30']; };
+  var hires = [], exits = [], title;
+  if(fyBE){
+    var rg = range(fyBE); title = 'ปีงบประมาณ ' + fyBE;
+    hires = PERSONS.filter(function(p){ return inScope(p) && p.startDate && p.startDate > rg[0] && p.startDate <= rg[1]; });
+    exits = PERSONS.filter(function(p){ return inScope(p) && p.separated && p.sepDate && p.sepDate > rg[0] && p.sepDate <= rg[1]; });
+  } else {
+    var first = range(Y[0].fy)[0], last = range(Y[Y.length - 1].fy)[1]; title = 'พ้นสภาพด้วยเหตุผล "' + reason + '" (5 ปีงบ)';
+    exits = PERSONS.filter(function(p){ return inScope(p) && p.separated && p.sepDate && p.sepDate > first && p.sepDate <= last && (p.sepReason || 'พ้นสภาพ') === reason; });
+  }
+  var byDate = function(k){ return function(a, b){ return String(a[k]).localeCompare(String(b[k])); }; };
+  var tbl = function(list, cols){ return list.length ? '<div class="tbl-wrap" style="max-height:300px;overflow:auto"><table><thead><tr>' + cols.map(function(c){ return '<th>' + c[0] + '</th>'; }).join('') + '</tr></thead><tbody>' +
+    list.map(function(p){ return '<tr data-edit="' + esc(p.id) + '" style="cursor:pointer">' + cols.map(function(c){ return '<td>' + c[1](p) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>' : '<p class="desc">ไม่มี</p>'; };
+  var nameCell = function(p){ return '<div class="pcell">' + avatar(p, 'sm') + '<div><b>' + esc(fullName(p)) + '</b><small>' + esc(p.id) + '</small></div></div>'; };
+  var box = document.createElement('div'); box.className = 'modal';
+  box.innerHTML = '<div class="modal-box" style="max-width:860px;width:96%"><h3>' + esc(title) + (sc !== 'all' ? ' · ' + (sc === 'academic' ? 'สายวิชาการ' : 'สายสนับสนุน') : '') + '</h3>' +
+    '<p class="desc">รายชื่อนี้แสดงเฉพาะผู้ดูแล ใช้ตรวจทานตัวเลขก่อนส่งรายงาน · คลิกชื่อเพื่อแก้ไขข้อมูล (เช่น วันที่พ้นสภาพ)</p>' +
+    (fyBE ? '<h4 style="margin:14px 0 6px">เข้าใหม่ ' + hires.length + ' ท่าน</h4>' + tbl(hires.sort(byDate('startDate')), [['บุคลากร', nameCell], ['เริ่มปฏิบัติงาน', function(p){ return thDate(p.startDate); }], ['ตำแหน่ง', function(p){ return esc(p.position || ''); }]]) : '') +
+    '<h4 style="margin:14px 0 6px">พ้นสภาพ ' + exits.length + ' ท่าน</h4>' + tbl(exits.sort(byDate('sepDate')), [['บุคลากร', nameCell], ['เหตุผล', function(p){ return '<span class="tag danger">' + esc(p.sepReason || '') + '</span>'; }],
+      ['วันที่', function(p){ return thDate(p.sepDate) + (SEP_SRC[p.sepDateSource] ? '<br><small class="muted">' + SEP_SRC[p.sepDateSource] + '</small>' : ''); }], ['รายละเอียด', function(p){ return esc(p.separationNote || '—'); }]]) +
+    '<div class="modal-acts"><button class="btn" id="mvClose">ปิด</button></div></div>';
+  document.body.appendChild(box);
+  $('mvClose').onclick = function(){ box.remove(); };
+  box.addEventListener('click', function(e){
+    if(e.target === box){ box.remove(); return; }
+    var row = e.target.closest('[data-edit]');
+    if(row){ e.stopPropagation(); var id = row.getAttribute('data-edit'); box.remove(); openDrawer(id); }   // เปิดลิ้นชักแก้ไขโดยตรง
+  });
+}
 function mvRow(y, sc){ var b = sc === 'all' ? y : y.byType[sc]; return { headStart:b.headStart, hires:b.hires, exits:b.exits, headEnd:b.headEnd }; }
 function drawMove(el){
   var d = MOVE.data, sc = MOVE.scope, Y = d.years;
@@ -1489,7 +1533,7 @@ function drawMove(el){
   var rows = Y.map(function(y){
     var r = mvRow(y, sc), net = r.hires - r.exits, avg = (r.headStart + r.headEnd) / 2;
     var to = sc === 'all' ? y.turnover : (avg ? Math.round(r.exits / avg * 1000) / 10 : 0);
-    return '<tr><td><b>' + y.fy + '</b>' + (y.partial ? ' <small class="muted">(ถึงปัจจุบัน)</small>' : '') + '</td><td>' + r.headStart + '</td><td class="pos">+' + r.hires + '</td><td class="neg">−' + r.exits + '</td>' +
+    return '<tr class="mv-click" data-mvfy="' + y.fy + '" title="คลิกเพื่อดูรายชื่อผู้เข้าใหม่และผู้พ้นสภาพในปีงบ ' + y.fy + '"><td><b>' + y.fy + '</b>' + (y.partial ? ' <small class="muted">(ถึงปัจจุบัน)</small>' : '') + '</td><td>' + r.headStart + '</td><td class="pos">+' + r.hires + '</td><td class="neg">−' + r.exits + '</td>' +
       (sc === 'all' ? usedR.map(function(rs){ return '<td>' + (y.reasons[rs] || 0) + '</td>'; }).join('') : '') +
       '<td><b>' + r.headEnd + '</b></td><td class="' + (net > 0 ? 'pos' : net < 0 ? 'neg' : '') + '">' + (net > 0 ? '+' : net < 0 ? '−' : '') + Math.abs(net) + '</td><td>' + pctTxt(to) + '</td>' +
       (sc === 'all' ? '<td>' + pctTxt(y.retention) + '</td>' : '') + '</tr>';
@@ -1511,12 +1555,16 @@ function drawMove(el){
       '<th>สิ้นปี</th><th>สุทธิ</th><th>Turnover</th>' + (sc === 'all' ? '<th>Retention</th>' : '') + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
       '<p class="desc" style="margin:10px 0 0">Turnover = พ้นสภาพ ÷ อัตรากำลังเฉลี่ย (ต้นปี+สิ้นปี)/2 × 100 · Retention = ผู้ที่อยู่ตั้งแต่ต้นปีและยังอยู่ ÷ อัตรากำลังต้นปี × 100 · ต้นปี = จำนวน ณ 30 ก.ย. ของปีก่อน</p></div>' +
     '<div class="two"><div class="panel"><h3>เหตุผลการพ้นสภาพ (5 ปีงบ)</h3>' +
-      (d.reasons.length ? d.reasons.map(function(r){ var mx = d.reasons[0].n; return '<div class="rt-row" style="cursor:default"><span>' + esc(r.label) + '</span><div class="track"><i style="width:' + Math.round(r.n / mx * 100) + '%;background:#B3302A"></i></div><b>' + r.n + '</b></div>'; }).join('') : '<p class="desc">ยังไม่มีข้อมูลการพ้นสภาพในช่วงนี้</p>') + '</div>' +
+      (d.reasons.length ? d.reasons.map(function(r){ var mx = d.reasons[0].n; return '<div class="rt-row" data-mvreason="' + esc(r.label) + '" title="คลิกเพื่อดูรายชื่อ"><span>' + esc(r.label) + '</span><div class="track"><i style="width:' + Math.round(r.n / mx * 100) + '%;background:#B3302A"></i></div><b>' + r.n + '</b></div>'; }).join('') : '<p class="desc">ยังไม่มีข้อมูลการพ้นสภาพในช่วงนี้</p>') + '</div>' +
       '<div class="panel"><h3>คาดการณ์เกษียณ (วางแผนทดแทนอัตรากำลัง)</h3>' + d.retireForecast.map(function(r){ var mx = Math.max(1, ...d.retireForecast.map(function(x){ return x.n; })); return '<div class="rt-row" style="cursor:default"><span>ปีงบ ' + r.fy + '</span><div class="track"><i style="width:' + Math.round(r.n / mx * 100) + '%"></i></div><b>' + r.n + '</b></div>'; }).join('') +
       '<p class="desc" style="margin:8px 0 0">จากผู้มีวันเกิดในระบบ ' + d.birthKnown + ' ท่าน</p></div></div>' +
     '<div class="panel"><h3>คุณภาพข้อมูล</h3><p class="desc" style="margin:0">มีวันที่เริ่มปฏิบัติงาน ' + q.withStart + ' จาก ' + q.people + ' ท่าน (' + startPct + '%) — ผู้ที่ไม่มีวันเริ่มงานจะถือว่าอยู่มาก่อนช่วงสถิติ ตัวเลข "เข้าใหม่" ในอดีตจึงอาจต่ำกว่าจริง' +
-      (q.sepNoDate ? ' · พ้นสภาพแต่ไม่มีวันที่ ' + q.sepNoDate + ' ท่าน (ไม่นำมาคำนวณ ควรบันทึกวันที่พ้นสภาพ)' : '') + (d.contractsEnding ? ' · สัญญาจ้างใกล้สิ้นสุด ' + d.contractsEnding + ' ท่าน' : '') + '</p></div>';
+      (q.sepFromContract ? ' · ใช้วันสิ้นสุดสัญญาจ้างเป็นวันที่พ้นสภาพ ' + q.sepFromContract + ' ท่าน' : '') +
+      (q.sepApprox ? ' · <b>วันที่พ้นสภาพโดยประมาณ ' + q.sepApprox + ' ท่าน — ควรระบุวันที่จริง</b> (ดูได้ที่ บุคลากร → พ้นสภาพแล้ว ป้ายที่มีเส้นประ)' : '') +
+      (q.sepNoDate ? ' · พ้นสภาพแต่ไม่มีวันที่ ' + q.sepNoDate + ' ท่าน (ไม่นำมาคำนวณ)' : '') + (d.contractsEnding ? ' · สัญญาจ้างใกล้สิ้นสุด ' + d.contractsEnding + ' ท่าน' : '') + '</p></div>';
   el.querySelectorAll('[data-mv]').forEach(function(b){ b.onclick = function(){ MOVE.scope = b.getAttribute('data-mv'); drawMove(el); }; });
+  el.querySelectorAll('[data-mvfy]').forEach(function(tr){ tr.onclick = function(){ mvPeopleModal(Number(tr.getAttribute('data-mvfy')), null); }; });
+  el.querySelectorAll('[data-mvreason]').forEach(function(rw){ rw.onclick = function(){ mvPeopleModal(null, rw.getAttribute('data-mvreason')); }; });
   $('mvPrint').onclick = function(){ window.print(); };
   $('mvCsv').onclick = function(){
     var head = ['ปีงบประมาณ','ช่วงข้อมูลถึง','สายงาน','อัตรากำลังต้นปี','เข้าใหม่','พ้นสภาพ'].concat(REASONS.map(function(r){ return 'พ้นสภาพ: ' + r; })).concat(['อัตรากำลังสิ้นปี','สุทธิ','Turnover (%)','Retention (%)']);
