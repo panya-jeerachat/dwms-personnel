@@ -539,6 +539,7 @@
   .ins-stack i{display:block; height:100%;}
   .ins-leg{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
   .ins-chip{font-size:12.5px; border:1px solid var(--border); border-radius:999px; padding:3px 10px; background:var(--surface);}
+  .ins-chip.zero{opacity:.5; border-style:dashed;}
   .ins-chip[data-ins]:hover{border-color:var(--accent); background:var(--surface-alt);}
   .ins-chip small{color:var(--text-faint);}
   .ins-ph{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;}
@@ -2824,11 +2825,12 @@
         // แสดงทุกสาขา/หน่วยงาน (ไม่ตัดอันดับ) · บางท่านสังกัดมากกว่า 1 หน่วยงาน จึงนับรวมได้มากกว่าจำนวนคน
         // ใช้วิธีนับเดียวกับชิปสาขาและการค้นหา (hasDept = สาขาหลัก + สาขาที่เกี่ยวข้อง) ตัวเลขจึงตรงกันทุกจุด
         const dm = {};
-        getDepts().forEach(d=>{ const n = list.filter(r=> hasDept(r, d)).length; if(n) dm[d] = n; });
+        getDepts().forEach(d=>{ dm[d] = list.filter(r=> hasDept(r, d)).length; });      // ทุกหน่วยงานของคณะ (รวมที่มี 0 ท่านในกลุ่มนี้)
         const multi = list.filter(r=> new Set(deptsOf(r).map(canon)).size > 1).length;
         const keys = Object.keys(dm).sort((a,b)=> dm[b] - dm[a] || a.localeCompare(b, 'th'));
-        if(keys.length) secs += '<div class="ins-sec"><h4>สาขา / หน่วยงาน (' + keys.length + ' หน่วยงาน)</h4><div class="ins-leg">' +
-          keys.map(x=> '<span class="ins-chip"' + insAttr('dept|' + x) + ' data-tip="' + escapeHtml(x + ': ' + dm[x] + ' ท่าน (' + pctOf(dm[x], list.length) + '% ของกลุ่มนี้) — คลิกดูรายละเอียด') + '"><i class="dot" style="background:' + colorOf(x) + '"></i>' + escapeHtml(x) + ' <b>' + dm[x] + '</b> <small>' + pctOf(dm[x], list.length) + '%</small></span>').join('') + '</div>' +
+        const withAny = keys.filter(x=> dm[x] > 0).length;
+        if(keys.length) secs += '<div class="ins-sec"><h4>สาขา / หน่วยงาน (ทั้งหมด ' + keys.length + ' หน่วยงาน' + (withAny < keys.length ? ' · มีบุคลากรในกลุ่มนี้ ' + withAny : '') + ')</h4><div class="ins-leg">' +
+          keys.map(x=> '<span class="ins-chip' + (dm[x] ? '' : ' zero') + '"' + insAttr('dept|' + x) + ' data-tip="' + escapeHtml(x + ': ' + dm[x] + ' ท่าน' + (dm[x] ? ' (' + pctOf(dm[x], list.length) + '% ของกลุ่มนี้)' : ' ในกลุ่มนี้') + ' — คลิกดูรายละเอียดของหน่วยงาน') + '"><i class="dot" style="background:' + colorOf(x) + '"></i>' + escapeHtml(x) + ' <b>' + dm[x] + '</b> <small>' + pctOf(dm[x], list.length) + '%</small></span>').join('') + '</div>' +
           (multi ? '<p class="note" style="margin-top:6px">' + multi + ' ท่านสังกัดหรือเกี่ยวข้องมากกว่า 1 หน่วยงาน จึงถูกนับในทุกหน่วยงาน (นับแบบเดียวกับชิปสาขาบนหน้าเว็บ)</p>' : '') + '</div>';
       }
       if(d.g) secs += genderSec(d.g);
