@@ -242,6 +242,15 @@ td.calc{padding:6px 10px;color:var(--soft);font-size:13px;white-space:nowrap;bac
 .btile.none b{color:var(--soft)}
 .bgtag{display:inline-block;min-width:54px;text-align:center;font-weight:700;font-size:13px;color:#fff;background:#C24A44;border-radius:6px;padding:2px 8px}
 @media (max-width:900px){ .btiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.mv-tbl th,.mv-tbl td{text-align:right;white-space:nowrap}
+.mv-tbl th:first-child,.mv-tbl td:first-child{text-align:left}
+.mv-tbl td.pos{color:var(--leaf-d);font-weight:600}
+.mv-tbl td.neg{color:var(--danger);font-weight:600}
+.mv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.mv-kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.mv-kpi b{display:block;font-size:24px;line-height:1.2}
+.mv-kpi span{font-size:12.5px;color:var(--soft);line-height:1.5}
+@media print{ .side,.topbar,.banner,#gSaveBar,.no-print,#toast{display:none !important} .shell{display:block} .main,.content{padding:0;margin:0} .panel{break-inside:avoid;box-shadow:none} body{background:#fff} }
 .progress{height:10px;background:var(--mint);border-radius:5px;overflow:hidden;margin:10px 0}
 .progress i{display:block;height:100%;background:var(--leaf);width:0;transition:width .3s}
 .loglist{max-height:320px;overflow:auto;font-size:13px;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;background:var(--mint-2)}
@@ -419,6 +428,7 @@ var FORM = [
   { k:'employmentType', l:'ประเภทการจ้าง', list:'employmentType' },
   { k:'startDate', l:'วันที่เริ่มปฏิบัติงาน', type:'date', hint:'ใช้คำนวณอายุงานและแนวโน้มรายปี' },
   { k:'birthDate', l:'วัน/เดือน/ปีเกิด', type:'date', hint:'ใช้คำนวณอายุและปีเกษียณ · ข้อมูลส่วนบุคคล ไม่แสดงบนหน้าเว็บสาธารณะ' },
+  { k:'contractEnd', l:'วันที่สิ้นสุดสัญญาจ้าง', type:'date', hint:'ไม่บังคับ · ถ้าเลยวันนี้และไม่ต่อสัญญา ระบบถือว่าพ้นสภาพ (หมดสัญญาจ้าง) ทันที' },
   { k:'bloodGroup', l:'หมู่โลหิต', opts:[['','— ไม่ระบุ —'],['A','A'],['B','B'],['AB','AB'],['O','O']] },
   { k:'bloodRh', l:'Rh', opts:[['','— ไม่ระบุ —'],['Rh+','Rh+ (บวก)'],['Rh-','Rh− (ลบ)']] },
   { k:'email', l:'อีเมล', type:'email', full:true, hint:'ใช้เป็นชื่อผู้ใช้เข้าระบบของบุคลากรท่านนี้' },
@@ -429,6 +439,7 @@ var FORM = [
 
 var EMP_DEFAULTS = ['ข้าราชการ','พนักงานมหาวิทยาลัย','พนักงานมหาวิทยาลัย (เงินรายได้)','ลูกจ้างประจำ','ลูกจ้างชั่วคราว','พนักงานราชการ'];
 var ICONS = {
+  move:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
   blood:'<path d="M12 3.5c3 4 6 7.3 6 10.5a6 6 0 01-12 0c0-3.2 3-6.5 6-10.5z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/>',
   rules:'<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
   grid:'<rect x="3.5" y="4" width="17" height="16" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M3.5 9.5h17M3.5 15h17M9.5 4v16" stroke="currentColor" stroke-width="1.8"/>',
@@ -449,6 +460,7 @@ var VIEWS = {
   gender:  { t:'เติมข้อมูลเพศ', role:'editor' },
   rules:   { t:'เกณฑ์เกษียณ', role:'editor' },
   blood:   { t:'ค้นหาหมู่โลหิต', role:'editor' },
+  move:    { t:'รายงานอัตรากำลัง', role:'editor' },
   me:      { t:'ข้อมูลของฉัน', role:'user' },
   password:{ t:'เปลี่ยนรหัสผ่าน', role:'user' },
   users:   { t:'บัญชีผู้ใช้', role:'admin' },
@@ -679,12 +691,15 @@ function go(v){
   VIEW = v;
   $('viewTitle').textContent = VIEWS[v].t;
   Array.prototype.forEach.call($('nav').children, function(b){ b.classList.toggle('on', b.getAttribute('data-go') === v); });
-  var fn = { dash:viewDash, people:viewPeople, grid:viewGrid, gender:viewGender, rules:viewRules, blood:viewBlood, me:viewMe, password:viewPassword, users:viewUsers, migrate:viewMigrate, logs:viewLogs, system:viewSystem }[v];
+  var fn = { dash:viewDash, people:viewPeople, grid:viewGrid, gender:viewGender, rules:viewRules, blood:viewBlood, move:viewMove, me:viewMe, password:viewPassword, users:viewUsers, migrate:viewMigrate, logs:viewLogs, system:viewSystem }[v];
   fn($('view'));
   window.scrollTo(0, 0);
 }
 /** บุคลากรที่ยังปฏิบัติงาน (ไม่รวมผู้พ้นสภาพ) — ใช้กับทุกหน้าที่นับ/ค้นหา */
 function activeP(){ return PERSONS.filter(function(p){ return !p.separated; }); }
+var WARN_DAYS = 90;
+function contractSoon(p){ return !p.separated && p.contractDaysLeft !== '' && p.contractDaysLeft != null && p.contractDaysLeft <= WARN_DAYS; }
+function sepText(p){ return (p.sepReason || p.status || 'พ้นสภาพ') + (p.sepDate ? ' ' + thDate(p.sepDate) : ''); }
 function myPerson(){ return ME && ME.personId ? PERSONS.filter(function(p){ return p.id === ME.personId; })[0] : null; }
 function upsertPerson(p){
   var i = PERSONS.findIndex(function(x){ return x.id === p.id; });
@@ -735,7 +750,11 @@ function viewDash(el){
   var fy0 = curFY(), rtYears = [0,1,2,3,4].map(function(i){ return fy0 + i; });
   var rtList = P.filter(function(p){ return p.retireFY && !p.retired && p.retireFY <= fy0 + 4; }).sort(function(a, b){ return String(a.retireDate).localeCompare(String(b.retireDate)); });
   var rtMax = Math.max(1, ...rtYears.map(function(y){ return rtList.filter(function(p){ return p.retireFY === y; }).length; }));
-  var rtHtml = '<div class="panel"><h3>เกษียณใน 5 ปีงบประมาณข้างหน้า</h3><p class="desc">คำนวณจากวันเกิดและประเภทการจ้าง · มีวันเกิดแล้ว ' + P.filter(function(p){ return p.birthDate; }).length + ' จาก ' + n + ' ท่าน</p>' +
+  var soon = P.filter(contractSoon).sort(function(a, b){ return a.contractDaysLeft - b.contractDaysLeft; });
+  var ctHtml = soon.length ? '<div class="panel"><h3>สัญญาจ้างใกล้สิ้นสุด (' + WARN_DAYS + ' วัน)</h3><p class="desc">หากไม่ต่อสัญญา ระบบจะถือว่าพ้นสภาพ (หมดสัญญาจ้าง) ในวันถัดจากวันสิ้นสุดทันที</p><div class="todo">' +
+    soon.slice(0, 10).map(function(p){ return '<button data-edit="' + esc(p.id) + '">' + avatar(p, 'sm') + '<span>' + esc(fullName(p)) + '</span><span class="tags"><span class="tag ' + (p.contractDaysLeft <= 30 ? 'danger' : 'warn') + '">' + thDate(p.contractEnd) + ' · อีก ' + p.contractDaysLeft + ' วัน</span></span></button>'; }).join('') +
+    '</div>' + (soon.length > 10 ? '<p class="desc" style="margin-top:8px">และอีก ' + (soon.length - 10) + ' ท่าน — ดูทั้งหมดที่ บุคลากร → "สัญญาจ้างใกล้สิ้นสุด"</p>' : '') + '</div>' : '';
+  var rtHtml = ctHtml + '<div class="panel"><h3>เกษียณใน 5 ปีงบประมาณข้างหน้า</h3><p class="desc">คำนวณจากวันเกิดและประเภทการจ้าง · มีวันเกิดแล้ว ' + P.filter(function(p){ return p.birthDate; }).length + ' จาก ' + n + ' ท่าน</p>' +
     rtYears.map(function(y){ var c = rtList.filter(function(p){ return p.retireFY === y; }).length;
       return '<div class="rt-row" data-rtfy="' + y + '"><span>ปีงบ ' + y + '</span><div class="track"><i style="width:' + Math.round(c / rtMax * 100) + '%"></i></div><b>' + c + '</b></div>'; }).join('') +
     (rtList.length ? '<div class="todo" style="margin-top:8px">' + rtList.slice(0, 8).map(function(p){
@@ -784,7 +803,7 @@ function viewPeople(el){
       '<select class="input" id="fd"><option value="">ทุกสาขา/หน่วยงาน</option>' + opt(OPT.dept || [], FILTER.dept) + '</select>' +
       '<select class="input" id="fb"><option value="">ทุกอาคาร</option>' + opt(OPT.building || [], FILTER.building) + '</select>' +
       '<select class="input" id="ft"><option value="">ทุกสายงาน</option><option value="T"' + (FILTER.type === 'T' ? ' selected' : '') + '>สายวิชาการ</option><option value="S"' + (FILTER.type === 'S' ? ' selected' : '') + '>สายสนับสนุน</option></select>' +
-      '<select class="input" id="fs"><option value="">ปฏิบัติงานอยู่</option><option value="sep">พ้นสภาพแล้ว (ประวัติ)</option><option value="all">ทั้งหมด</option></select>' +
+      '<select class="input" id="fs"><option value="">ปฏิบัติงานอยู่</option><option value="contract">สัญญาจ้างใกล้สิ้นสุด (90 วัน)</option><option value="sep">พ้นสภาพแล้ว (ประวัติ)</option><option value="all">ทั้งหมด</option></select>' +
       '<select class="input" id="fr"><option value="">ทุกช่วงอายุ</option><option value="fy">เกษียณปีงบนี้ (' + curFY() + ')</option><option value="5">เกษียณภายใน 5 ปีงบ</option><option value="done">เกษียณแล้ว</option><option value="-">ยังไม่มีวันเกิด</option></select>' +
       '<select class="input" id="fg"><option value="">ทุกเพศ</option><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option><option value="-">ยังไม่ระบุเพศ</option></select>' +
       '<select class="input" id="fp"><option value="">รูปทั้งหมด</option><option value="has">มีรูปแล้ว</option><option value="none">ไม่มีรูป</option><option value="pending">รูปยังไม่ย้าย</option></select>' +
@@ -825,7 +844,8 @@ function drawPeople(){
     if(FILTER.dept && (p.dept || '').indexOf(FILTER.dept) === -1) return false;
     if(FILTER.building && p.building !== FILTER.building) return false;
     if(FILTER.type && String(p.id).charAt(0).toUpperCase() !== FILTER.type) return false;
-    if((FILTER.state || '') === '' && p.separated) return false;
+    if(((FILTER.state || '') === '' || FILTER.state === 'contract') && p.separated) return false;
+    if(FILTER.state === 'contract' && !contractSoon(p)) return false;
     if(FILTER.state === 'sep' && !p.separated) return false;
     if(FILTER.retire === '-' && p.birthDate) return false;
     if(FILTER.retire === 'fy' && !(p.retireFY === curFY() && !p.retired)) return false;
@@ -848,7 +868,7 @@ function drawPeople(){
       '<td class="hide-sm">' + (esc(p.dept) || '<span class="muted">—</span>') + '</td>' +
       '<td class="hide-sm">' + (esc(loc(p)) || '<span class="muted">—</span>') + '</td>' +
       '<td class="hide-sm">' + (esc(p.email) || '<span class="tag danger">ไม่มีอีเมล</span>') + '</td>' +
-      '<td>' + (p.separated ? '<span class="tag danger">พ้นสภาพ: ' + esc(p.status) + (p.separationDate ? ' ' + thDate(p.separationDate) : '') + '</span> '
+      '<td>' + (contractSoon(p) ? '<span class="tag warn">สัญญาสิ้นสุด ' + thDate(p.contractEnd) + '</span> ' : '') + (p.separated ? '<span class="tag danger">พ้นสภาพ: ' + esc(sepText(p)) + '</span> '
         : (p.status ? '<span class="tag' + (p.status.indexOf('ปกติ') === -1 ? ' warn' : '') + '">' + esc(p.status) + '</span> ' : '')) +
         (p.visible === false ? '<span class="tag grey">ซ่อน</span> ' : '') +
         (p.retired ? '<span class="tag grey">เกษียณแล้ว</span> ' : (p.retireFY && p.retireFY <= curFY() + 4 ? '<span class="tag warn">เกษียณปีงบ ' + p.retireFY + '</span> ' : '')) + photoTag(p) + '</td></tr>';
@@ -900,9 +920,12 @@ function openDrawer(id){
       '<div class="acts">' + (isNew ? '<span class="tag grey">บันทึกข้อมูลก่อน จึงเพิ่มรูปได้</span>' :
         '<button class="btn sm" id="phBtn">' + (p.photo ? 'เปลี่ยนรูป' : 'เพิ่มรูป') + '</button>' +
         (p.photo || p.photoType ? '<button class="btn sm danger" id="phDel">ลบรูป</button>' : '') + photoTag(p)) + '</div></div>' +
-    (p.separated ? '<div class="hrbox" style="background:var(--danger-bg);border-color:#E9C4C1;color:var(--danger)"><b>พ้นสภาพแล้ว: ' + esc(p.status) + (p.separationDate ? ' เมื่อ ' + thDate(p.separationDate) : '') + '</b>' +
+    (p.separated ? '<div class="hrbox" style="background:var(--danger-bg);border-color:#E9C4C1;color:var(--danger)"><b>พ้นสภาพแล้ว: ' + esc(sepText(p)) + '</b>' +
+      (p.separationNote ? '<small style="color:var(--danger)">รายละเอียด: ' + esc(p.separationNote) + '</small>' : '') +
       '<small style="color:var(--danger)">เก็บเป็นประวัติ · ไม่นับในสถิติ · ค้นหาไม่เจอบนหน้าเว็บ · บัญชีเข้าระบบถูกปิด</small>' +
-      (can('editor') ? '<button class="btn sm" id="drRestore" style="margin-top:6px">คืนสถานะ (กลับเข้าปฏิบัติงาน)</button>' : '') + '</div>' : '') +
+      (can('editor') ? (p.sepReason === 'หมดสัญญาจ้าง' ? '<button class="btn sm" id="drRenew" style="margin-top:6px">ต่อสัญญา (กลับเข้าปฏิบัติงาน)…</button>' : '<button class="btn sm" id="drRestore" style="margin-top:6px">คืนสถานะ (กลับเข้าปฏิบัติงาน)</button>') : '') + '</div>'
+     : (p.contractEnd ? '<div class="hrbox" style="' + (contractSoon(p) ? 'background:#FBF1DE;border-color:#EBCB95' : '') + '"><span class="hk">สัญญาจ้างสิ้นสุด</span> <b>' + thDate(p.contractEnd) + '</b> <span class="hk">(อีก ' + p.contractDaysLeft + ' วัน)</span>' +
+        (can('editor') ? ' <button class="btn sm" id="drRenew">ต่อสัญญา…</button>' : '') + '</div>' : '')) +
     '<div class="hrbox" id="hrBox">' + hrBoxHtml(p) + '</div>' +
     '<form class="dr-body" id="drForm"><div class="grid2">' +
       (isNew ? '<div class="field full"><label>สายงาน</label><select class="input" name="idPrefix"><option value="T">สายวิชาการ (รหัส T…)</option><option value="S">สายสนับสนุน (รหัส S…)</option></select></div>' : '') +
@@ -920,6 +943,7 @@ function openDrawer(id){
   $('drForm').onsubmit = function(e){ e.preventDefault(); savePerson(); };
   if($('drDel')) $('drDel').onclick = function(){ deletePerson(p); };
   if($('drSep')) $('drSep').onclick = function(){ separateDialog(p); };
+  if($('drRenew')) $('drRenew').onclick = function(){ renewDialog(p); };
   if($('drRestore')) $('drRestore').onclick = function(){
     askConfirm('คืนสถานะ ' + fullName(p) + '?', 'สถานะจะกลับเป็น "ปกติ" · แสดงบนหน้าเว็บและนับในสถิติอีกครั้ง · เปิดบัญชีเข้าระบบ', 'คืนสถานะ').then(function(y){
       if(!y) return;
@@ -946,14 +970,40 @@ function separateDialog(p){
   box.innerHTML = '<div class="modal-box"><h3>พ้นสภาพ: ' + esc(fullName(p)) + '</h3>' +
     '<p>ข้อมูลยังเก็บไว้เป็นประวัติในระบบ แต่จะไม่นับในสถิติ ค้นหาไม่เจอบนหน้าเว็บ และปิดบัญชีเข้าระบบ · คืนสถานะได้ภายหลัง</p>' +
     '<div class="field"><label>เหตุผล</label><select class="input" id="spR">' + reasons.map(function(r){ return '<option' + (p.retired && r === 'เกษียณอายุ' ? ' selected' : '') + '>' + esc(r) + '</option>'; }).join('') + '</select></div>' +
-    '<div class="field" style="margin-top:10px"><label>วันที่พ้นสภาพ</label><input class="input" type="date" id="spD" value="' + (p.retired && p.retireDate ? p.retireDate : today) + '"></div>' +
+    '<div class="field" style="margin-top:10px"><label>วันที่พ้นสภาพ (วันสุดท้ายที่ปฏิบัติงาน)</label><input class="input" type="date" id="spD" value="' + (p.retired && p.retireDate ? p.retireDate : today) + '"></div>' +
+    '<div class="field" style="margin-top:10px"><label>รายละเอียดเหตุผล (ไม่บังคับ)</label><textarea class="input" id="spN" rows="2" placeholder="เช่น โอนไปสังกัด… / ลาออกเพื่อศึกษาต่อ / เลขที่คำสั่ง…"></textarea></div>' +
     '<div class="modal-acts"><button class="btn" id="spC">ยกเลิก</button><button class="btn danger" id="spOk">ยืนยันพ้นสภาพ</button></div></div>';
   document.body.appendChild(box);
   $('spC').onclick = function(){ box.remove(); };
   $('spOk').onclick = function(){
-    var it = { id:p.id, reason:$('spR').value, date:$('spD').value };
+    var it = { id:p.id, reason:$('spR').value, date:$('spD').value, note:$('spN').value };
     box.remove();
     doSeparate([it], function(){ closeDrawer(); });
+  };
+}
+/** ต่อสัญญาจ้าง */
+function renewDialog(p){
+  var base = ymdOf(p.contractEnd) || todayYmd(), t = todayYmd();
+  var from = (p.contractEnd && p.contractEnd >= (t.y + '-' + ('0' + t.m).slice(-2) + '-' + ('0' + t.d).slice(-2))) ? base : t;
+  var def = (from.y + 1) + '-' + ('0' + from.m).slice(-2) + '-' + ('0' + Math.min(from.d, 28)).slice(-2);
+  var box = document.createElement('div'); box.className = 'modal';
+  box.innerHTML = '<div class="modal-box"><h3>ต่อสัญญาจ้าง: ' + esc(fullName(p)) + '</h3>' +
+    '<p>' + (p.contractEnd ? 'สัญญาเดิมสิ้นสุด ' + thDate(p.contractEnd) + '. ' : '') + (p.separated ? 'บุคลากรท่านนี้จะกลับมาปฏิบัติงานและเปิดบัญชีเข้าระบบ' : 'ระบุวันสิ้นสุดสัญญาใหม่') + '</p>' +
+    '<div class="field"><label>วันสิ้นสุดสัญญาใหม่</label><input class="input" type="date" id="rnD" value="' + def + '"></div>' +
+    '<label class="chk" style="margin-top:8px;display:flex;gap:8px;align-items:center"><input type="checkbox" id="rnNo"> ไม่กำหนดวันสิ้นสุด (เช่น บรรจุเป็นพนักงานประจำ)</label>' +
+    '<div class="field" style="margin-top:10px"><label>หมายเหตุ (ไม่บังคับ)</label><input class="input" id="rnN" placeholder="เช่น ต่อสัญญาตามคำสั่งที่ …"></div>' +
+    '<div class="modal-acts"><button class="btn" id="rnC">ยกเลิก</button><button class="btn primary" id="rnOk">บันทึกต่อสัญญา</button></div></div>';
+  document.body.appendChild(box);
+  $('rnNo').onchange = function(){ $('rnD').disabled = this.checked; };
+  $('rnC').onclick = function(){ box.remove(); };
+  $('rnOk').onclick = function(){
+    var ce = $('rnNo').checked ? '' : $('rnD').value, note = $('rnN').value;   // อ่านค่าก่อนปิดหน้าต่าง
+    if(!$('rnNo').checked && !ce){ toast('กรุณาระบุวันสิ้นสุดสัญญาใหม่', true); return; }
+    box.remove(); busy('กำลังบันทึกต่อสัญญา…');
+    call('renewContract', { id:p.id, contractEnd:ce, note:note }).then(function(r){
+      upsertPerson(r.person); toast('ต่อสัญญาแล้ว' + (ce ? ' ถึง ' + thDate(ce) : ' (ไม่กำหนดวันสิ้นสุด)') + (r.account ? ' · ' + r.account : ''));
+      openDrawer(p.id); refreshAfterChange();
+    }).catch(function(e){ toast(e.message, true); }).finally(function(){ busy(''); });
   };
 }
 function doSeparate(items, after){
@@ -1159,6 +1209,7 @@ var GF = {
   employmentType:{ l:'ประเภทการจ้าง', list:'employmentType', w:200 },
   startDate:{ l:'วันที่เริ่มปฏิบัติงาน', type:'date', w:160 },
   birthDate:{ l:'วัน/เดือน/ปีเกิด', type:'date', w:160 },
+  contractEnd:{ l:'สิ้นสุดสัญญาจ้าง', type:'date', w:160 },
   bloodGroup:{ l:'หมู่โลหิต', opts:[['','— ไม่ระบุ —'],['A','A'],['B','B'],['AB','AB'],['O','O']], w:130 },
   bloodRh:{ l:'Rh', opts:[['','— ไม่ระบุ —'],['Rh+','Rh+ (บวก)'],['Rh-','Rh− (ลบ)']], w:130 },
   visible:{ l:'แสดงบนเว็บ', check:true, w:90 },
@@ -1168,10 +1219,10 @@ var GGROUPS = [
   { k:'loc', l:'ที่ตั้งห้องทำงาน', f:['building','floor','room'] },
   { k:'pos', l:'ชื่อและตำแหน่ง', f:['acadTitle','name','position','dept'] },
   { k:'contact', l:'ช่องทางติดต่อ', f:['email','phone'] },
-  { k:'hr', l:'ข้อมูล HR', f:['gender','birthDate','employmentType','startDate','status'] },
+  { k:'hr', l:'ข้อมูล HR', f:['gender','birthDate','employmentType','startDate','contractEnd','status'] },
   { k:'blood', l:'หมู่โลหิต', f:['bloodGroup','bloodRh'] },
   { k:'pub', l:'การแสดงผล', f:['visible','note'] },
-  { k:'all', l:'ทุกช่อง', f:['acadTitle','name','position','dept','building','floor','room','email','phone','gender','birthDate','bloodGroup','bloodRh','status','employmentType','startDate','visible','note'] }
+  { k:'all', l:'ทุกช่อง', f:['acadTitle','name','position','dept','building','floor','room','email','phone','gender','birthDate','bloodGroup','bloodRh','status','employmentType','startDate','contractEnd','visible','note'] }
 ];
 var GRID = { group:'loc', pend:{}, sel:{}, err:{}, q:'', dept:'', building:'', type:'', blank:'' };
 function gridPendingCount(){ var n = 0; Object.keys(GRID.pend).forEach(function(id){ n += Object.keys(GRID.pend[id]).length; }); return n; }
@@ -1419,6 +1470,68 @@ function addRule(el, type){
   drawRules(el);
   var inputs = el.querySelectorAll('[data-rk="match"]'); var last = inputs[inputs.length - 1];
   if(last && !type) last.focus();
+}
+
+/* ================= รายงานอัตรากำลัง (เข้า–ออก) — ตัวเลขรวม ไม่มีชื่อ ================= */
+var MOVE = { data:null, scope:'all' };
+function viewMove(el){
+  el.innerHTML = '<div class="panel"><div class="empty">กำลังคำนวณรายงาน…</div></div>';
+  call('movementReport').then(function(d){ MOVE.data = d; drawMove(el); }).catch(function(e){ el.innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; });
+}
+function mvRow(y, sc){ var b = sc === 'all' ? y : y.byType[sc]; return { headStart:b.headStart, hires:b.hires, exits:b.exits, headEnd:b.headEnd }; }
+function drawMove(el){
+  var d = MOVE.data, sc = MOVE.scope, Y = d.years;
+  var REASONS = ['เกษียณอายุ','ลาออก','โอนย้าย','หมดสัญญาจ้าง','เสียชีวิต','ให้ออก','พ้นสภาพ'];
+  var usedR = REASONS.filter(function(r){ return Y.some(function(y){ return y.reasons[r]; }); });
+  var last = Y.filter(function(y){ return !y.partial; }).slice(-1)[0] || Y[Y.length - 1];
+  var pctTxt = function(v){ return (v || 0).toFixed(1) + '%'; };
+  var q = d.quality, startPct = q.people ? Math.round(q.withStart / q.people * 100) : 0;
+  var rows = Y.map(function(y){
+    var r = mvRow(y, sc), net = r.hires - r.exits, avg = (r.headStart + r.headEnd) / 2;
+    var to = sc === 'all' ? y.turnover : (avg ? Math.round(r.exits / avg * 1000) / 10 : 0);
+    return '<tr><td><b>' + y.fy + '</b>' + (y.partial ? ' <small class="muted">(ถึงปัจจุบัน)</small>' : '') + '</td><td>' + r.headStart + '</td><td class="pos">+' + r.hires + '</td><td class="neg">−' + r.exits + '</td>' +
+      (sc === 'all' ? usedR.map(function(rs){ return '<td>' + (y.reasons[rs] || 0) + '</td>'; }).join('') : '') +
+      '<td><b>' + r.headEnd + '</b></td><td class="' + (net > 0 ? 'pos' : net < 0 ? 'neg' : '') + '">' + (net > 0 ? '+' : net < 0 ? '−' : '') + Math.abs(net) + '</td><td>' + pctTxt(to) + '</td>' +
+      (sc === 'all' ? '<td>' + pctTxt(y.retention) + '</td>' : '') + '</tr>';
+  }).join('');
+  var lr = mvRow(last, sc);
+  el.innerHTML =
+    '<div class="panel no-print" style="margin-bottom:12px"><h3>รายงานอัตรากำลัง (การเข้า–ออกของบุคลากร)</h3><p class="desc" style="margin:0">ตามปีงบประมาณ (1 ต.ค. – 30 ก.ย.) · คำนวณจาก "วันที่เริ่มปฏิบัติงาน" และ "วันที่พ้นสภาพ" · แสดงเป็นตัวเลขรวม ไม่มีรายชื่อ · ใช้ประกอบรายงานมหาวิทยาลัยและการตรวจประเมิน EdPEx (หมวด 5 และ 7.3)</p>' +
+      '<div class="toolbar" style="margin:12px 0 0"><div class="seg2" id="mvScope">' + [['all','ทั้งหมด'],['academic','สายวิชาการ'],['support','สายสนับสนุน']].map(function(x){ return '<button data-mv="' + x[0] + '" class="' + (sc === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><span style="flex:1"></span>' +
+      '<button class="btn" id="mvCsv">⬇ ส่งออก CSV</button><button class="btn" id="mvPrint">🖨 พิมพ์</button></div></div>' +
+    '<div class="mv-kpis">' +
+      '<div class="mv-kpi"><b>' + lr.headEnd + '</b><span>อัตรากำลัง ณ สิ้นปีงบ ' + last.fy + '</span></div>' +
+      '<div class="mv-kpi"><b style="color:var(--leaf-d)">+' + lr.hires + '</b><span>เข้าใหม่ ปีงบ ' + last.fy + '</span></div>' +
+      '<div class="mv-kpi"><b style="color:var(--danger)">−' + lr.exits + '</b><span>พ้นสภาพ ปีงบ ' + last.fy + '</span></div>' +
+      (sc === 'all' ? '<div class="mv-kpi"><b>' + pctTxt(last.turnover) + '</b><span>อัตราการลาออก/พ้นสภาพ (Turnover)</span></div><div class="mv-kpi"><b>' + pctTxt(last.retention) + '</b><span>อัตราการคงอยู่ (Retention)</span></div>' : '') +
+      '<div class="mv-kpi"><b>' + (d.avgTenureAtExit != null ? d.avgTenureAtExit + ' ปี' : '—') + '</b><span>อายุงานเฉลี่ยเมื่อพ้นสภาพ (5 ปี)</span></div>' +
+    '</div>' +
+    '<div class="panel"><h3>สรุปรายปีงบประมาณ' + (sc !== 'all' ? ' · ' + (sc === 'academic' ? 'สายวิชาการ' : 'สายสนับสนุน') : '') + '</h3><div class="tbl-wrap"><table class="mv-tbl"><thead><tr><th>ปีงบ</th><th>ต้นปี</th><th>เข้าใหม่</th><th>พ้นสภาพ</th>' +
+      (sc === 'all' ? usedR.map(function(r){ return '<th><small>' + r + '</small></th>'; }).join('') : '') +
+      '<th>สิ้นปี</th><th>สุทธิ</th><th>Turnover</th>' + (sc === 'all' ? '<th>Retention</th>' : '') + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<p class="desc" style="margin:10px 0 0">Turnover = พ้นสภาพ ÷ อัตรากำลังเฉลี่ย (ต้นปี+สิ้นปี)/2 × 100 · Retention = ผู้ที่อยู่ตั้งแต่ต้นปีและยังอยู่ ÷ อัตรากำลังต้นปี × 100 · ต้นปี = จำนวน ณ 30 ก.ย. ของปีก่อน</p></div>' +
+    '<div class="two"><div class="panel"><h3>เหตุผลการพ้นสภาพ (5 ปีงบ)</h3>' +
+      (d.reasons.length ? d.reasons.map(function(r){ var mx = d.reasons[0].n; return '<div class="rt-row" style="cursor:default"><span>' + esc(r.label) + '</span><div class="track"><i style="width:' + Math.round(r.n / mx * 100) + '%;background:#B3302A"></i></div><b>' + r.n + '</b></div>'; }).join('') : '<p class="desc">ยังไม่มีข้อมูลการพ้นสภาพในช่วงนี้</p>') + '</div>' +
+      '<div class="panel"><h3>คาดการณ์เกษียณ (วางแผนทดแทนอัตรากำลัง)</h3>' + d.retireForecast.map(function(r){ var mx = Math.max(1, ...d.retireForecast.map(function(x){ return x.n; })); return '<div class="rt-row" style="cursor:default"><span>ปีงบ ' + r.fy + '</span><div class="track"><i style="width:' + Math.round(r.n / mx * 100) + '%"></i></div><b>' + r.n + '</b></div>'; }).join('') +
+      '<p class="desc" style="margin:8px 0 0">จากผู้มีวันเกิดในระบบ ' + d.birthKnown + ' ท่าน</p></div></div>' +
+    '<div class="panel"><h3>คุณภาพข้อมูล</h3><p class="desc" style="margin:0">มีวันที่เริ่มปฏิบัติงาน ' + q.withStart + ' จาก ' + q.people + ' ท่าน (' + startPct + '%) — ผู้ที่ไม่มีวันเริ่มงานจะถือว่าอยู่มาก่อนช่วงสถิติ ตัวเลข "เข้าใหม่" ในอดีตจึงอาจต่ำกว่าจริง' +
+      (q.sepNoDate ? ' · พ้นสภาพแต่ไม่มีวันที่ ' + q.sepNoDate + ' ท่าน (ไม่นำมาคำนวณ ควรบันทึกวันที่พ้นสภาพ)' : '') + (d.contractsEnding ? ' · สัญญาจ้างใกล้สิ้นสุด ' + d.contractsEnding + ' ท่าน' : '') + '</p></div>';
+  el.querySelectorAll('[data-mv]').forEach(function(b){ b.onclick = function(){ MOVE.scope = b.getAttribute('data-mv'); drawMove(el); }; });
+  $('mvPrint').onclick = function(){ window.print(); };
+  $('mvCsv').onclick = function(){
+    var head = ['ปีงบประมาณ','ช่วงข้อมูลถึง','สายงาน','อัตรากำลังต้นปี','เข้าใหม่','พ้นสภาพ'].concat(REASONS.map(function(r){ return 'พ้นสภาพ: ' + r; })).concat(['อัตรากำลังสิ้นปี','สุทธิ','Turnover (%)','Retention (%)']);
+    var lines = [head];
+    Y.forEach(function(y){ ['all','academic','support'].forEach(function(t){
+      var r = mvRow(y, t), avg = (r.headStart + r.headEnd) / 2;
+      lines.push([y.fy, y.end, t === 'all' ? 'ทั้งหมด' : t === 'academic' ? 'สายวิชาการ' : 'สายสนับสนุน', r.headStart, r.hires, r.exits]
+        .concat(REASONS.map(function(rs){ return t === 'all' ? (y.reasons[rs] || 0) : ''; }))
+        .concat([r.headEnd, r.hires - r.exits, t === 'all' ? y.turnover : (avg ? (Math.round(r.exits / avg * 1000) / 10) : 0), t === 'all' ? y.retention : '']));
+    }); });
+    var csv = '\ufeff' + lines.map(function(l){ return l.map(function(v){ v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); }).join('\r\n');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+    a.download = 'รายงานอัตรากำลัง-วิศวกรรมศาสตร์-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); }, 500);
+    toast('ส่งออกรายงานแล้ว (ตัวเลขรวม ไม่มีรายชื่อ)');
+  };
 }
 
 /* ================= ค้นหาหมู่โลหิต (กรณีเร่งด่วน) ================= */
@@ -1723,7 +1836,7 @@ function runMigration(list){
 var ACT_TH = { 'login':'เข้าสู่ระบบ', 'login-fail':'เข้าระบบไม่สำเร็จ', 'forgot':'ขอรหัสผ่านใหม่', 'person-add':'เพิ่มบุคลากร', 'person-edit':'แก้ไขข้อมูล',
   'person-delete':'ลบบุคลากร', 'photo-set':'เปลี่ยนรูป', 'photo-remove':'ลบรูป', 'password-change':'เปลี่ยนรหัสผ่าน', 'user-edit':'แก้ไขบัญชี',
   'user-add':'เพิ่มบัญชี', 'user-reset':'คืนรหัสเริ่มต้น', 'user-delete':'ลบบัญชี', 'user-sync':'สร้างบัญชีอัตโนมัติ', 'backup':'สำรองไฟล์',
-  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'person-bulk':'แก้ไขแบบตาราง', 'retire-rules':'แก้เกณฑ์เกษียณ', 'person-separate':'พ้นสภาพ', 'person-restore':'คืนสถานะ', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
+  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'person-bulk':'แก้ไขแบบตาราง', 'retire-rules':'แก้เกณฑ์เกษียณ', 'person-separate':'พ้นสภาพ', 'person-restore':'คืนสถานะ', 'contract-renew':'ต่อสัญญา', 'contract-expire':'หมดสัญญาจ้าง (อัตโนมัติ)', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
 function viewLogs(el){
   el.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>การกระทำ</th><th>เป้าหมาย</th><th class="hide-sm">รายละเอียด</th></tr></thead><tbody id="ltb"><tr><td colspan="5"><div class="empty">กำลังโหลด…</div></td></tr></tbody></table></div>';
   call('logs').then(function(rows){
