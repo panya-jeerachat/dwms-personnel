@@ -25,12 +25,12 @@
   r.setAttribute('data-mode', dark ? 'dark' : 'light');
 })();
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://eng.msu.ac.th">
 <link rel="preconnect" href="https://script.google.com">
 <link rel="dns-prefetch" href="https://script.googleusercontent.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- ฟอนต์ "มอน้ำชี" (Mornamchi) ฟอนต์ประจำมหาวิทยาลัยมหาสารคาม — ลิขสิทธิ์เฉพาะมหาวิทยาลัย
+     ไฟล์ฟอนต์อยู่บน eng.msu.ac.th เท่านั้น (ไม่ฝังในหน้านี้ และไม่เก็บไว้บน GitHub) -->
+<link rel="preconnect" href="https://eng.msu.ac.th" crossorigin>
+<link rel="stylesheet" href="https://eng.msu.ac.th/assistantpersonnel/fonts/mornamchi-web.css">
 <style>
   /* =====================================================================
      ธีมไดนามิก — ทุกสีคำนวณจาก --h (เฉดสี) และ --sat ที่ JS เปลี่ยนได้
@@ -98,7 +98,7 @@
   html,body{margin:0;padding:0;}
   html{scroll-behavior:smooth;}
   body{
-    font-family:'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
+    font-family:"Mornamchi", "Sarabun", "Noto Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif; font-synthesis:none;
     color:var(--text); background-color:var(--paper);
     background-image:
       linear-gradient(var(--grid) 1px, transparent 1px),
@@ -583,6 +583,9 @@
     .hero-search button.go{padding:0 14px;}
     .hbar{grid-template-columns:minmax(70px,110px) minmax(0,1fr) 30px;}
   }
+
+  /* ฟอนต์มอน้ำชีทุกส่วน: ปุ่ม ช่องกรอก ตัวเลือก ข้อความในกราฟ */
+  button, input, select, textarea, optgroup, svg text { font-family: inherit; }
 </style>
 </head>
 <body>

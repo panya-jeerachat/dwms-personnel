@@ -6,9 +6,10 @@
 <title>ระบบฐานข้อมูลบุคลากร | คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</title>
 <meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- ฟอนต์ "มอน้ำชี" (Mornamchi) ฟอนต์ประจำมหาวิทยาลัยมหาสารคาม — ลิขสิทธิ์เฉพาะมหาวิทยาลัย
+     ไฟล์ฟอนต์อยู่บน eng.msu.ac.th เท่านั้น (ไม่ฝังในหน้านี้ และไม่เก็บไว้บน GitHub) -->
+<link rel="preconnect" href="https://eng.msu.ac.th" crossorigin>
+<link rel="stylesheet" href="https://eng.msu.ac.th/assistantpersonnel/fonts/mornamchi-web.css">
 <style>
 :root{
   --forest:#123D29; --forest-2:#1A4D35; --leaf:#1F9550; --leaf-d:#177A41; --mint:#E6F5EA; --mint-2:#F2FAF4;
@@ -19,7 +20,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{font-family:'IBM Plex Sans Thai',Tahoma,system-ui,sans-serif;background:var(--paper);color:var(--ink);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{font-family:"Mornamchi", "Sarabun", "Noto Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;font-synthesis:none;background:var(--paper);color:var(--ink);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--leaf-d)}
 :focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
@@ -291,6 +292,9 @@ td.calc{padding:6px 10px;color:var(--soft);font-size:13px;white-space:nowrap;bac
   .grid2{grid-template-columns:1fr}
   .hide-sm{display:none}
 }
+
+  /* ฟอนต์มอน้ำชีทุกส่วน: ปุ่ม ช่องกรอก ตัวเลือก ข้อความในกราฟ */
+  button, input, select, textarea, optgroup, svg text { font-family: inherit; }
 </style>
 </head>
 <body>
@@ -1653,6 +1657,18 @@ function drawBlood(){
   $('bCount').textContent = 'พบ ' + list.length + ' คน' + (n ? ' · เลือกไว้ ' + n + ' คน (ปุ่มด้านบนใช้เฉพาะที่เลือก)' : ' · ปุ่มด้านบนใช้กับทุกคนในรายการ');
   $('bBody').querySelectorAll('[data-bsel]').forEach(function(c){ c.onchange = function(){ if(c.checked) BLOOD.sel[c.getAttribute('data-bsel')] = 1; else delete BLOOD.sel[c.getAttribute('data-bsel')]; drawBlood(); }; });
 }
+/** ตรวจว่าเครื่องนี้โหลดฟอนต์มอน้ำชีจาก eng.msu.ac.th สำเร็จหรือไม่ (แสดงในหน้าตั้งค่าระบบ) */
+function checkFontStatus(){
+  var el = $('fontStat'); if(!el || !document.fonts) return;
+  Promise.all([document.fonts.load('400 16px Mornamchi'), document.fonts.load('700 16px Mornamchi')]).then(function(){
+    var ok = document.fonts.check('400 16px Mornamchi') && document.fonts.check('700 16px Mornamchi');
+    el.innerHTML = ok ? '<span class="tag">โหลดสำเร็จ</span> จาก eng.msu.ac.th/assistantpersonnel/fonts/'
+      : '<span class="tag warn">โหลดไม่สำเร็จ</span> กำลังใช้ฟอนต์สำรอง — ตรวจไฟล์ที่ eng.msu.ac.th/assistantpersonnel/fonts/font.php?check=1';
+  }).catch(function(){   // โหลดล้มเหลว (เช่น เซิร์ฟเวอร์ไม่ตอบ หรือหน้านี้ไม่อยู่ในรายการที่อนุญาตของ font.php)
+    el.innerHTML = '<span class="tag warn">โหลดไม่สำเร็จ</span> กำลังใช้ฟอนต์สำรอง — ตรวจไฟล์ที่ eng.msu.ac.th/assistantpersonnel/fonts/font.php?check=1 และรายการเว็บที่อนุญาตใน font.php';
+  });
+}
+new MutationObserver(function(){ var el = $('fontStat'); if(el && el.textContent === 'กำลังตรวจ…') checkFontStatus(); }).observe(document.documentElement, { childList:true, subtree:true });
 function copyText(v, msg){
   (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function(){ toast(msg); }, function(){
     var t = document.createElement('textarea'); t.value = v; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); toast(msg);
@@ -1884,7 +1900,7 @@ function runMigration(list){
 var ACT_TH = { 'login':'เข้าสู่ระบบ', 'login-fail':'เข้าระบบไม่สำเร็จ', 'forgot':'ขอรหัสผ่านใหม่', 'person-add':'เพิ่มบุคลากร', 'person-edit':'แก้ไขข้อมูล',
   'person-delete':'ลบบุคลากร', 'photo-set':'เปลี่ยนรูป', 'photo-remove':'ลบรูป', 'password-change':'เปลี่ยนรหัสผ่าน', 'user-edit':'แก้ไขบัญชี',
   'user-add':'เพิ่มบัญชี', 'user-reset':'คืนรหัสเริ่มต้น', 'user-delete':'ลบบัญชี', 'user-sync':'สร้างบัญชีอัตโนมัติ', 'backup':'สำรองไฟล์',
-  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'person-bulk':'แก้ไขแบบตาราง', 'retire-rules':'แก้เกณฑ์เกษียณ', 'person-separate':'พ้นสภาพ', 'person-restore':'คืนสถานะ', 'contract-renew':'ต่อสัญญา', 'contract-expire':'หมดสัญญาจ้าง (อัตโนมัติ)', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
+  'setup':'ติดตั้งระบบ', 'gender-bulk':'เติมข้อมูลเพศ', 'person-bulk':'แก้ไขแบบตาราง', 'retire-rules':'แก้เกณฑ์เกษียณ', 'person-separate':'พ้นสภาพ', 'person-restore':'คืนสถานะ', 'contract-renew':'ต่อสัญญา', 'migration-import':'นำเข้าความลับ (ย้ายระบบ)', 'contract-expire':'หมดสัญญาจ้าง (อัตโนมัติ)', 'cache-refresh':'รีเฟรชหน้าเว็บ', 'api-key':'เปลี่ยนกุญแจ API' };
 function viewLogs(el){
   el.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>การกระทำ</th><th>เป้าหมาย</th><th class="hide-sm">รายละเอียด</th></tr></thead><tbody id="ltb"><tr><td colspan="5"><div class="empty">กำลังโหลด…</div></td></tr></tbody></table></div>';
   call('logs').then(function(rows){
@@ -1921,7 +1937,10 @@ function viewSystem(el){
       row('API ข้อมูลเต็ม', i.exportApi, 'สำหรับระบบอื่นของคณะ มีข้อมูลภายใน ห้ามเผยแพร่ หากหลุดให้กดสร้างกุญแจใหม่') +
       row('ตรวจสภาพ upload.php', i.checkUrl) +
       row('Google Sheet', i.sheetUrl) +
+      '<span>ส่งอีเมลจากบัญชี</span><span><b>' + esc(i.runAs || '-') + '</b>' + (i.expectedRunAs && i.runAs && i.runAs.toLowerCase() !== i.expectedRunAs.toLowerCase() ? ' <span class="tag warn">ยังไม่ใช่บัญชีกลาง ' + esc(i.expectedRunAs) + '</span>' : (i.runAs ? ' <span class="tag">บัญชีกลาง</span>' : '')) + '</span><span></span>' +
+      '<span>อีเมลรับรหัสใหม่ของ admin</span><span>' + esc(i.recoveryEmail || '-') + '</span><span></span>' +
       '<span>โควตาอีเมลวันนี้</span><span>เหลือ ' + i.mailQuota + ' ฉบับ</span><span></span>' +
+      '<span>ฟอนต์มอน้ำชี</span><span id="fontStat">กำลังตรวจ…</span><span></span>' +
       '<span></span><span><button class="btn sm danger" id="sKey">สร้างกุญแจ API ใหม่</button></span><span></span>';
     $('sKey').onclick = function(){
       askConfirm('สร้างกุญแจ API ใหม่?', 'ระบบอื่นที่ใช้กุญแจเดิมจะเรียกข้อมูลไม่ได้จนกว่าจะเปลี่ยนเป็นกุญแจใหม่', 'สร้างกุญแจใหม่', true).then(function(y){
