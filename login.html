@@ -255,6 +255,15 @@ td.calc{padding:6px 10px;color:var(--soft);font-size:13px;white-space:nowrap;bac
 .mv-kpi b{display:block;font-size:24px;line-height:1.2}
 .mv-kpi span{font-size:12.5px;color:var(--soft);line-height:1.5}
 @media print{ .side,.topbar,.banner,#gSaveBar,.no-print,#toast{display:none !important} .shell{display:block} .main,.content{padding:0;margin:0} .panel{break-inside:avoid;box-shadow:none} body{background:#fff} }
+.sso{margin:4px 0 14px}
+.sso-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:1px solid var(--line-2);color:var(--ink);font-weight:600;padding:11px 14px}
+.sso-btn:hover{background:var(--mint-2);border-color:var(--leaf)}
+.sso-btn small{font-weight:400;color:var(--soft)}
+.gis-btn{display:flex;justify-content:center;min-height:0}
+.gis-btn:empty{display:none}
+#ssoMsg .msg{margin-top:10px}
+.or{display:flex;align-items:center;gap:10px;margin:16px 0 4px;color:var(--faint);font-size:12.5px}
+.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
 .progress{height:10px;background:var(--mint);border-radius:5px;overflow:hidden;margin:10px 0}
 .progress i{display:block;height:100%;background:var(--leaf);width:0;transition:width .3s}
 .loglist{max-height:320px;overflow:auto;font-size:13px;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;background:var(--mint-2)}
@@ -315,6 +324,13 @@ td.calc{padding:6px 10px;color:var(--soft);font-size:13px;white-space:nowrap;bac
     <div class="auth-card" id="loginCard">
       <h2>เข้าสู่ระบบ</h2>
       <p class="sub">ใช้อีเมลมหาวิทยาลัยที่บันทึกไว้ในระบบ หรือชื่อผู้ใช้ admin</p>
+      <!-- เข้าสู่ระบบด้วยบัญชี Google ของมหาวิทยาลัย (SSO) -->
+      <div class="sso" id="ssoBox" hidden>
+        <button type="button" class="btn sso-btn" id="ssoBtn" hidden><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg><span>เข้าสู่ระบบด้วย Google <small>(@msu.ac.th)</small></span></button>
+        <div id="gisBtn" class="gis-btn"></div>
+        <div id="ssoMsg"></div>
+        <div class="or"><span>หรือใช้รหัสผ่าน</span></div>
+      </div>
       <form id="loginForm" autocomplete="on">
         <div class="field"><label for="lu">อีเมล หรือชื่อผู้ใช้</label>
           <input class="input" id="lu" name="username" autocomplete="username" required></div>
@@ -584,7 +600,7 @@ function checkBackend(){
   if(/\/dev(\?|$)/.test(APP_URL)){ showBackendWarn(DEV_URL_MSG); return; }
   fetch(APP_URL + '?action=version&_ts=' + Date.now(), { credentials:'omit', cache:'no-store' })
     .then(function(r){ return r.json(); })
-    .then(function(j){ if(!j || !j.version) showBackendWarn(OLD_BACKEND_MSG); })
+    .then(function(j){ if(!j || !j.version) showBackendWarn(OLD_BACKEND_MSG); else initGis(j.sso); })
     .catch(function(){ showBackendWarn('เชื่อมต่อระบบหลังบ้านไม่ได้ — ตรวจว่า APP_URL ในไฟล์ login.html เป็นลิงก์ /exec ล่าสุด และตั้ง "ผู้มีสิทธิ์เข้าถึง" ของการทำให้ใช้งานได้เป็น "ทุกคน"'); });
 }
 function showBackendWarn(t){
@@ -651,6 +667,7 @@ $('forgotForm').onsubmit = function(e){
 };
 
 function signOut(expired){
+  if(!expired){ store('dwms_sso_off', '1'); try{ if(window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect(); }catch(e){} }
   if(TOKEN && !expired) run('api', [TOKEN, 'logout', {}]).catch(function(){});
   TOKEN = null; ME = null; store('dwms_token', null);
   closeDrawer();
@@ -658,6 +675,52 @@ function signOut(expired){
   $('loginMsg').innerHTML = expired ? '<div class="msg info">เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง</div>' : '';
 }
 $('logoutBtn').onclick = function(){ signOut(false); };
+
+/* ================= เข้าสู่ระบบด้วย Google (SSO) =================
+   - หน้าผู้ดูแลใน Apps Script: Google ระบุบัญชีที่ลงชื่ออยู่ให้เอง (เข้าอัตโนมัติเมื่อเปิดหน้า)
+   - login.html: ปุ่ม "Sign in with Google" (ต้องตั้งค่า GOOGLE_CLIENT_ID ใน Code.gs) */
+function ssoSuccess(r){
+  if(!r.ok){ var e = new Error(r.error); e.code = r.code; throw e; }
+  TOKEN = r.data.token;
+  if($('lr').checked) store('dwms_token', TOKEN);
+  store('dwms_sso_off', null);
+  $('ssoMsg').innerHTML = '';
+  return start();
+}
+function ssoFail(e, quiet){
+  if(quiet && e && e.code === 'NO_IDENTITY'){ $('ssoMsg').innerHTML = ''; return; }
+  $('ssoMsg').innerHTML = '<div class="msg err">' + esc(e && e.message || 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ') + '</div>';
+}
+function ssoGas(auto){
+  var b = $('ssoBtn'); b.disabled = true;
+  $('ssoMsg').innerHTML = '<div class="msg info">กำลังเข้าสู่ระบบด้วยบัญชี Google…</div>';
+  return run('apiSsoSession', []).then(ssoSuccess).catch(function(e){ ssoFail(e, auto); }).then(function(){ b.disabled = false; });
+}
+function initGis(sso){
+  if(!sso || !sso.enabled || !sso.clientId) return;
+  var sc = document.createElement('script');
+  sc.src = 'https://accounts.google.com/gsi/client'; sc.async = true; sc.defer = true;
+  sc.onload = function(){
+    try{
+      google.accounts.id.initialize({
+        client_id: sso.clientId, hd: sso.domain, ux_mode: 'popup', auto_select: false, cancel_on_tap_outside: true,
+        callback: function(resp){
+          $('ssoMsg').innerHTML = '<div class="msg info">กำลังตรวจสอบกับ Google…</div>';
+          run('apiSsoGoogle', [resp.credential]).then(ssoSuccess).catch(function(e){ ssoFail(e, false); });
+        }
+      });
+      var w = Math.min(380, Math.max(220, ($('loginCard').clientWidth || 360) - 8));
+      google.accounts.id.renderButton($('gisBtn'), { type:'standard', theme:'outline', size:'large', text:'signin_with', shape:'rectangular', logo_alignment:'center', locale:'th', width:w });
+      $('ssoBox').hidden = false;
+    }catch(e){ console.warn('[DWMS] Google Sign-In:', e); }
+  };
+  sc.onerror = function(){ console.warn('[DWMS] โหลด Google Sign-In ไม่ได้'); };
+  document.head.appendChild(sc);
+}
+if(IN_GAS){
+  $('ssoBox').hidden = false; $('ssoBtn').hidden = false;
+  $('ssoBtn').onclick = function(){ ssoGas(false); };
+}
 
 /* ================= เริ่มระบบ ================= */
 function start(){
@@ -1963,6 +2026,8 @@ var saved = load('dwms_token');
 if(saved){
   TOKEN = saved;
   start().catch(function(){ TOKEN = null; store('dwms_token', null); $('authView').hidden = false; $('appView').hidden = true; });
+} else if(IN_GAS && !load('dwms_sso_off')){
+  ssoGas(true);          // เปิดหน้ามาแล้วเข้าระบบด้วยบัญชี Google @msu.ac.th ให้อัตโนมัติ
 } else {
   $('lu').focus();
 }
