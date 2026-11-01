@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <title>ระบบฐานข้อมูลบุคลากร | คณะวิศวกรรมศาสตร์ มหาวิทยาลัยมหาสารคาม</title>
 <meta name="robots" content="noindex">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- ฟอนต์ "มอน้ำชี" (Mornamchi) ฟอนต์ประจำมหาวิทยาลัยมหาสารคาม — ลิขสิทธิ์เฉพาะมหาวิทยาลัย
      ไฟล์ฟอนต์อยู่บน eng.msu.ac.th เท่านั้น (ไม่ฝังในหน้านี้ และไม่เก็บไว้บน GitHub) -->
@@ -521,7 +522,7 @@ function avatar(p, size){
   var cls = 'av' + (size ? ' ' + size : ''), src = p.photo || p.photoPreview || '';
   if(src){
     var px = size === 'lg' ? 320 : 120;
-    return '<div class="' + cls + '" style="background:' + avColor(p.name) + '"><img src="' + esc(thumbOf(src, px)) + '" data-full="' + esc(src) + '" data-i="' + init + '" alt="" loading="lazy" decoding="async" onerror="avErr(this)"></div>';
+    return '<div class="' + cls + '" style="background:' + avColor(p.name) + '"><img referrerpolicy="no-referrer" src="' + esc(thumbOf(src, px)) + '" data-full="' + esc(src) + '" data-i="' + init + '" alt="" loading="lazy" decoding="async" onerror="avErr(this)"></div>';
   }
   return '<div class="' + cls + '" style="background:' + avColor(p.name) + '">' + init + '</div>';
 }
