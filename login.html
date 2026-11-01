@@ -1224,10 +1224,40 @@ function uploadPhoto(id, dataUrl){
       return browserUpload(t, b64).then(function(j){
         return call('attachPhoto', { id:id, file:j.file, size:j.size, receipt:j.receipt });
       });
-    }).catch(function(e){ throw new Error(e.message + ' (ช่องทางหลัก: ' + r.reason + ')'); });
+    }).catch(function(e){
+      if(IN_GAS && (e.blocked || /403|บล็อก|ตอบกลับไม่ถูกต้อง|เชื่อมต่อเซิร์ฟเวอร์รูปไม่ได้/.test(e.message))){
+        throw new Error('เซิร์ฟเวอร์รูปปฏิเสธการอัปโหลดจากหน้านี้ (ระบบป้องกันของมหาวิทยาลัย) \u2014 กรุณาเข้าหน้าผู้ดูแลผ่านปุ่ม "เข้าแบบไม่ผูกบัญชี Google" ที่หน้าเว็บสาธารณะ (login.html บน eng.msu.ac.th) ซึ่งอยู่โดเมนเดียวกับเซิร์ฟเวอร์รูป จึงอัปโหลดได้');
+      }
+      throw new Error(e.message + ' (ช่องทางหลัก: ' + r.reason + ')');
+    });
   });
 }
 var SEND_MODE = 'post', CHUNK = { post:60000, get:5000 };
+/** แปลง base64 → Blob สำหรับแนบไฟล์จริง (multipart) */
+function b64ToBlob(b64){
+  var bin = atob(b64), n = bin.length, arr = new Uint8Array(n);
+  for(var i = 0; i < n; i++) arr[i] = bin.charCodeAt(i);
+  var head = arr.slice(0, 12);
+  var type = (head[0] === 0xFF && head[1] === 0xD8) ? 'image/jpeg'
+    : (head[0] === 0x89 && head[1] === 0x50) ? 'image/png'
+    : (head[8] === 0x57 && head[9] === 0x45) ? 'image/webp' : 'application/octet-stream';
+  return new Blob([arr], { type:type });
+}
+/** ช่องทางที่ 3: แนบไฟล์จริง (multipart) — WAF ของมหาวิทยาลัยมักอนุญาต ลองก่อนเป็นอันดับแรก */
+function browserUploadMultipart(t, b64){
+  var fd = new FormData();
+  fd.append('action', 'upload'); fd.append('ts', t.ts); fd.append('nonce', t.nonce); fd.append('sig', t.sig); fd.append('tag', t.tag);
+  var ext = ({ 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp' })[b64ToBlob(b64).type] || 'jpg';
+  fd.append('file', b64ToBlob(b64), 'photo.' + ext);
+  return fetch(t.url, { method:'POST', body:fd }).then(function(r){   // ห้ามตั้ง Content-Type เอง เบราว์เซอร์ใส่ boundary ให้
+    return r.text().then(function(txt){
+      var j = null; try{ j = JSON.parse(txt); }catch(e){}
+      if(!j){ var er = new Error('multipart ถูกบล็อก (HTTP ' + r.status + ')'); er.blocked = true; throw er; }
+      if(!j.ok) throw new Error(j.error || 'ส่งไม่สำเร็จ');
+      return j;
+    });
+  }, function(){ var er = new Error('เชื่อมต่อเซิร์ฟเวอร์รูปไม่ได้'); er.blocked = true; throw er; });
+}
 function browserUpload(t, b64){
   var data = b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
   var uid = Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(16)), function(x){ return ('0' + x.toString(16)).slice(-2); }).join('');
@@ -1253,10 +1283,15 @@ function browserUpload(t, b64){
     }
     return next();
   }
-  return all(SEND_MODE).catch(function(e){
-    if(!e.blocked || SEND_MODE === 'get') throw e;
-    SEND_MODE = 'get';
-    return all('get');
+  // ลำดับช่องทาง: แนบไฟล์จริง (multipart) → ส่งเป็นชิ้น POST → ส่งเป็นชิ้น GET
+  // ข้ามไปช่องถัดไปเฉพาะเมื่อ "ถูกบล็อก" (WAF/เครือข่าย) ไม่ใช่เมื่อไฟล์ผิดหรือรหัสผิด
+  return browserUploadMultipart(t, b64).catch(function(e){
+    if(!e.blocked) throw e;
+    return all('post').catch(function(e2){
+      if(!e2.blocked) throw e2;
+      SEND_MODE = 'get';
+      return all('get');
+    });
   });
 }
 
